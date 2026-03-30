@@ -12,6 +12,10 @@ export default {
         "2xl": "1400px",
       },
     },
+    fontFamily: {
+      sans: ['"Noto Sans JP"', '"Inter"', 'sans-serif'],
+      display: ['"Inter"', '"Noto Sans JP"', 'sans-serif'],
+    },
     extend: {
       colors: {
         border: "hsl(var(--border))",
