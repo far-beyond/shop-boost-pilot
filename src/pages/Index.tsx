@@ -46,6 +46,48 @@ function HeroIllustration() {
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
       />
 
+      {/* Grid pattern overlay */}
+      <svg className="absolute inset-0 w-full h-full rounded-3xl opacity-[0.07]" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <path d="M 32 0 L 0 0 0 32" fill="none" stroke="hsl(215 90% 52%)" strokeWidth="0.8" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+      </svg>
+
+      {/* Map pins */}
+      {[
+        { x: "22%", y: "25%", delay: 0.4, size: "lg" },
+        { x: "68%", y: "35%", delay: 0.6, size: "sm" },
+        { x: "45%", y: "72%", delay: 0.8, size: "sm" },
+      ].map((pin, i) => (
+        <motion.div
+          key={`pin-${i}`}
+          className="absolute flex flex-col items-center"
+          style={{ left: pin.x, top: pin.y }}
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: pin.delay, type: "spring", stiffness: 200, damping: 12 }}
+        >
+          <MapPin className={`${pin.size === "lg" ? "w-6 h-6" : "w-4 h-4"} text-primary drop-shadow-sm`} />
+          <motion.div
+            className={`${pin.size === "lg" ? "w-3 h-1" : "w-2 h-0.5"} rounded-full bg-primary/20 mt-0.5`}
+            animate={{ scaleX: [1, 1.3, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+        </motion.div>
+      ))}
+
+      {/* Radius circle around main pin */}
+      <motion.div
+        className="absolute rounded-full border border-dashed border-primary/20"
+        style={{ left: "22%", top: "25%", width: "100px", height: "100px", transform: "translate(-50%, -30%)" }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 1.0, duration: 0.6 }}
+      />
+
       {/* Central store icon */}
       <motion.div
         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-2xl bg-card shadow-lg flex items-center justify-center border border-border"
