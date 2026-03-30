@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, BarChart3, FileText, Map, MessageSquare, Target, Zap } from "lucide-react";
+import { ArrowRight, BarChart3, FileText, Map, MessageSquare, Target, Zap, Store, TrendingUp, Users, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Layout from "@/components/Layout";
+import { motion } from "framer-motion";
 
 const features = [
   {
@@ -34,53 +35,172 @@ const steps = [
   { step: "04", title: "実行 & 改善", description: "KPIを見ながら施策を実行・改善" },
 ];
 
+function HeroIllustration() {
+  return (
+    <div className="relative w-full max-w-md mx-auto h-64 md:h-80">
+      {/* Map background blob */}
+      <motion.div
+        className="absolute inset-0 rounded-3xl opacity-30"
+        style={{ background: "var(--gradient-primary)" }}
+        animate={{ scale: [1, 1.04, 1], rotate: [0, 1, -1, 0] }}
+        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      {/* Central store icon */}
+      <motion.div
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-2xl bg-card shadow-lg flex items-center justify-center border border-border"
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+      >
+        <Store className="w-9 h-9 text-primary" />
+      </motion.div>
+
+      {/* Orbiting icons */}
+      {[
+        { Icon: Users, x: "15%", y: "20%", delay: 0.5 },
+        { Icon: TrendingUp, x: "75%", y: "15%", delay: 0.7 },
+        { Icon: Search, x: "80%", y: "65%", delay: 0.9 },
+        { Icon: BarChart3, x: "10%", y: "70%", delay: 1.1 },
+      ].map(({ Icon, x, y, delay }, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-12 h-12 rounded-xl bg-card shadow-md flex items-center justify-center border border-border"
+          style={{ left: x, top: y }}
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay, type: "spring", stiffness: 180 }}
+        >
+          <Icon className="w-5 h-5 text-primary" />
+        </motion.div>
+      ))}
+
+      {/* Connecting lines (decorative dots) */}
+      {[
+        { x: "35%", y: "30%", delay: 1.3 },
+        { x: "60%", y: "28%", delay: 1.4 },
+        { x: "65%", y: "55%", delay: 1.5 },
+        { x: "30%", y: "60%", delay: 1.6 },
+      ].map((dot, i) => (
+        <motion.div
+          key={`dot-${i}`}
+          className="absolute w-2 h-2 rounded-full bg-primary/40"
+          style={{ left: dot.x, top: dot.y }}
+          initial={{ scale: 0 }}
+          animate={{ scale: [0, 1, 0.6, 1] }}
+          transition={{ delay: dot.delay, duration: 0.6 }}
+        />
+      ))}
+
+      {/* Floating metric cards */}
+      <motion.div
+        className="absolute right-0 top-4 bg-card rounded-lg shadow-md border border-border px-3 py-2 text-xs"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 1.5, duration: 0.5 }}
+      >
+        <span className="text-muted-foreground">来店率</span>
+        <span className="block text-primary font-bold text-sm">+32%</span>
+      </motion.div>
+
+      <motion.div
+        className="absolute left-0 bottom-4 bg-card rounded-lg shadow-md border border-border px-3 py-2 text-xs"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 1.7, duration: 0.5 }}
+      >
+        <span className="text-muted-foreground">認知度</span>
+        <span className="block text-accent font-bold text-sm">+58%</span>
+      </motion.div>
+
+      {/* Pulse ring */}
+      <motion.div
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 rounded-full border-2 border-primary/20"
+        animate={{ scale: [1, 1.6], opacity: [0.4, 0] }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: "easeOut" }}
+      />
+    </div>
+  );
+}
+
 export default function Index() {
   return (
     <Layout>
       {/* Hero */}
-      <section className="py-20 md:py-32" style={{ background: "var(--gradient-hero)" }}>
-        <div className="container mx-auto px-4 text-center max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-6">
-            <Map className="w-4 h-4" />
-            マップ連動型 店舗集客AI
+      <section className="py-20 md:py-28 overflow-hidden" style={{ background: "var(--gradient-hero)" }}>
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-6">
+                <Map className="w-4 h-4" />
+                マップ連動型 店舗集客AI
+              </div>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-6">
+                あなたのお店に合う集客施策を、
+                <br className="hidden sm:block" />
+                <span className="text-primary">数分で提案します</span>
+              </h1>
+              <p className="text-lg text-muted-foreground mb-8">
+                店舗情報を入力するだけで、商圏・客層・競合をふまえた集客プランをAIが作成します。
+              </p>
+              <Link to="/input">
+                <Button size="lg" className="text-base px-8 gap-2">
+                  無料で診断する
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+            >
+              <HeroIllustration />
+            </motion.div>
           </div>
-          <h1 className="text-3xl md:text-5xl font-bold text-foreground leading-tight mb-6">
-            あなたのお店に合う集客施策を、
-            <br className="hidden sm:block" />
-            <span className="text-primary">数分で提案します</span>
-          </h1>
-          <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto">
-            店舗情報を入力するだけで、商圏・客層・競合をふまえた集客プランをAIが作成します。
-          </p>
-          <Link to="/input">
-            <Button size="lg" className="text-base px-8 gap-2">
-              無料で診断する
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
         </div>
       </section>
 
       {/* Features */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-center text-foreground mb-4">
-            MapBoost AI でできること
-          </h2>
-          <p className="text-center text-muted-foreground mb-12 max-w-xl mx-auto">
-            店舗情報を入力するだけで、4つの分析・提案を自動で行います。
-          </p>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <h2 className="text-2xl md:text-3xl font-bold text-center text-foreground mb-4">
+              MapBoost AI でできること
+            </h2>
+            <p className="text-center text-muted-foreground mb-12 max-w-xl mx-auto">
+              店舗情報を入力するだけで、4つの分析・提案を自動で行います。
+            </p>
+          </motion.div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
-            {features.map((f) => (
-              <Card key={f.title} className="border border-border shadow-sm hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3 text-primary-foreground" style={{ background: "var(--gradient-primary)" }}>
-                    <f.icon className="w-5 h-5" />
-                  </div>
-                  <CardTitle className="text-lg">{f.title}</CardTitle>
-                  <CardDescription>{f.description}</CardDescription>
-                </CardHeader>
-              </Card>
+            {features.map((f, i) => (
+              <motion.div
+                key={f.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.1 }}
+              >
+                <Card className="border border-border shadow-sm hover:shadow-md transition-shadow h-full">
+                  <CardHeader>
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3 text-primary-foreground" style={{ background: "var(--gradient-primary)" }}>
+                      <f.icon className="w-5 h-5" />
+                    </div>
+                    <CardTitle className="text-lg">{f.title}</CardTitle>
+                    <CardDescription>{f.description}</CardDescription>
+                  </CardHeader>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -93,12 +213,19 @@ export default function Index() {
             導入イメージ
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-4xl mx-auto">
-            {steps.map((s) => (
-              <div key={s.step} className="text-center">
+            {steps.map((s, i) => (
+              <motion.div
+                key={s.step}
+                className="text-center"
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.12 }}
+              >
                 <div className="text-4xl font-bold text-primary/20 mb-2">{s.step}</div>
                 <h3 className="text-lg font-semibold text-foreground mb-1">{s.title}</h3>
                 <p className="text-sm text-muted-foreground">{s.description}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
