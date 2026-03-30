@@ -1,13 +1,54 @@
-import { Link } from "react-router-dom";
-import { ArrowRight, AlertTriangle, CheckCircle2, Target, TrendingUp, Users } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowRight, AlertTriangle, CheckCircle2, Target, TrendingUp, Users, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Layout from "@/components/Layout";
-import { dummyDiagnosis } from "@/lib/dummyData";
+import { getDiagnosis, type DiagnosisResult } from "@/lib/diagnosisService";
 
 export default function Diagnosis() {
-  const d = dummyDiagnosis;
+  const { id } = useParams<{ id: string }>();
+
+  const { data: diagnosis, isLoading, error } = useQuery({
+    queryKey: ["diagnosis", id],
+    queryFn: () => getDiagnosis(id!),
+    enabled: !!id,
+  });
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error || !diagnosis) {
+    return (
+      <Layout>
+        <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
+          <p className="text-destructive">診断結果が見つかりませんでした</p>
+          <Link to="/dashboard"><Button variant="outline">ダッシュボードに戻る</Button></Link>
+        </div>
+      </Layout>
+    );
+  }
+
+  const d = diagnosis.diagnosis_result as DiagnosisResult | null;
+
+  if (!d) {
+    return (
+      <Layout>
+        <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">診断結果を生成中です…</p>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -18,13 +59,12 @@ export default function Diagnosis() {
             診断結果
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-            カフェ モカ 渋谷店の集客診断
+            {diagnosis.store_name}の集客診断
           </h1>
           <p className="text-muted-foreground">AIが分析した結果をもとに、最適な施策を提案します。</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Strengths */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -36,15 +76,13 @@ export default function Diagnosis() {
               <ul className="space-y-2">
                 {d.strengths.map((s, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
-                    <span className="text-accent mt-0.5">✓</span>
-                    {s}
+                    <span className="text-accent mt-0.5">✓</span>{s}
                   </li>
                 ))}
               </ul>
             </CardContent>
           </Card>
 
-          {/* Weaknesses */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -56,15 +94,13 @@ export default function Diagnosis() {
               <ul className="space-y-2">
                 {d.weaknesses.map((w, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
-                    <span className="text-destructive mt-0.5">!</span>
-                    {w}
+                    <span className="text-destructive mt-0.5">!</span>{w}
                   </li>
                 ))}
               </ul>
             </CardContent>
           </Card>
 
-          {/* Target Customers */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -77,7 +113,6 @@ export default function Diagnosis() {
             </CardContent>
           </Card>
 
-          {/* Differentiation */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -89,8 +124,7 @@ export default function Diagnosis() {
               <ul className="space-y-2">
                 {d.differentiationPoints.map((p, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
-                    <span className="text-primary mt-0.5">◆</span>
-                    {p}
+                    <span className="text-primary mt-0.5">◆</span>{p}
                   </li>
                 ))}
               </ul>
@@ -98,7 +132,6 @@ export default function Diagnosis() {
           </Card>
         </div>
 
-        {/* Bottlenecks */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>集客ボトルネック</CardTitle>
@@ -107,24 +140,19 @@ export default function Diagnosis() {
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {d.bottlenecks.map((b, i) => (
-                <Badge key={i} variant="secondary" className="text-sm py-1.5 px-3">
-                  {b}
-                </Badge>
+                <Badge key={i} variant="secondary" className="text-sm py-1.5 px-3">{b}</Badge>
               ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Actions */}
         <h2 className="text-xl font-bold text-foreground mb-4">今すぐやるべき施策 3つ</h2>
         <div className="space-y-4 mb-10">
           {d.actions.map((a, i) => (
             <Card key={i} className="border-l-4 border-l-primary">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-foreground text-sm font-bold">
-                    {i + 1}
-                  </span>
+                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-foreground text-sm font-bold">{i + 1}</span>
                   {a.name}
                 </CardTitle>
               </CardHeader>
@@ -149,11 +177,16 @@ export default function Diagnosis() {
           ))}
         </div>
 
-        <div className="text-center">
-          <Link to="/promo">
+        <div className="flex justify-center gap-4">
+          <Link to={`/promo/${id}`}>
             <Button size="lg" className="gap-2 text-base px-8">
-              販促文を作る
+              販促文を見る
               <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
+          <Link to={`/kpi/${id}`}>
+            <Button size="lg" variant="outline" className="gap-2 text-base px-8">
+              KPI設計を見る
             </Button>
           </Link>
         </div>

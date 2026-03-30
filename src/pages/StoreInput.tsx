@@ -10,7 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import Layout from "@/components/Layout";
-import { ArrowRight, Store } from "lucide-react";
+import { ArrowRight, Loader2, Store } from "lucide-react";
+import { createDiagnosis, runAIDiagnosis } from "@/lib/diagnosisService";
+import { toast } from "sonner";
 
 const mediaOptions = [
   "Googleビジネスプロフィール",
@@ -23,15 +25,15 @@ const mediaOptions = [
 ];
 
 const storeSchema = z.object({
-  storeName: z.string().trim().min(1, "店舗名を入力してください").max(100, "100文字以内で入力してください"),
-  industry: z.string().trim().min(1, "業種を入力してください").max(100, "100文字以内で入力してください"),
-  address: z.string().trim().min(1, "住所を入力してください").max(200, "200文字以内で入力してください"),
-  station: z.string().trim().max(100, "100文字以内で入力してください").optional().default(""),
-  target: z.string().trim().max(200, "200文字以内で入力してください").optional().default(""),
-  strengths: z.string().trim().max(500, "500文字以内で入力してください").optional().default(""),
-  concerns: z.string().trim().max(500, "500文字以内で入力してください").optional().default(""),
-  budget: z.string().trim().max(100, "100文字以内で入力してください").optional().default(""),
-  competitors: z.string().trim().max(500, "500文字以内で入力してください").optional().default(""),
+  storeName: z.string().trim().min(1, "店舗名を入力してください").max(100),
+  industry: z.string().trim().min(1, "業種を入力してください").max(100),
+  address: z.string().trim().min(1, "住所を入力してください").max(200),
+  station: z.string().trim().max(100).optional().default(""),
+  target: z.string().trim().max(200).optional().default(""),
+  strengths: z.string().trim().max(500).optional().default(""),
+  concerns: z.string().trim().max(500).optional().default(""),
+  budget: z.string().trim().max(100).optional().default(""),
+  competitors: z.string().trim().max(500).optional().default(""),
   media: z.array(z.string()).optional().default([]),
 });
 
@@ -39,25 +41,49 @@ type StoreFormValues = z.infer<typeof storeSchema>;
 
 export default function StoreInput() {
   const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<StoreFormValues>({
     resolver: zodResolver(storeSchema),
     defaultValues: {
-      storeName: "",
-      industry: "",
-      address: "",
-      station: "",
-      target: "",
-      strengths: "",
-      concerns: "",
-      budget: "",
-      competitors: "",
-      media: [],
+      storeName: "", industry: "", address: "", station: "", target: "",
+      strengths: "", concerns: "", budget: "", competitors: "", media: [],
     },
   });
 
-  const onSubmit = (_data: StoreFormValues) => {
-    navigate("/diagnosis");
+  const onSubmit = async (data: StoreFormValues) => {
+    setSubmitting(true);
+    try {
+      const diagnosis = await createDiagnosis({
+        store_name: data.storeName,
+        industry: data.industry,
+        address: data.address,
+        station: data.station || undefined,
+        target_audience: data.target || undefined,
+        strengths: data.strengths || undefined,
+        concerns: data.concerns || undefined,
+        budget: data.budget || undefined,
+        competitors: data.competitors || undefined,
+        media: data.media?.length ? data.media : undefined,
+      });
+
+      toast.info("AIが診断を開始しました…");
+
+      // Run all AI analyses in parallel
+      await Promise.all([
+        runAIDiagnosis(diagnosis.id, "diagnosis"),
+        runAIDiagnosis(diagnosis.id, "promo"),
+        runAIDiagnosis(diagnosis.id, "kpi"),
+      ]);
+
+      toast.success("診断が完了しました！");
+      navigate(`/diagnosis/${diagnosis.id}`);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "診断の開始に失敗しました");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -68,20 +94,14 @@ export default function StoreInput() {
             <Store className="w-4 h-4" />
             店舗情報入力
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-            店舗の情報を教えてください
-          </h1>
-          <p className="text-muted-foreground">
-            入力内容をもとに、AIが集客診断と施策を提案します。
-          </p>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">店舗の情報を教えてください</h1>
+          <p className="text-muted-foreground">入力内容をもとに、AIが集客診断と施策を提案します。</p>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>基本情報</CardTitle>
-            <CardDescription>
-              できるだけ詳しく入力いただくと、より精度の高い診断が可能です。
-            </CardDescription>
+            <CardDescription>できるだけ詳しく入力いただくと、より精度の高い診断が可能です。</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -93,7 +113,6 @@ export default function StoreInput() {
                     <FormMessage />
                   </FormItem>
                 )} />
-
                 <FormField control={form.control} name="industry" render={({ field }) => (
                   <FormItem>
                     <FormLabel>業種 <span className="text-destructive">*</span></FormLabel>
@@ -101,7 +120,6 @@ export default function StoreInput() {
                     <FormMessage />
                   </FormItem>
                 )} />
-
                 <FormField control={form.control} name="address" render={({ field }) => (
                   <FormItem>
                     <FormLabel>住所 <span className="text-destructive">*</span></FormLabel>
@@ -109,7 +127,6 @@ export default function StoreInput() {
                     <FormMessage />
                   </FormItem>
                 )} />
-
                 <FormField control={form.control} name="station" render={({ field }) => (
                   <FormItem>
                     <FormLabel>最寄駅</FormLabel>
@@ -117,7 +134,6 @@ export default function StoreInput() {
                     <FormMessage />
                   </FormItem>
                 )} />
-
                 <FormField control={form.control} name="target" render={({ field }) => (
                   <FormItem>
                     <FormLabel>ターゲット層</FormLabel>
@@ -125,7 +141,6 @@ export default function StoreInput() {
                     <FormMessage />
                   </FormItem>
                 )} />
-
                 <FormField control={form.control} name="strengths" render={({ field }) => (
                   <FormItem>
                     <FormLabel>店の強み</FormLabel>
@@ -133,7 +148,6 @@ export default function StoreInput() {
                     <FormMessage />
                   </FormItem>
                 )} />
-
                 <FormField control={form.control} name="concerns" render={({ field }) => (
                   <FormItem>
                     <FormLabel>現在の悩み</FormLabel>
@@ -141,7 +155,6 @@ export default function StoreInput() {
                     <FormMessage />
                   </FormItem>
                 )} />
-
                 <FormField control={form.control} name="budget" render={({ field }) => (
                   <FormItem>
                     <FormLabel>月の広告・販促予算</FormLabel>
@@ -149,7 +162,6 @@ export default function StoreInput() {
                     <FormMessage />
                   </FormItem>
                 )} />
-
                 <FormField control={form.control} name="competitors" render={({ field }) => (
                   <FormItem>
                     <FormLabel>競合店舗</FormLabel>
@@ -157,23 +169,17 @@ export default function StoreInput() {
                     <FormMessage />
                   </FormItem>
                 )} />
-
                 <FormField control={form.control} name="media" render={({ field }) => (
                   <FormItem>
                     <FormLabel>利用したい媒体（複数選択可）</FormLabel>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {mediaOptions.map((m) => (
-                        <label
-                          key={m}
-                          className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
-                        >
+                        <label key={m} className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
                           <Checkbox
                             checked={field.value?.includes(m)}
                             onCheckedChange={(checked) => {
                               const current = field.value ?? [];
-                              field.onChange(
-                                checked ? [...current, m] : current.filter((x) => x !== m)
-                              );
+                              field.onChange(checked ? [...current, m] : current.filter((x) => x !== m));
                             }}
                           />
                           <span className="text-sm">{m}</span>
@@ -184,9 +190,18 @@ export default function StoreInput() {
                   </FormItem>
                 )} />
 
-                <Button type="submit" size="lg" className="w-full gap-2 text-base">
-                  診断を開始する
-                  <ArrowRight className="w-4 h-4" />
+                <Button type="submit" size="lg" className="w-full gap-2 text-base" disabled={submitting}>
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      AIが分析中…（30秒ほどかかります）
+                    </>
+                  ) : (
+                    <>
+                      診断を開始する
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
                 </Button>
               </form>
             </Form>

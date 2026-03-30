@@ -1,18 +1,17 @@
 import { Link, useLocation } from "react-router-dom";
-import { BarChart3, FileText, Home, LayoutDashboard, MessageSquare, Target } from "lucide-react";
+import { BarChart3, FileText, Home, LayoutDashboard, LogIn, LogOut, MessageSquare, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
-  { to: "/", label: "トップ", icon: Home },
-  { to: "/input", label: "店舗入力", icon: FileText },
-  { to: "/diagnosis", label: "診断結果", icon: Target },
-  { to: "/promo", label: "販促文", icon: MessageSquare },
-  { to: "/kpi", label: "KPI設計", icon: BarChart3 },
-  { to: "/dashboard", label: "ダッシュボード", icon: LayoutDashboard },
+  { to: "/", label: "トップ", icon: Home, authRequired: false },
+  { to: "/input", label: "店舗入力", icon: FileText, authRequired: true },
+  { to: "/dashboard", label: "ダッシュボード", icon: LayoutDashboard, authRequired: true },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -25,18 +24,33 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <span className="hidden sm:inline">MapBoost AI</span>
           </Link>
           <nav className="flex items-center gap-1">
-            {navItems.map(({ to, label, icon: Icon }) => (
-              <Link key={to} to={to}>
-                <Button
-                  variant={location.pathname === to ? "secondary" : "ghost"}
-                  size="sm"
-                  className="text-xs sm:text-sm gap-1.5"
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className="hidden md:inline">{label}</span>
+            {navItems
+              .filter((item) => !item.authRequired || user)
+              .map(({ to, label, icon: Icon }) => (
+                <Link key={to} to={to}>
+                  <Button
+                    variant={location.pathname === to ? "secondary" : "ghost"}
+                    size="sm"
+                    className="text-xs sm:text-sm gap-1.5"
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="hidden md:inline">{label}</span>
+                  </Button>
+                </Link>
+              ))}
+            {user ? (
+              <Button variant="ghost" size="sm" className="text-xs sm:text-sm gap-1.5" onClick={signOut}>
+                <LogOut className="w-4 h-4" />
+                <span className="hidden md:inline">ログアウト</span>
+              </Button>
+            ) : (
+              <Link to="/auth">
+                <Button variant="ghost" size="sm" className="text-xs sm:text-sm gap-1.5">
+                  <LogIn className="w-4 h-4" />
+                  <span className="hidden md:inline">ログイン</span>
                 </Button>
               </Link>
-            ))}
+            )}
           </nav>
         </div>
       </header>
