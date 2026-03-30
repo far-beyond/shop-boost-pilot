@@ -14,7 +14,93 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      diagnoses: {
+        Row: {
+          address: string
+          budget: string | null
+          competitors: string | null
+          concerns: string | null
+          created_at: string
+          diagnosis_result: Json | null
+          id: string
+          industry: string
+          kpi_plan: Json | null
+          media: string[] | null
+          promo_texts: Json | null
+          station: string | null
+          status: string
+          store_name: string
+          strengths: string | null
+          target_audience: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          budget?: string | null
+          competitors?: string | null
+          concerns?: string | null
+          created_at?: string
+          diagnosis_result?: Json | null
+          id?: string
+          industry: string
+          kpi_plan?: Json | null
+          media?: string[] | null
+          promo_texts?: Json | null
+          station?: string | null
+          status?: string
+          store_name: string
+          strengths?: string | null
+          target_audience?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          budget?: string | null
+          competitors?: string | null
+          concerns?: string | null
+          created_at?: string
+          diagnosis_result?: Json | null
+          id?: string
+          industry?: string
+          kpi_plan?: Json | null
+          media?: string[] | null
+          promo_texts?: Json | null
+          station?: string | null
+          status?: string
+          store_name?: string
+          strengths?: string | null
+          target_audience?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
