@@ -178,7 +178,11 @@ export default function Diagnosis() {
           ))}
         </div>
 
-        <div className="flex justify-center gap-4">
+        <div className="flex flex-wrap justify-center gap-4">
+          <Button size="lg" variant="outline" className="gap-2 text-base px-8" onClick={() => exportDiagnosisPDF(diagnosis)}>
+            <Download className="w-4 h-4" />
+            PDF出力
+          </Button>
           <Link to={`/promo/${id}`}>
             <Button size="lg" className="gap-2 text-base px-8">
               販促文を見る
