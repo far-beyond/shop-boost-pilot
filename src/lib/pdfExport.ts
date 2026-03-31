@@ -2,76 +2,135 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { DiagnosisRow, DiagnosisResult, KPIPlan } from "./diagnosisService";
 
-export function exportDiagnosisPDF(diagnosis: DiagnosisRow) {
+let fontLoaded = false;
+let fontBase64 = "";
+
+async function loadJapaneseFont(doc: jsPDF) {
+  if (!fontLoaded) {
+    const res = await fetch(
+      "https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.18/files/noto-sans-jp-japanese-400-normal.woff"
+    );
+    const buf = await res.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let binary = "";
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    fontBase64 = btoa(binary);
+    fontLoaded = true;
+  }
+  doc.addFileToVFS("NotoSansJP-Regular.woff", fontBase64);
+  doc.addFont("NotoSansJP-Regular.woff", "NotoSansJP", "normal");
+  doc.setFont("NotoSansJP");
+}
+
+const BLUE: [number, number, number] = [41, 121, 255];
+const LIGHT_BG: [number, number, number] = [245, 248, 255];
+const GRAY: [number, number, number] = [120, 130, 145];
+
+function drawSectionHeader(doc: jsPDF, title: string, y: number): number {
+  doc.setFillColor(...BLUE);
+  doc.roundedRect(14, y - 5, 4, 18, 2, 2, "F");
+  doc.setFontSize(14);
+  doc.setTextColor(30, 30, 50);
+  doc.text(title, 22, y + 6);
+  return y + 18;
+}
+
+function checkPageBreak(doc: jsPDF, y: number, needed: number): number {
+  if (y + needed > 275) {
+    doc.addPage();
+    return 20;
+  }
+  return y;
+}
+
+export async function exportDiagnosisPDF(diagnosis: DiagnosisRow) {
   const doc = new jsPDF({ putOnlyUsedFonts: true });
+  await loadJapaneseFont(doc);
+
   const d = diagnosis.diagnosis_result as DiagnosisResult | null;
   const kpi = diagnosis.kpi_plan as KPIPlan | null;
+  const pageW = doc.internal.pageSize.getWidth();
 
-  let y = 20;
+  // ─── Title bar ───
+  doc.setFillColor(...BLUE);
+  doc.rect(0, 0, pageW, 40, "F");
+  doc.setFontSize(20);
+  doc.setTextColor(255);
+  doc.text(`${diagnosis.store_name}`, 14, 18);
+  doc.setFontSize(11);
+  doc.text("AI集客診断レポート", 14, 28);
 
-  // Title
-  doc.setFontSize(18);
-  doc.text(`${diagnosis.store_name} - AI Diagnosis Report`, 14, y);
-  y += 10;
-  doc.setFontSize(10);
-  doc.setTextColor(120);
-  doc.text(`Industry: ${diagnosis.industry} | Address: ${diagnosis.address}`, 14, y);
-  doc.text(`Generated: ${new Date(diagnosis.created_at).toLocaleDateString("ja-JP")}`, 14, y + 5);
-  doc.setTextColor(0);
-  y += 15;
+  // Meta
+  doc.setFontSize(9);
+  doc.setTextColor(...GRAY);
+  const meta = `業種: ${diagnosis.industry}  |  住所: ${diagnosis.address}  |  作成日: ${new Date(diagnosis.created_at).toLocaleDateString("ja-JP")}`;
+  doc.text(meta, 14, 50);
+
+  let y = 62;
 
   if (d) {
-    // Strengths
-    doc.setFontSize(13);
-    doc.text("Strengths", 14, y);
-    y += 6;
+    // ─── 強み ───
+    y = drawSectionHeader(doc, "店舗の強み", y);
     doc.setFontSize(10);
+    doc.setTextColor(40, 40, 60);
     d.strengths.forEach((s) => {
-      doc.text(`• ${s}`, 18, y);
-      y += 5;
+      y = checkPageBreak(doc, y, 7);
+      doc.text(`✓  ${s}`, 22, y);
+      y += 6;
     });
-    y += 4;
-
-    // Weaknesses
-    doc.setFontSize(13);
-    doc.text("Weaknesses", 14, y);
     y += 6;
+
+    // ─── 弱み ───
+    y = checkPageBreak(doc, y, 30);
+    y = drawSectionHeader(doc, "弱み・課題", y);
     doc.setFontSize(10);
     d.weaknesses.forEach((w) => {
-      doc.text(`• ${w}`, 18, y);
-      y += 5;
+      y = checkPageBreak(doc, y, 7);
+      doc.text(`!  ${w}`, 22, y);
+      y += 6;
     });
-    y += 4;
-
-    // Target Customers
-    doc.setFontSize(13);
-    doc.text("Target Customers", 14, y);
     y += 6;
+
+    // ─── 狙うべき客層 ───
+    y = checkPageBreak(doc, y, 30);
+    y = drawSectionHeader(doc, "狙うべき客層", y);
     doc.setFontSize(10);
-    const targetLines = doc.splitTextToSize(d.targetCustomers, 175);
-    doc.text(targetLines, 18, y);
-    y += targetLines.length * 5 + 4;
+    const targetLines = doc.splitTextToSize(d.targetCustomers, 165);
+    doc.text(targetLines, 22, y);
+    y += targetLines.length * 5.5 + 6;
 
-    // Differentiation
-    doc.setFontSize(13);
-    doc.text("Differentiation Points", 14, y);
-    y += 6;
+    // ─── 差別化ポイント ───
+    y = checkPageBreak(doc, y, 30);
+    y = drawSectionHeader(doc, "差別化ポイント", y);
     doc.setFontSize(10);
     d.differentiationPoints.forEach((p) => {
-      doc.text(`• ${p}`, 18, y);
-      y += 5;
+      y = checkPageBreak(doc, y, 7);
+      doc.text(`◆  ${p}`, 22, y);
+      y += 6;
     });
-    y += 4;
+    y += 6;
 
-    // Actions table
+    // ─── ボトルネック ───
+    y = checkPageBreak(doc, y, 30);
+    y = drawSectionHeader(doc, "集客ボトルネック", y);
+    doc.setFontSize(10);
+    d.bottlenecks.forEach((b) => {
+      y = checkPageBreak(doc, y, 7);
+      doc.text(`▸  ${b}`, 22, y);
+      y += 6;
+    });
+    y += 6;
+
+    // ─── 施策テーブル ───
     if (d.actions.length > 0) {
-      doc.setFontSize(13);
-      doc.text("Recommended Actions", 14, y);
-      y += 4;
+      y = checkPageBreak(doc, y, 50);
+      y = drawSectionHeader(doc, "今すぐやるべき施策", y);
 
       autoTable(doc, {
         startY: y,
-        head: [["#", "Action", "Cost", "Difficulty", "Effect"]],
+        head: [["#", "施策名", "概算コスト", "難易度", "効果の目安"]],
         body: d.actions.map((a, i) => [
           String(i + 1),
           `${a.name}\n${a.reason}`,
@@ -79,35 +138,41 @@ export function exportDiagnosisPDF(diagnosis: DiagnosisRow) {
           a.difficulty,
           a.expectedEffect,
         ]),
-        styles: { fontSize: 8, cellPadding: 2 },
-        headStyles: { fillColor: [41, 121, 255] },
-        columnStyles: { 1: { cellWidth: 70 } },
-        margin: { left: 14 },
+        styles: { font: "NotoSansJP", fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: BLUE, font: "NotoSansJP" },
+        alternateRowStyles: { fillColor: LIGHT_BG },
+        columnStyles: { 1: { cellWidth: 65 } },
+        margin: { left: 14, right: 14 },
       });
 
-      y = (doc as any).lastAutoTable.finalY + 10;
+      y = (doc as any).lastAutoTable.finalY + 12;
     }
   }
 
-  // KPI table
+  // ─── KPIテーブル ───
   if (kpi?.kpis?.length) {
-    if (y > 240) {
-      doc.addPage();
-      y = 20;
-    }
-    doc.setFontSize(13);
-    doc.text("KPI Plan", 14, y);
-    y += 4;
+    y = checkPageBreak(doc, y, 50);
+    y = drawSectionHeader(doc, "KPI設計", y);
 
     autoTable(doc, {
       startY: y,
-      head: [["Metric", "Target", "Measurement", "Frequency"]],
+      head: [["指標名", "目標値", "測定方法", "確認頻度"]],
       body: kpi.kpis.map((k) => [k.metric, k.target, k.measurement, k.frequency]),
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [41, 121, 255] },
-      margin: { left: 14 },
+      styles: { font: "NotoSansJP", fontSize: 8, cellPadding: 3 },
+      headStyles: { fillColor: BLUE, font: "NotoSansJP" },
+      alternateRowStyles: { fillColor: LIGHT_BG },
+      margin: { left: 14, right: 14 },
     });
   }
 
-  doc.save(`${diagnosis.store_name}_diagnosis.pdf`);
+  // ─── Footer on each page ───
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(...GRAY);
+    doc.text(`MapBoost AI  |  ページ ${i} / ${totalPages}`, pageW / 2, 290, { align: "center" });
+  }
+
+  doc.save(`${diagnosis.store_name}_診断レポート.pdf`);
 }
