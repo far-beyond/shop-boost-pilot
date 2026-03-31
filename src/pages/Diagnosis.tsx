@@ -1,11 +1,12 @@
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, AlertTriangle, CheckCircle2, Target, TrendingUp, Users, Loader2 } from "lucide-react";
+import { ArrowRight, AlertTriangle, CheckCircle2, Target, TrendingUp, Users, Loader2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Layout from "@/components/Layout";
 import { getDiagnosis, type DiagnosisResult } from "@/lib/diagnosisService";
+import { exportDiagnosisPDF } from "@/lib/pdfExport";
 
 export default function Diagnosis() {
   const { id } = useParams<{ id: string }>();
