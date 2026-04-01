@@ -1,12 +1,22 @@
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, AlertTriangle, CheckCircle2, Target, TrendingUp, Users, Loader2, Download } from "lucide-react";
+import { ArrowRight, AlertTriangle, CheckCircle2, Target, TrendingUp, Users, Loader2, Download, BarChart3, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Layout from "@/components/Layout";
 import { getDiagnosis, type DiagnosisResult } from "@/lib/diagnosisService";
 import { exportDiagnosisPDF } from "@/lib/pdfExport";
+import { motion } from "framer-motion";
+
+const fadeUp = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+};
+
+const stagger = {
+  animate: { transition: { staggerChildren: 0.08 } },
+};
 
 export default function Diagnosis() {
   const { id } = useParams<{ id: string }>();
@@ -51,149 +61,204 @@ export default function Diagnosis() {
     );
   }
 
+  const analysisCards = [
+    {
+      icon: CheckCircle2,
+      iconClass: "text-accent",
+      bgClass: "bg-accent/10",
+      title: "店舗の強み",
+      items: d.strengths,
+      marker: "✓",
+      markerClass: "text-accent",
+    },
+    {
+      icon: AlertTriangle,
+      iconClass: "text-destructive",
+      bgClass: "bg-destructive/10",
+      title: "弱み・課題",
+      items: d.weaknesses,
+      marker: "!",
+      markerClass: "text-destructive",
+    },
+    {
+      icon: Users,
+      iconClass: "text-primary",
+      bgClass: "bg-primary/10",
+      title: "狙うべき客層",
+      content: d.targetCustomers,
+    },
+    {
+      icon: TrendingUp,
+      iconClass: "text-primary",
+      bgClass: "bg-primary/10",
+      title: "差別化ポイント",
+      items: d.differentiationPoints,
+      marker: "◆",
+      markerClass: "text-primary",
+    },
+  ];
+
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-4">
-            <Target className="w-4 h-4" />
-            診断結果
-          </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-            {diagnosis.store_name}の集客診断
-          </h1>
-          <p className="text-muted-foreground">AIが分析した結果をもとに、最適な施策を提案します。</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <CheckCircle2 className="w-5 h-5 text-accent" />
-                店舗の強み
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {d.strengths.map((s, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <span className="text-accent mt-0.5">✓</span>{s}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <AlertTriangle className="w-5 h-5 text-destructive" />
-                弱み・課題
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {d.weaknesses.map((w, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <span className="text-destructive mt-0.5">!</span>{w}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Users className="w-5 h-5 text-primary" />
-                狙うべき客層
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">{d.targetCustomers}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                差別化ポイント
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {d.differentiationPoints.map((p, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <span className="text-primary mt-0.5">◆</span>{p}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>集客ボトルネック</CardTitle>
-            <CardDescription>現在の集客を妨げている主な要因</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {d.bottlenecks.map((b, i) => (
-                <Badge key={i} variant="secondary" className="text-sm py-1.5 px-3">{b}</Badge>
-              ))}
+      <div className="min-h-[80vh]" style={{ background: "var(--gradient-hero)" }}>
+        <div className="container mx-auto px-4 py-8 sm:py-12 max-w-4xl">
+          {/* Header */}
+          <motion.div className="text-center mb-8 sm:mb-10" {...fadeUp}>
+            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary mb-3">
+              <Target className="w-3.5 h-3.5" />
+              診断結果
             </div>
-          </CardContent>
-        </Card>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+              {diagnosis.store_name}の集客診断
+            </h1>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              AIが分析した結果をもとに、最適な施策を提案します。
+            </p>
+          </motion.div>
 
-        <h2 className="text-xl font-bold text-foreground mb-4">今すぐやるべき施策 3つ</h2>
-        <div className="space-y-4 mb-10">
-          {d.actions.map((a, i) => (
-            <Card key={i} className="border-l-4 border-l-primary">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary text-primary-foreground text-sm font-bold">{i + 1}</span>
-                  {a.name}
+          {/* Analysis Grid */}
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8"
+            variants={stagger}
+            initial="initial"
+            animate="animate"
+          >
+            {analysisCards.map((card, idx) => {
+              const Icon = card.icon;
+              return (
+                <motion.div key={idx} variants={fadeUp}>
+                  <Card className="h-full border-border/60 shadow-sm hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-2 sm:pb-3">
+                      <CardTitle className="flex items-center gap-2.5 text-base sm:text-lg">
+                        <div className={`w-8 h-8 rounded-lg ${card.bgClass} flex items-center justify-center shrink-0`}>
+                          <Icon className={`w-4 h-4 ${card.iconClass}`} />
+                        </div>
+                        {card.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {card.content ? (
+                        <p className="text-sm text-muted-foreground leading-relaxed">{card.content}</p>
+                      ) : (
+                        <ul className="space-y-1.5">
+                          {card.items?.map((item, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm leading-relaxed">
+                              <span className={`${card.markerClass} mt-0.5 shrink-0 font-medium`}>{card.marker}</span>
+                              <span className="text-foreground/80">{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+
+          {/* Bottlenecks */}
+          <motion.div {...fadeUp} transition={{ delay: 0.3 }}>
+            <Card className="mb-6 sm:mb-8 border-border/60 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2.5 text-base sm:text-lg">
+                  <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
+                    <BarChart3 className="w-4 h-4 text-destructive" />
+                  </div>
+                  集客ボトルネック
                 </CardTitle>
+                <CardDescription className="pl-10">現在の集客を妨げている主な要因</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">{a.reason}</p>
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground block mb-1">概算コスト</span>
-                    <span className="font-medium">{a.estimatedCost}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block mb-1">難易度</span>
-                    <span className="font-medium">{a.difficulty}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block mb-1">効果の目安</span>
-                    <span className="font-medium">{a.expectedEffect}</span>
-                  </div>
+                <div className="flex flex-wrap gap-2">
+                  {d.bottlenecks.map((b, i) => (
+                    <Badge key={i} variant="secondary" className="text-xs sm:text-sm py-1 sm:py-1.5 px-2.5 sm:px-3 rounded-lg font-normal">
+                      {b}
+                    </Badge>
+                  ))}
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
+          </motion.div>
 
-        <div className="flex flex-wrap justify-center gap-4">
-          <Button size="lg" variant="outline" className="gap-2 text-base px-8" onClick={() => exportDiagnosisPDF(diagnosis)}>
-            <Download className="w-4 h-4" />
-            PDF出力
-          </Button>
-          <Link to={`/promo/${id}`}>
-            <Button size="lg" className="gap-2 text-base px-8">
-              販促文を見る
-              <ArrowRight className="w-4 h-4" />
+          {/* Actions */}
+          <motion.div {...fadeUp} transition={{ delay: 0.4 }}>
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--gradient-primary)" }}>
+                <Zap className="w-4 h-4 text-primary-foreground" />
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold text-foreground">今すぐやるべき施策</h2>
+            </div>
+
+            <div className="space-y-3 sm:space-y-4 mb-8 sm:mb-10">
+              {d.actions.map((a, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 + i * 0.1 }}
+                >
+                  <Card className="border-border/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                    <div className="flex">
+                      <div className="w-1.5 shrink-0" style={{ background: "var(--gradient-primary)" }} />
+                      <div className="flex-1">
+                        <CardHeader className="pb-2 pt-4 sm:pt-5 px-4 sm:px-6">
+                          <CardTitle className="text-base sm:text-lg flex items-center gap-2.5">
+                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold text-primary-foreground shrink-0" style={{ background: "var(--gradient-primary)" }}>
+                              {i + 1}
+                            </span>
+                            {a.name}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="px-4 sm:px-6 pb-4 sm:pb-5">
+                          <p className="text-sm text-muted-foreground mb-3 sm:mb-4 leading-relaxed">{a.reason}</p>
+                          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                            {[
+                              { label: "概算コスト", value: a.estimatedCost },
+                              { label: "難易度", value: a.difficulty },
+                              { label: "効果の目安", value: a.expectedEffect },
+                            ].map((metric) => (
+                              <div key={metric.label} className="rounded-lg bg-muted/50 p-2 sm:p-3 text-center">
+                                <span className="text-[10px] sm:text-xs text-muted-foreground block mb-0.5">{metric.label}</span>
+                                <span className="text-xs sm:text-sm font-semibold text-foreground">{metric.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* CTA Buttons */}
+          <motion.div
+            className="flex flex-col sm:flex-row flex-wrap justify-center gap-3"
+            {...fadeUp}
+            transition={{ delay: 0.7 }}
+          >
+            <Button
+              size="lg"
+              variant="outline"
+              className="gap-2 text-sm sm:text-base px-6 sm:px-8 w-full sm:w-auto shadow-sm"
+              onClick={() => exportDiagnosisPDF(diagnosis)}
+            >
+              <Download className="w-4 h-4" />
+              PDF出力
             </Button>
-          </Link>
-          <Link to={`/kpi/${id}`}>
-            <Button size="lg" variant="outline" className="gap-2 text-base px-8">
-              KPI設計を見る
-            </Button>
-          </Link>
+            <Link to={`/promo/${id}`} className="w-full sm:w-auto">
+              <Button size="lg" className="gap-2 text-sm sm:text-base px-6 sm:px-8 w-full shadow-sm">
+                販促文を見る
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </Link>
+            <Link to={`/kpi/${id}`} className="w-full sm:w-auto">
+              <Button size="lg" variant="outline" className="gap-2 text-sm sm:text-base px-6 sm:px-8 w-full shadow-sm">
+                KPI設計を見る
+              </Button>
+            </Link>
+          </motion.div>
         </div>
       </div>
     </Layout>
