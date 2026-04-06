@@ -17,6 +17,7 @@ import {
 } from "@/lib/mapAreaService";
 import {
   generateTownPolygons,
+  resolvePolygonNames,
   getHeatmapColor,
   getHeatmapValue,
   calculateFlyerSelection,
