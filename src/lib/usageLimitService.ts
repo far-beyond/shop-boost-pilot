@@ -1,6 +1,18 @@
 import { supabase } from "@/integrations/supabase/client";
 
-const FREE_MONTHLY_LIMIT = 3;
+const DEFAULT_FREE_MONTHLY_LIMIT = 10;
+
+async function getFreeMonthlyLimit(): Promise<number> {
+  try {
+    const { data } = await supabase
+      .from("plan_settings")
+      .select("setting_value")
+      .eq("setting_key", "free_monthly_limit")
+      .maybeSingle();
+    if (data?.setting_value) return parseInt(data.setting_value, 10) || DEFAULT_FREE_MONTHLY_LIMIT;
+  } catch {}
+  return DEFAULT_FREE_MONTHLY_LIMIT;
+}
 
 export async function checkUsageLimit(): Promise<{
   allowed: boolean;
@@ -38,10 +50,11 @@ export async function checkUsageLimit(): Promise<{
     .maybeSingle();
 
   const used = usage?.usage_count || 0;
+  const limit = await getFreeMonthlyLimit();
   return {
-    allowed: used < FREE_MONTHLY_LIMIT,
+    allowed: used < limit,
     used,
-    limit: FREE_MONTHLY_LIMIT,
+    limit,
     isWhitelisted: false,
   };
 }
