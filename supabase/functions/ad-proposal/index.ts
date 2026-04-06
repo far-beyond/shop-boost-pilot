@@ -108,14 +108,29 @@ const toolDef = {
   },
 };
 
-function buildPrompt(address: string, industry: string, budget: string, target: string, storeName: string) {
-  const system = `あなたは日本のデジタル広告（Google広告・Meta広告）の戦略プランナーAIです。
+function buildPrompt(address: string, industry: string, budget: string, target: string, storeName: string, isEn = false) {
+  const system = isEn
+    ? `You are an expert digital advertising strategy planner AI (Google Ads & Meta Ads). Design optimal ad plans for local physical stores. Provide realistic proposals based on local market rates. Write ad copy in natural, compelling language. Always respond in English.`
+    : `あなたは日本のデジタル広告（Google広告・Meta広告）の戦略プランナーAIです。
 地域の実店舗向けに最適な広告プランを設計します。
 日本のリスティング広告・SNS広告の相場に基づいた現実的な提案を行ってください。
 広告コピーは日本の消費者に刺さる自然な日本語で作成してください。
 必ず日本語で回答してください。`;
 
-  const user = `以下の条件で広告提案を作成してください。
+  const user = isEn
+    ? `Please create an advertising proposal with the following conditions.
+
+Store Location: ${address}
+${storeName ? `Store Name: ${storeName}` : ""}
+Industry: ${industry}
+${budget ? `Monthly Ad Budget: ${budget}` : "Budget: Not specified (please provide optimal suggestions)"}
+${target ? `Target Audience: ${target}` : ""}
+
+Include:
+1. Google Ads plan: campaign type, recommended keywords (10+), ad copy (3 patterns), estimated CPC/CTR/CPA
+2. Meta Ads (Instagram/Facebook) plan: objective, targeting (3 patterns), ad creative concepts (3 patterns), estimated CPM/CTR
+3. Overall strategy: recommended platform, budget allocation, expected ROAS, operation tips`
+    : `以下の条件で広告提案を作成してください。
 
 店舗所在地: ${address}
 ${storeName ? `店舗名: ${storeName}` : ""}
@@ -142,7 +157,8 @@ serve(async (req) => {
       });
     }
 
-    const { address, industry, budget, target, storeName } = await req.json();
+    const { address, industry, budget, target, storeName, language } = await req.json();
+    const isEn = language === "en";
 
     if (!address || !industry) {
       return new Response(JSON.stringify({ error: "住所と業種は必須です" }), {
@@ -150,7 +166,7 @@ serve(async (req) => {
       });
     }
 
-    const { system, user } = buildPrompt(address, industry, budget || "", target || "", storeName || "");
+    const { system, user } = buildPrompt(address, industry, budget || "", target || "", storeName || "", isEn);
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

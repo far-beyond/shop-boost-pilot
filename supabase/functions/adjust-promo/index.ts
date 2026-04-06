@@ -27,7 +27,8 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const { text, tone } = await req.json();
+    const { text, tone, language } = await req.json();
+    const isEn = language === "en";
 
     if (!text || typeof text !== "string") {
       return new Response(JSON.stringify({ error: "text is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -43,11 +44,23 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "AI API key not configured" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const toneInstructions: Record<string, string> = {
-      soft: "以下の販促文をもっとやわらかく、親しみやすいトーンに書き換えてください。意味は変えないでください。",
-      strong: "以下の販促文をもっと力強く、インパクトのあるトーンに書き換えてください。意味は変えないでください。",
-      alternative: "以下の販促文とは別のアプローチで、同じ商品・サービスの魅力を伝える新しい販促文を作成してください。",
+    const toneInstructions: Record<string, Record<string, string>> = {
+      ja: {
+        soft: "以下の販促文をもっとやわらかく、親しみやすいトーンに書き換えてください。意味は変えないでください。",
+        strong: "以下の販促文をもっと力強く、インパクトのあるトーンに書き換えてください。意味は変えないでください。",
+        alternative: "以下の販促文とは別のアプローチで、同じ商品・サービスの魅力を伝える新しい販促文を作成してください。",
+      },
+      en: {
+        soft: "Rewrite the following promotional text in a softer, friendlier tone. Keep the meaning the same.",
+        strong: "Rewrite the following promotional text in a stronger, more impactful tone. Keep the meaning the same.",
+        alternative: "Create a new promotional text using a different approach to convey the appeal of the same product/service.",
+      },
     };
+
+    const lang = isEn ? "en" : "ja";
+    const sysMsg = isEn
+      ? "You are a marketing copywriter for physical retail stores. Adjust the promotional text as instructed. Return only the resulting text. No explanations or preambles."
+      : "あなたは日本の実店舗向けマーケティングコピーライターです。指示に従って販促文を調整してください。結果のテキストのみ返してください。説明や前置きは不要です。";
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -58,8 +71,8 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "あなたは日本の実店舗向けマーケティングコピーライターです。指示に従って販促文を調整してください。結果のテキストのみ返してください。説明や前置きは不要です。" },
-          { role: "user", content: `${toneInstructions[tone]}\n\n元の文:\n${text}` },
+          { role: "system", content: sysMsg },
+          { role: "user", content: `${toneInstructions[lang][tone]}\n\n${isEn ? "Original text" : "元の文"}:\n${text}` },
         ],
       }),
     });
