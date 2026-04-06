@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   Megaphone, Loader2, Search, Copy, Check, Target, TrendingUp,
-  DollarSign, Users, Lightbulb, MousePointerClick,
+  DollarSign, Users, Lightbulb, MousePointerClick, FileDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -137,10 +137,22 @@ export default function AdProposal() {
                   <label className="text-sm font-medium text-foreground">ターゲット層（任意）</label>
                   <Textarea placeholder="例: 30〜40代の子育て世帯、近隣のオフィスワーカー" value={target} onChange={(e) => setTarget(e.target.value)} rows={2} />
                 </div>
-                <Button onClick={runProposal} disabled={loading} className="w-full sm:w-auto gap-2">
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                  {loading ? "提案生成中..." : "AIで広告提案を作成"}
-                </Button>
+                <div className="flex gap-2 flex-wrap">
+                  <Button onClick={runProposal} disabled={loading} className="gap-2">
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                    {loading ? "提案生成中..." : "AIで広告提案を作成"}
+                  </Button>
+                  {result && (
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() => exportAdProposalPDF(result, { storeName, address, industry })}
+                    >
+                      <FileDown className="w-4 h-4" />
+                      PDFダウンロード
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </motion.div>
