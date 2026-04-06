@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   MapPin, Loader2, Search, Target, TrendingUp, Shield, AlertTriangle,
   Crown, Building2, Megaphone, Newspaper, Users, ChevronRight, Star, FileDown,

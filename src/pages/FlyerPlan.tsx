@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Newspaper, MapPin, Loader2, Search, Copy, Check, Lightbulb,
   CalendarDays, DollarSign, Target, TrendingUp, FileText, Megaphone, Download,

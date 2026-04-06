@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { MapPin, Users, Home, TrendingUp, Loader2, Search, Building2, AlertTriangle, CheckCircle2, BarChart3, Database, Sparkles, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
