@@ -878,6 +878,11 @@ const translations: Record<Language, Record<string, string>> = {
     "map.censusWorldpop": "WorldPop推計",
     "map.estimateOverseas": "推定データ（海外）",
     "map.aiEstimate": "AI推定",
+    "map.avgAge": "平均年齢",
+    "map.ageUnit": "歳",
+    "map.industryLabel": "業種",
+    "map.distanceLabel": "距離",
+    "map.points": "点",
   },
   en: {
     // Nav & Layout
@@ -1748,6 +1753,11 @@ const translations: Record<Language, Record<string, string>> = {
     "map.censusWorldpop": "WorldPop Est.",
     "map.estimateOverseas": "Estimated (Overseas)",
     "map.aiEstimate": "AI Estimate",
+    "map.avgAge": "Avg. Age",
+    "map.ageUnit": "",
+    "map.industryLabel": "Industry",
+    "map.distanceLabel": "Distance",
+    "map.points": "pts",
   },
 };
 
