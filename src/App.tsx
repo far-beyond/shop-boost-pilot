@@ -15,6 +15,10 @@ import AreaAnalysis from "./pages/AreaAnalysis";
 import FlyerPlan from "./pages/FlyerPlan";
 import AdProposal from "./pages/AdProposal";
 import LocationMatch from "./pages/LocationMatch";
+import StoreCandidateInput from "./pages/StoreCandidateInput";
+import MediaPlan from "./pages/MediaPlan";
+import AgencyDashboard from "./pages/AgencyDashboard";
+import Report from "./pages/Report";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +43,10 @@ const AppRoutes = () => (
     <Route path="/flyer-plan" element={<ProtectedRoute><FlyerPlan /></ProtectedRoute>} />
     <Route path="/ad-proposal" element={<ProtectedRoute><AdProposal /></ProtectedRoute>} />
     <Route path="/location-match" element={<ProtectedRoute><LocationMatch /></ProtectedRoute>} />
+    <Route path="/store-candidates" element={<ProtectedRoute><StoreCandidateInput /></ProtectedRoute>} />
+    <Route path="/media-plan" element={<ProtectedRoute><MediaPlan /></ProtectedRoute>} />
+    <Route path="/agency" element={<ProtectedRoute><AgencyDashboard /></ProtectedRoute>} />
+    <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
     {/* Legacy routes redirect */}
     <Route path="/diagnosis" element={<Navigate to="/dashboard" replace />} />
     <Route path="/promo" element={<Navigate to="/dashboard" replace />} />

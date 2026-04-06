@@ -1,17 +1,29 @@
 import { Link, useLocation } from "react-router-dom";
-import { FileText, Home, LayoutDashboard, LogIn, LogOut, MapPin, Megaphone, Newspaper, Target, Compass } from "lucide-react";
+import {
+  FileText, Home, LayoutDashboard, LogIn, LogOut, MapPin,
+  Megaphone, Newspaper, Target, Compass, Building2, BarChart3,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { motion } from "framer-motion";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
-const navItems = [
+const mainNavItems = [
   { to: "/", label: "トップ", icon: Home, authRequired: false },
-  { to: "/input", label: "店舗入力", icon: FileText, authRequired: true },
-  { to: "/area-analysis", label: "地域分析", icon: MapPin, authRequired: true },
-  { to: "/flyer-plan", label: "チラシ設計", icon: Newspaper, authRequired: true },
-  { to: "/ad-proposal", label: "広告提案", icon: Megaphone, authRequired: true },
+  { to: "/area-analysis", label: "商圏分析", icon: MapPin, authRequired: true },
+  { to: "/media-plan", label: "媒体プラン", icon: Megaphone, authRequired: true },
   { to: "/location-match", label: "エリア適性", icon: Compass, authRequired: true },
-  { to: "/dashboard", label: "ダッシュボード", icon: LayoutDashboard, authRequired: true },
+  { to: "/agency", label: "案件管理", icon: LayoutDashboard, authRequired: true },
+];
+
+const moreItems = [
+  { to: "/store-candidates", label: "出店候補地", icon: Building2 },
+  { to: "/input", label: "店舗入力（診断）", icon: FileText },
+  { to: "/ad-proposal", label: "広告提案", icon: Target },
+  { to: "/flyer-plan", label: "チラシ設計", icon: Newspaper },
+  { to: "/report", label: "統合レポート", icon: BarChart3 },
+  { to: "/dashboard", label: "診断一覧", icon: LayoutDashboard },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -29,7 +41,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <span className="hidden sm:inline tracking-tight">MapBoost AI</span>
           </Link>
           <nav className="flex items-center gap-0.5">
-            {navItems
+            {mainNavItems
               .filter((item) => !item.authRequired || user)
               .map(({ to, label, icon: Icon }) => {
                 const isActive = location.pathname === to;
@@ -50,6 +62,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   </Link>
                 );
               })}
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground rounded-lg">
+                    <BarChart3 className="w-4 h-4" />
+                    <span className="hidden md:inline ml-1.5">その他</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  {moreItems.map(({ to, label, icon: Icon }) => (
+                    <DropdownMenuItem key={to} asChild>
+                      <Link to={to} className="flex items-center gap-2 cursor-pointer">
+                        <Icon className="w-4 h-4" />
+                        {label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             {user ? (
               <Button
                 variant="ghost"
@@ -77,7 +109,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <footer className="border-t border-border/60 bg-card/50 py-8 mt-auto">
         <div className="container mx-auto px-4 text-center text-xs text-muted-foreground space-y-1">
           <p className="font-medium">© 2024 MapBoost AI</p>
-          <p>マップ連動型 店舗集客AI — 日本の実店舗オーナーのための集客支援サービス</p>
+          <p>ローカルマーケティング分析ツール — 地域分析・出店分析・広告提案・チラシ配布設計</p>
         </div>
       </footer>
     </div>
