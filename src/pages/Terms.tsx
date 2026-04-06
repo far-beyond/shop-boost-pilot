@@ -2,7 +2,7 @@ import Layout from "@/components/Layout";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Terms() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const sections = [
     { title: t("terms.s1.title"), body: t("terms.s1.body") },
