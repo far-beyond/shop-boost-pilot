@@ -317,7 +317,9 @@ serve(async (req) => {
         totalHouseholds: census.totalHouseholds,
         ageDistribution: census.ageDistribution,
       } : null,
-      dataSource: census ? "e-Stat国勢調査 + AI分析" : "AI推定分析",
+      dataSource: census
+        ? (isEn ? "e-Stat Census + AI Analysis" : "e-Stat国勢調査 + AI分析")
+        : (isEn ? "AI Estimated Analysis" : "AI推定分析"),
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

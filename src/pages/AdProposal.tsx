@@ -54,8 +54,9 @@ type AdProposalResult = {
 };
 
 const priorityColor = (p: string) => {
-  if (p === "高") return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
-  if (p === "中") return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
+  const v = p?.toLowerCase();
+  if (v === "高" || v === "high") return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+  if (v === "中" || v === "medium") return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
   return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
 };
 

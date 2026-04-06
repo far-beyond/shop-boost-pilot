@@ -114,8 +114,9 @@ export default function AreaAnalysis() {
   };
 
   const getSeverityColor = (severity: string) => {
-    if (severity === "高") return "destructive";
-    if (severity === "中") return "secondary";
+    const v = severity?.toLowerCase();
+    if (v === "高" || v === "high") return "destructive";
+    if (v === "中" || v === "medium") return "secondary";
     return "outline";
   };
 

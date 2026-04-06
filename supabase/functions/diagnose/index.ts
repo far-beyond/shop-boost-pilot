@@ -52,17 +52,31 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "AI API key not configured" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const storeInfo = `
+    const unknown = isEn ? "Unknown" : "不明";
+    const storeInfo = isEn
+      ? `
+Store Name: ${diagnosis.store_name}
+Industry: ${diagnosis.industry}
+Address: ${diagnosis.address}
+Nearest Station: ${diagnosis.station || unknown}
+Target Audience: ${diagnosis.target_audience || unknown}
+Store Strengths: ${diagnosis.strengths || unknown}
+Current Concerns: ${diagnosis.concerns || unknown}
+Monthly Budget: ${diagnosis.budget || unknown}
+Competitors: ${diagnosis.competitors || unknown}
+Preferred Media: ${(diagnosis.media || []).join(", ") || unknown}
+`.trim()
+      : `
 店舗名: ${diagnosis.store_name}
 業種: ${diagnosis.industry}
 住所: ${diagnosis.address}
-最寄駅: ${diagnosis.station || "不明"}
-ターゲット層: ${diagnosis.target_audience || "不明"}
-店の強み: ${diagnosis.strengths || "不明"}
-現在の悩み: ${diagnosis.concerns || "不明"}
-月の予算: ${diagnosis.budget || "不明"}
-競合店舗: ${diagnosis.competitors || "不明"}
-利用したい媒体: ${(diagnosis.media || []).join("、") || "不明"}
+最寄駅: ${diagnosis.station || unknown}
+ターゲット層: ${diagnosis.target_audience || unknown}
+店の強み: ${diagnosis.strengths || unknown}
+現在の悩み: ${diagnosis.concerns || unknown}
+月の予算: ${diagnosis.budget || unknown}
+競合店舗: ${diagnosis.competitors || unknown}
+利用したい媒体: ${(diagnosis.media || []).join("、") || unknown}
 `.trim();
 
     let systemPrompt = "";
