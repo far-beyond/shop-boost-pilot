@@ -31,10 +31,12 @@ export interface FlyerSelection {
 export type TownFeature = GeoJSON.Feature<GeoJSON.Polygon, TownPolygonProperties>;
 export type TownFeatureCollection = GeoJSON.FeatureCollection<GeoJSON.Polygon, TownPolygonProperties>;
 
-// Generate dummy town polygons around a center point
-export function generateDummyTownPolygons(
+// Generate town polygons around a given center point.
+// When censusData is provided, polygon properties reflect real values.
+export function generateTownPolygons(
   center: [number, number],
-  radiusKm: number
+  radiusKm: number,
+  censusData?: { totalPopulation?: number; totalHouseholds?: number; avgAge?: number }
 ): TownFeatureCollection {
   const towns: TownFeature[] = [];
   const gridSize = radiusKm <= 1 ? 3 : radiusKm <= 3 ? 5 : 7;
@@ -68,9 +70,19 @@ export function generateDummyTownPolygons(
       const halfLat = latStep * 0.48;
       const halfLng = lngStep * 0.48;
 
-      const population = Math.round(800 + Math.random() * 4200 - dist * 300);
-      const households = Math.round(population / (2 + Math.random() * 0.8));
-      const avgAge = Math.round(35 + Math.random() * 20);
+      const basePop = censusData?.totalPopulation || 0;
+      const baseHouseholds = censusData?.totalHouseholds || 0;
+      const baseAge = censusData?.avgAge || 42;
+      const townCount = idx + gridSize * gridSize; // estimate total for distribution
+      const population = basePop > 0
+        ? Math.round((basePop / (gridSize * gridSize)) * (0.6 + Math.random() * 0.8))
+        : Math.round(800 + Math.random() * 4200 - dist * 300);
+      const households = baseHouseholds > 0
+        ? Math.round((baseHouseholds / (gridSize * gridSize)) * (0.6 + Math.random() * 0.8))
+        : Math.round(population / (2 + Math.random() * 0.8));
+      const avgAge = basePop > 0
+        ? Math.round(baseAge + (Math.random() - 0.5) * 6)
+        : Math.round(35 + Math.random() * 20);
       const densityRank: TownPolygonProperties["densityRank"] =
         population > 3500 ? "high" : population > 1800 ? "medium" : "low";
 
