@@ -68,7 +68,7 @@ const priorityColor = (p: string) => {
 };
 
 export default function FlyerPlan() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [address, setAddress] = useState("");
   const [industry, setIndustry] = useState("");
   const [storeName, setStoreName] = useState("");
