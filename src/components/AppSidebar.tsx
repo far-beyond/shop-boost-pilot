@@ -1,7 +1,7 @@
 import {
   Home, MapPin, Megaphone, Compass, LayoutDashboard,
   Building2, FileText, Target as TargetIcon, Newspaper, BarChart3,
-  LogOut, LogIn, Globe,
+  LogOut, LogIn, Globe, CreditCard,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -107,6 +107,18 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-2 space-y-1">
+        <SidebarMenuButton asChild>
+          <NavLink
+            to="/pricing"
+            end
+            className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-sm text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+            activeClassName="bg-primary/8 text-primary font-medium"
+          >
+            <CreditCard className="w-4 h-4 shrink-0" />
+            {!collapsed && <span>{t("nav.pricing")}</span>}
+          </NavLink>
+        </SidebarMenuButton>
+
         <Button
           variant="ghost"
           size="sm"
