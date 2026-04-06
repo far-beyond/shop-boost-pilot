@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   MapPin, Loader2, Search, Target, TrendingUp, Shield, AlertTriangle,
-  Crown, Building2, Megaphone, Newspaper, Users, ChevronRight, Star,
+  Crown, Building2, Megaphone, Newspaper, Users, ChevronRight, Star, FileDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { exportLocationMatchPDF } from "@/lib/locationMatchPdfExport";
 
 const fadeUp = { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 } };
 const stagger = { animate: { transition: { staggerChildren: 0.08 } } };
@@ -163,10 +164,22 @@ export default function LocationMatch() {
                     rows={2}
                   />
                 </div>
-                <Button onClick={runMatch} disabled={loading} className="w-full sm:w-auto gap-2">
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                  {loading ? "エリア分析中..." : "AIでエリアマッチング"}
-                </Button>
+                <div className="flex gap-2 flex-wrap">
+                  <Button onClick={runMatch} disabled={loading} className="gap-2">
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                    {loading ? "エリア分析中..." : "AIでエリアマッチング"}
+                  </Button>
+                  {result && (
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() => exportLocationMatchPDF(result, { industry, serviceDescription })}
+                    >
+                      <FileDown className="w-4 h-4" />
+                      PDFダウンロード
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </motion.div>
