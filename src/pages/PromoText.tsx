@@ -11,7 +11,8 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const tabs = ["Googleビジネスプロフィール", "Instagram", "X", "チラシ", "LINE", "広告見出し"];
+const tabKeys = ["Googleビジネスプロフィール", "Instagram", "X", "チラシ", "LINE", "広告見出し"];
+const tabLabelKeys = ["promo.tabGBP", "promo.tabIG", "promo.tabX", "promo.tabFlyer", "promo.tabLINE", "promo.tabAdHeadline"];
 
 async function adjustPromoText(text: string, tone: "soft" | "strong" | "alternative"): Promise<string> {
   const { data, error } = await supabase.functions.invoke("adjust-promo", { body: { text, tone } });
@@ -98,14 +99,14 @@ export default function PromoText() {
             <p className="text-muted-foreground">{t("promo.generating")}</p>
           </div>
         ) : (
-          <Tabs defaultValue={tabs[0]}>
+          <Tabs defaultValue={tabKeys[0]}>
             <TabsList className="flex flex-wrap h-auto gap-1 mb-6">
-              {tabs.map((tab) => (
-                <TabsTrigger key={tab} value={tab} className="text-xs sm:text-sm">{tab}</TabsTrigger>
+              {tabKeys.map((tab, idx) => (
+                <TabsTrigger key={tab} value={tab} className="text-xs sm:text-sm">{t(tabLabelKeys[idx])}</TabsTrigger>
               ))}
             </TabsList>
 
-            {tabs.map((tab) => (
+            {tabKeys.map((tab) => (
               <TabsContent key={tab} value={tab} className="space-y-4">
                 {(texts[tab] || []).map((text, i) => {
                   const isAdjusting = (tone: string) => adjustingKey === `${tab}-${i}-${tone}`;

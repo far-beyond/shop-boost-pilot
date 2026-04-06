@@ -2,7 +2,7 @@ import Layout from "@/components/Layout";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Terms() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const sections = [
     { title: t("terms.s1.title"), body: t("terms.s1.body") },
@@ -25,7 +25,7 @@ export default function Terms() {
           {sections.map((s, i) => (
             <section key={i}>
               <h2 className="text-base font-semibold text-foreground mb-2">
-                {`第${i + 1}条`} {s.title}
+                {language === "ja" ? `第${i + 1}条` : `Article ${i + 1}`} {s.title}
               </h2>
               <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
                 {s.body}
