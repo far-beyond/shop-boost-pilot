@@ -78,13 +78,100 @@ async function fetchCensusData(address: string): Promise<CensusData | null> {
   }
 }
 
+// --- Overpass API (OpenStreetMap) competitor fetching ---
+
+const INDUSTRY_OSM_TAGS: Record<string, string[]> = {
+  "居酒屋": ['amenity=restaurant', 'amenity=bar', 'amenity=pub'],
+  "飲食店": ['amenity=restaurant', 'amenity=cafe', 'amenity=fast_food'],
+  "レストラン": ['amenity=restaurant'],
+  "カフェ": ['amenity=cafe'],
+  "学習塾": ['amenity=school', 'office=educational_institution', 'amenity=college'],
+  "美容院": ['shop=hairdresser', 'shop=beauty'],
+  "コンビニ": ['shop=convenience'],
+  "病院": ['amenity=hospital', 'amenity=clinic', 'amenity=doctors'],
+  "薬局": ['amenity=pharmacy', 'shop=chemist'],
+  "フィットネス": ['leisure=fitness_centre', 'leisure=sports_centre'],
+  "クリーニング": ['shop=laundry', 'shop=dry_cleaning'],
+  "小売店": ['shop=supermarket', 'shop=general', 'shop=department_store'],
+};
+
+const DEFAULT_OSM_TAGS = [
+  'amenity=restaurant', 'amenity=cafe', 'shop=convenience',
+  'shop=supermarket', 'shop=hairdresser', 'amenity=pharmacy',
+];
+
+function getOsmTagsForIndustry(industry?: string): string[] {
+  if (!industry) return DEFAULT_OSM_TAGS;
+  for (const [key, tags] of Object.entries(INDUSTRY_OSM_TAGS)) {
+    if (industry.includes(key)) return tags;
+  }
+  // Fallback: search as shop=*
+  return ['shop=*', 'amenity=restaurant', 'amenity=cafe'];
+}
+
+function buildOverpassQuery(lat: number, lng: number, radiusMeters: number, tags: string[]): string {
+  const filters = tags.map((tag) => {
+    const [k, v] = tag.split("=");
+    const filter = v === "*" ? `["${k}"]` : `["${k}"="${v}"]`;
+    return `node${filter}(around:${radiusMeters},${lat},${lng});`;
+  }).join("\n");
+  return `[out:json][timeout:10];\n(\n${filters}\n);\nout body;`;
+}
+
+function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+async function fetchCompetitorsFromOverpass(
+  center: [number, number],
+  radiusMeters: number,
+  industry?: string
+): Promise<CompetitorStore[]> {
+  const tags = getOsmTagsForIndustry(industry);
+  const query = buildOverpassQuery(center[0], center[1], radiusMeters, tags);
+
+  const res = await fetch("https://overpass-api.de/api/interpreter", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `data=${encodeURIComponent(query)}`,
+  });
+
+  if (!res.ok) throw new Error("Overpass API request failed");
+  const data = await res.json();
+
+  const elements: any[] = data.elements || [];
+  return elements
+    .filter((el: any) => el.lat && el.lon)
+    .map((el: any, i: number) => {
+      const tags = el.tags || {};
+      const name = tags.name || tags["name:ja"] || `店舗 ${i + 1}`;
+      const cat = tags.shop || tags.amenity || tags.leisure || tags.office || "店舗";
+      const distance = Math.round(haversineDistance(center[0], center[1], el.lat, el.lon));
+      return {
+        id: `osm-${el.id || i}`,
+        name,
+        lat: el.lat,
+        lng: el.lon,
+        industry: cat,
+        distance,
+      };
+    })
+    .sort((a, b) => a.distance - b.distance)
+    .slice(0, 50); // cap at 50
+}
+
 // Fetch map-based area analysis from API
 export async function fetchMapAreaAnalysis(
   address: string,
   radius: string,
   industry?: string
 ): Promise<MapAreaAnalysisResult> {
-  // Geocode and fetch census + AI analysis in parallel
+  // Geocode first (needed for Overpass)
   const [center, censusData, aiAnalysis] = await Promise.all([
     geocodeAddress(address),
     fetchCensusData(address),
@@ -106,7 +193,17 @@ export async function fetchMapAreaAnalysis(
   const totalPop = censusData?.totalPopulation || result.population || 0;
   const totalHouseholds = censusData?.totalHouseholds || result.households || 0;
   const populationZones = generatePopulationZones(center, radiusMeters, totalPop);
-  const competitors = generateCompetitorMarkers(center, radiusMeters, result);
+
+  // Fetch real competitors from Overpass API, fallback to generated data
+  let competitors: CompetitorStore[];
+  try {
+    competitors = await fetchCompetitorsFromOverpass(center, radiusMeters, industry);
+    if (competitors.length === 0) {
+      competitors = generateCompetitorMarkers(center, radiusMeters, result);
+    }
+  } catch {
+    competitors = generateCompetitorMarkers(center, radiusMeters, result);
+  }
 
   // Build age distribution from census or AI
   let ageDistribution: { ageGroup: string; percentage: number; count: number }[] = [];
