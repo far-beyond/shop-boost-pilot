@@ -54,22 +54,25 @@ serve(async (req) => {
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0] as any;
-      console.log("[CHECK-SUB] subscription keys:", Object.keys(subscription));
-      console.log("[CHECK-SUB] subscription snippet:", JSON.stringify({
-        id: subscription.id,
-        current_period_end: subscription.current_period_end,
-        current_period_start: subscription.current_period_start,
-        ended_at: subscription.ended_at,
-        cancel_at: subscription.cancel_at,
-      }));
-      // Try multiple possible field names
-      const periodEnd = subscription.current_period_end;
-      if (periodEnd && typeof periodEnd === "number") {
-        subscriptionEnd = new Date(periodEnd * 1000).toISOString();
-      } else if (periodEnd && typeof periodEnd === "string") {
-        subscriptionEnd = periodEnd;
-      }
       productId = subscription.items?.data?.[0]?.price?.product ?? null;
+
+      // In Stripe API 2025-08-27.basil, current_period_end is removed.
+      // Get period end from the latest invoice instead.
+      const invoiceId = subscription.latest_invoice;
+      if (invoiceId && typeof invoiceId === "string") {
+        try {
+          const invoice = await stripe.invoices.retrieve(invoiceId);
+          const lines = (invoice as any).lines?.data;
+          if (lines && lines.length > 0 && lines[0].period?.end) {
+            const endTs = lines[0].period.end;
+            subscriptionEnd = typeof endTs === "number"
+              ? new Date(endTs * 1000).toISOString()
+              : endTs;
+          }
+        } catch (e) {
+          console.log("[CHECK-SUB] Could not retrieve invoice:", (e as Error).message);
+        }
+      }
     }
 
     return new Response(JSON.stringify({
