@@ -101,54 +101,14 @@ function parsePopulationData(statData: any): { totalPopulation: number; malePopu
 
   const values = Array.isArray(statData.DATA_INF.VALUE) ? statData.DATA_INF.VALUE : [statData.DATA_INF.VALUE];
 
-  // Get category labels from CLASS_INF
-  const classInfo = statData?.CLASS_INF?.CLASS_OBJ;
-  const classArr = Array.isArray(classInfo) ? classInfo : classInfo ? [classInfo] : [];
-  
-  const catLabels: Record<string, string> = {};
-  const tabLabels: Record<string, string> = {};
-  for (const cls of classArr) {
-    const id = cls["@id"];
-    const items = Array.isArray(cls.CLASS) ? cls.CLASS : cls.CLASS ? [cls.CLASS] : [];
-    for (const item of items) {
-      if (id === "cat01") catLabels[item["@code"]] = item["@name"] || "";
-      if (id === "tab") tabLabels[item["@code"]] = item["@name"] || "";
-    }
-  }
-
+  // Table 0003445078 structure: cat01 "0"=総数, "1"=男, "2"=女
   for (const v of values) {
     const val = parseInt(v["$"] || "0", 10);
     if (isNaN(val) || val <= 0) continue;
-
     const cat01 = v["@cat01"] || "";
-    const tab = v["@tab"] || "";
-    const label = catLabels[cat01] || "";
-    const tabLabel = tabLabels[tab] || "";
-
-    // Identify by label content
-    if ((label.includes("総数") || label === "人口総数" || label.includes("人口") && label.includes("総")) && !label.includes("世帯")) {
-      if (label.includes("男") && !label.includes("女")) {
-        if (val > result.malePopulation) result.malePopulation = val;
-      } else if (label.includes("女")) {
-        if (val > result.femalePopulation) result.femalePopulation = val;
-      } else {
-        if (val > result.totalPopulation) result.totalPopulation = val;
-      }
-    }
-    if (label.includes("世帯") && label.includes("総数")) {
-      if (val > result.totalHouseholds) result.totalHouseholds = val;
-    }
-  }
-
-  // If no labeled match, try positional fallback
-  if (result.totalPopulation === 0) {
-    const nums = values
-      .map((v: any) => parseInt(v["$"] || "0", 10))
-      .filter((n: number) => !isNaN(n) && n > 0);
-    if (nums.length >= 1) result.totalPopulation = nums[0];
-    if (nums.length >= 2) result.malePopulation = nums[1];
-    if (nums.length >= 3) result.femalePopulation = nums[2];
-    if (nums.length >= 4) result.totalHouseholds = nums[3];
+    if (cat01 === "0") result.totalPopulation = val;
+    else if (cat01 === "1") result.malePopulation = val;
+    else if (cat01 === "2") result.femalePopulation = val;
   }
 
   return result;
