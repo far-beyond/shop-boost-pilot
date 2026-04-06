@@ -41,7 +41,7 @@ serve(async (req) => {
     // For admin actions, only hardcoded admins
     const isHardAdmin = ADMIN_EMAILS.includes(userEmail);
 
-    const { action, email, note } = await req.json();
+    const { action, email, note, settings } = await req.json();
 
     if (action === "check-admin") {
       return new Response(JSON.stringify({ isAdmin: isHardAdmin }), {
@@ -114,6 +114,35 @@ serve(async (req) => {
         .delete()
         .eq("email", email.toLowerCase().trim());
       if (error) throw error;
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "get-plan-settings") {
+      const { data, error } = await supabase
+        .from("plan_settings")
+        .select("*")
+        .order("setting_key");
+      if (error) throw error;
+      const result: Record<string, string> = {};
+      for (const row of data || []) result[row.setting_key] = row.setting_value;
+      return new Response(JSON.stringify({ settings: result }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "save-plan-settings") {
+      if (!settings || typeof settings !== "object") {
+        return new Response(JSON.stringify({ error: "Settings object required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      for (const [key, value] of Object.entries(settings as Record<string, string>)) {
+        const { error } = await supabase
+          .from("plan_settings")
+          .update({ setting_value: String(value), updated_by: userEmail, updated_at: new Date().toISOString() })
+          .eq("setting_key", key);
+        if (error) throw error;
+      }
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

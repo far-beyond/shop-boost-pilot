@@ -10,7 +10,8 @@ import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
-import { Shield, CreditCard, UserPlus, Trash2, Loader2 } from "lucide-react";
+import { Shield, CreditCard, UserPlus, Trash2, Loader2, Settings } from "lucide-react";
+import PlanSettingsTab from "@/components/admin/PlanSettingsTab";
 
 type Payment = {
   id: string;
@@ -152,6 +153,10 @@ export default function AdminDashboard() {
               <UserPlus className="w-4 h-4" />
               {t("admin.whitelist")}
             </TabsTrigger>
+            <TabsTrigger value="plan-settings" className="gap-2">
+              <Settings className="w-4 h-4" />
+              {t("admin.planSettings")}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="payments">
@@ -283,6 +288,10 @@ export default function AdminDashboard() {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="plan-settings">
+            <PlanSettingsTab />
           </TabsContent>
         </Tabs>
       </div>
