@@ -51,6 +51,8 @@ export type MapAreaAnalysisResult = {
   competitors: CompetitorStore[];
   summary: TradeAreaSummary;
   censusData: CensusData | null;
+  countryCode: string; // ISO 2-letter country code (e.g. "jp", "us")
+  isOverseas: boolean;
 };
 
 // Geocode address using Nominatim
