@@ -257,7 +257,7 @@ export async function fetchMapAreaAnalysis(
       if (data?.error) throw new Error(data.error);
       return data;
     }),
-    fetchCensusForCountry(countryCode, address, center, radiusMeters),
+    fetchCensusForCountry(countryCode, address, center, radiusMeters, language),
   ]);
 
   const result = aiAnalysis.result;
@@ -269,17 +269,17 @@ export async function fetchMapAreaAnalysis(
   const totalPop = censusData?.totalPopulation || result.population || 0;
   const totalHouseholds = censusData?.totalHouseholds || result.households || 0;
 
-  const populationZones = generatePopulationZones(center, radiusMeters, totalPop);
+  const populationZones = generatePopulationZones(center, radiusMeters, totalPop, language);
 
   // Competitors (Overpass — already global)
   let competitors: CompetitorStore[];
   try {
     competitors = await fetchCompetitorsFromOverpass(center, radiusMeters, industry);
     if (competitors.length === 0) {
-      competitors = generateCompetitorMarkers(center, radiusMeters, result);
+      competitors = generateCompetitorMarkers(center, radiusMeters, result, language);
     }
   } catch {
-    competitors = generateCompetitorMarkers(center, radiusMeters, result);
+    competitors = generateCompetitorMarkers(center, radiusMeters, result, language);
   }
 
   // Age distribution: prefer census data, fallback to AI
@@ -311,7 +311,7 @@ export async function fetchMapAreaAnalysis(
       householdTypes: result.householdTypes || [],
       competitorCount: competitors.length,
       tradeAreaScore: calculateTradeAreaScore(result),
-      recommendations: extractRecommendations(result),
+      recommendations: extractRecommendations(result, language),
       dataSource,
       primaryTarget: result.primaryTarget,
       areaCharacteristics: result.areaCharacteristics,
