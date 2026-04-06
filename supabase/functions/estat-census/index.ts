@@ -41,21 +41,8 @@ function extractPrefecture(address: string): string | null {
 
 function extractCity(address: string): string | null {
   // After prefecture, extract city/ward/town
-  const match = address.match(/(?:北海道|東京都|(?:京都|大阪)府|.{2,3}県)(.+?[市区町村])/);
+  const match = address.match(/(?:北海道|東京都|(?:京都|大阪)府|.{2,3}県)(.+?[市区町村郡])/);
   return match ? match[1] : null;
-}
-
-async function fetchEstatData(appId: string, statsDataId: string, cdArea: string): Promise<any> {
-  const url = `${ESTAT_BASE}/getStatsData?appId=${appId}&statsDataId=${statsDataId}&cdArea=${cdArea}&metaGetFlg=Y&cntGetFlg=N&sectionHeaderFlg=1`;
-  
-  console.log(`Fetching e-Stat: statsDataId=${statsDataId}, cdArea=${cdArea}`);
-  const res = await fetch(url);
-  if (!res.ok) {
-    console.error(`e-Stat API error: ${res.status}`);
-    return null;
-  }
-  const data = await res.json();
-  return data?.GET_STATS_DATA?.STATISTICAL_DATA || null;
 }
 
 async function findAreaCode(appId: string, address: string): Promise<{ code: string; name: string } | null> {
@@ -66,43 +53,61 @@ async function findAreaCode(appId: string, address: string): Promise<{ code: str
   if (!prefCode) return null;
 
   const cityName = extractCity(address);
+  console.log(`Extracted: pref=${prefName}(${prefCode}), city=${cityName}`);
 
-  // Use getStatsList to search area codes via the census data
-  // First, try to get area classifications from the population table
+  // Fetch area classifications from the population table using prefecture code
   const url = `${ESTAT_BASE}/getStatsData?appId=${appId}&statsDataId=${CENSUS_STATS.population}&cdArea=${prefCode}&metaGetFlg=Y&cntGetFlg=N&explanationGetFlg=N&limit=1`;
   
+  console.log(`Fetching area list: ${url.replace(appId, '***')}`);
   const res = await fetch(url);
-  if (!res.ok) return null;
+  if (!res.ok) {
+    console.error(`e-Stat area fetch error: ${res.status}`);
+    // Fallback: use prefecture-level code
+    return { code: prefCode + "000", name: prefName };
+  }
+  
   const data = await res.json();
+  
+  // Check for API errors
+  const status = data?.GET_STATS_DATA?.RESULT?.STATUS;
+  if (status && status !== 0) {
+    console.error(`e-Stat API status: ${status}, msg: ${data?.GET_STATS_DATA?.RESULT?.ERROR_MSG}`);
+    return { code: prefCode + "000", name: prefName };
+  }
 
   const classInfo = data?.GET_STATS_DATA?.STATISTICAL_DATA?.CLASS_INF?.CLASS_OBJ;
-  if (!classInfo) return null;
+  if (!classInfo) {
+    console.log("No CLASS_INF found, using prefecture code");
+    return { code: prefCode + "000", name: prefName };
+  }
 
   // Find area classification
-  const areaClass = Array.isArray(classInfo)
-    ? classInfo.find((c: any) => c["@id"] === "area")
-    : classInfo["@id"] === "area" ? classInfo : null;
+  const classArr = Array.isArray(classInfo) ? classInfo : [classInfo];
+  const areaClass = classArr.find((c: any) => c["@id"] === "area");
 
-  if (!areaClass) return null;
+  if (!areaClass) {
+    console.log("No area class found, using prefecture code");
+    return { code: prefCode + "000", name: prefName };
+  }
 
   const classes = Array.isArray(areaClass.CLASS) ? areaClass.CLASS : [areaClass.CLASS];
+  console.log(`Found ${classes.length} area codes`);
 
   // Try to match city name
   if (cityName) {
+    const searchName = cityName.replace(/[市区町村郡]$/, "");
     const match = classes.find((c: any) => {
       const name = c["@name"] || "";
-      return name.includes(cityName.replace(/[市区町村]$/, ""));
+      return name.includes(searchName);
     });
-    if (match) return { code: match["@code"], name: match["@name"] };
+    if (match) {
+      console.log(`Matched city: ${match["@name"]} (${match["@code"]})`);
+      return { code: match["@code"], name: match["@name"] };
+    }
+    console.log(`No match for city: ${searchName}`);
   }
 
   // Fallback: use prefecture-level data
-  const prefMatch = classes.find((c: any) => {
-    const code = c["@code"] || "";
-    return code === prefCode + "000";
-  });
-  if (prefMatch) return { code: prefMatch["@code"], name: prefMatch["@name"] };
-
   return { code: prefCode + "000", name: prefName };
 }
 
