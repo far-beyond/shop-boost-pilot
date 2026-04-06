@@ -1,8 +1,9 @@
 import { useState } from "react";
 import {
   FileText, Loader2, Search, MapPin, Megaphone, Newspaper,
-  Target, TrendingUp, DollarSign, Users, BarChart3,
+  Target, TrendingUp, DollarSign, Users, BarChart3, FileDown,
 } from "lucide-react";
+import { exportReportPDF } from "@/lib/reportPdfExport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
