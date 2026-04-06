@@ -55,6 +55,15 @@ type OpeningResult = {
   overallComment: string;
 };
 
+type CensusData = {
+  source: string;
+  areaName: string;
+  areaCode: string;
+  totalPopulation: number;
+  totalHouseholds: number;
+  ageDistribution: { ageGroup: string; population: number; percentage: number }[];
+};
+
 export default function AreaAnalysis() {
   const [activeTab, setActiveTab] = useState("area");
   const [address, setAddress] = useState("");
@@ -63,12 +72,16 @@ export default function AreaAnalysis() {
   const [loading, setLoading] = useState(false);
   const [areaResult, setAreaResult] = useState<AreaResult | null>(null);
   const [openingResult, setOpeningResult] = useState<OpeningResult | null>(null);
+  const [censusData, setCensusData] = useState<CensusData | null>(null);
+  const [dataSource, setDataSource] = useState<string>("");
 
   const runAnalysis = async () => {
     if (!address) { toast.error("住所を入力してください"); return; }
     if (activeTab === "opening" && !industry) { toast.error("業種を入力してください"); return; }
 
     setLoading(true);
+    setCensusData(null);
+    setDataSource("");
     try {
       const { data, error } = await supabase.functions.invoke("area-analysis", {
         body: { address, radius, industry, analysisType: activeTab },
@@ -79,7 +92,13 @@ export default function AreaAnalysis() {
       if (activeTab === "area") setAreaResult(data.result);
       else setOpeningResult(data.result);
 
-      toast.success("分析が完了しました");
+      if (data.censusData) setCensusData(data.censusData);
+      setDataSource(data.dataSource || "AI推定分析");
+
+      toast.success(data.censusData
+        ? "国勢調査データを基に分析が完了しました"
+        : "分析が完了しました（AI推定値）"
+      );
     } catch (e: any) {
       toast.error(e.message || "分析に失敗しました");
     } finally {
