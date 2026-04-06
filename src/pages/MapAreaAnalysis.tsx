@@ -487,6 +487,18 @@ export default function MapAreaAnalysis() {
             onMapClick={handleMapClick}
             heatmapMode={heatmapMode}
             selectedTownIds={selectedTownIds}
+            labels={{
+              candidate: t("map.candidateLabel"),
+              population: t("map.popLabel"),
+              popUnit: t("map.popUnit"),
+              households: t("map.households"),
+              avgAge: t("map.avgAge"),
+              ageUnit: t("map.ageUnit"),
+              industry: t("map.industryLabel"),
+              distance: t("map.distanceLabel"),
+              score: t("map.score"),
+              points: t("map.points"),
+            }}
           />
         </div>
 
