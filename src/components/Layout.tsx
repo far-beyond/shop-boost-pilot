@@ -29,9 +29,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <main className="flex-1">{children}</main>
 
           <footer className="border-t border-border/60 bg-card/50 py-8 mt-auto">
-            <div className="container mx-auto px-4 text-center text-xs text-muted-foreground space-y-1">
+            <div className="container mx-auto px-4 text-center text-xs text-muted-foreground space-y-2">
               <p className="font-medium">{t("footer.copyright")}</p>
               <p>{t("footer.description")}</p>
+              <div className="flex items-center justify-center gap-4 pt-1">
+                <Link to="/tokushoho" className="hover:text-foreground transition-colors">{t("footer.tokushoho")}</Link>
+                <span className="text-border">|</span>
+                <Link to="/terms" className="hover:text-foreground transition-colors">{t("footer.terms")}</Link>
+              </div>
             </div>
           </footer>
         </div>
