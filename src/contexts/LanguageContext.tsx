@@ -30,7 +30,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.storeInput": "店舗入力（診断）",
     "nav.logout": "ログアウト",
     "nav.login": "ログイン",
-    "footer.copyright": "© 2024 MapBoost AI",
+    "footer.copyright": "© 2026 MapBoost AI",
     "footer.description": "ローカルマーケティング分析ツール — 地域分析・出店分析・広告提案・チラシ配布設計",
 
     // Index / Hero
@@ -649,7 +649,7 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.storeInput": "Store Input (Diagnosis)",
     "nav.logout": "Logout",
     "nav.login": "Login",
-    "footer.copyright": "© 2024 MapBoost AI",
+    "footer.copyright": "© 2026 MapBoost AI",
     "footer.description": "Local Marketing Analysis Tool — Area Analysis, Store Analysis, Ad Proposals, Flyer Distribution",
 
     // Index / Hero
