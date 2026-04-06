@@ -109,6 +109,7 @@ export default function StoreInput() {
 
   return (
     <Layout>
+      <div className="container mx-auto px-4 py-12 max-w-2xl">
         {usageInfo && !usageInfo.allowed && (
           <Card className="mb-6 border-destructive/50 bg-destructive/5">
             <CardContent className="flex items-center gap-3 py-4">
@@ -128,7 +129,6 @@ export default function StoreInput() {
             今月の利用: {usageInfo.used} / {usageInfo.limit} 回
           </div>
         )}
-        <div className="container mx-auto px-4 py-12 max-w-2xl">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-4">
             <Store className="w-4 h-4" />
