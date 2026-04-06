@@ -7,16 +7,6 @@ const corsHeaders = {
 
 const ESTAT_BASE = "https://api.e-stat.go.jp/rest/3.0/app/json";
 
-// 令和2年国勢調査 statsDataIds
-const CENSUS_STATS = {
-  // 人口等基本集計 - 男女別人口及び世帯の種類別世帯数 (市区町村)
-  population: "0003445078",
-  // 人口等基本集計 - 年齢(5歳階級)、男女別人口 (市区町村)
-  agePopulation: "0003445094",
-  // 人口等基本集計 - 世帯人員別一般世帯数 (市区町村)
-  households: "0003445109",
-};
-
 // Prefecture name to code mapping
 const PREFECTURE_CODES: Record<string, string> = {
   "北海道": "01", "青森": "02", "岩手": "03", "宮城": "04", "秋田": "05",
@@ -31,104 +21,78 @@ const PREFECTURE_CODES: Record<string, string> = {
   "鹿児島": "46", "沖縄": "47",
 };
 
+// Tokyo 23 wards municipality codes
+const TOKYO_WARDS: Record<string, string> = {
+  "千代田区": "13101", "中央区": "13102", "港区": "13103", "新宿区": "13104",
+  "文京区": "13105", "台東区": "13106", "墨田区": "13107", "江東区": "13108",
+  "品川区": "13109", "目黒区": "13110", "大田区": "13111", "世田谷区": "13112",
+  "渋谷区": "13113", "中野区": "13114", "杉並区": "13115", "豊島区": "13116",
+  "北区": "13117", "荒川区": "13118", "板橋区": "13119", "練馬区": "13120",
+  "足立区": "13121", "葛飾区": "13122", "江戸川区": "13123",
+};
+
+// Major cities municipality codes
+const MAJOR_CITIES: Record<string, string> = {
+  "札幌市": "01100", "仙台市": "04100", "さいたま市": "11100",
+  "千葉市": "12100", "横浜市": "14100", "川崎市": "14130", "相模原市": "14150",
+  "新潟市": "15100", "静岡市": "22100", "浜松市": "22130",
+  "名古屋市": "23100", "京都市": "26100", "大阪市": "27100", "堺市": "27140",
+  "神戸市": "28100", "岡山市": "33100", "広島市": "34100", "北九州市": "40100",
+  "福岡市": "40130", "熊本市": "43100",
+};
+
 function extractPrefecture(address: string): string | null {
-  // Match 都道府県
   const match = address.match(/(北海道|東京都|(?:京都|大阪)府|.{2,3}県)/);
   if (!match) return null;
-  const name = match[1].replace(/[都府県]$/, "");
-  return name;
+  return match[1].replace(/[都府県]$/, "");
 }
 
 function extractCity(address: string): string | null {
-  // After prefecture, extract city/ward/town
-  const match = address.match(/(?:北海道|東京都|(?:京都|大阪)府|.{2,3}県)(.+?[市区町村郡])/);
+  const match = address.match(/(?:北海道|東京都|(?:京都|大阪)府|.{2,3}県)(.+?[市区町村])/);
   return match ? match[1] : null;
 }
 
-async function fetchEstatData(appId: string, statsDataId: string, cdArea: string): Promise<any> {
-  const url = `${ESTAT_BASE}/getStatsData?appId=${appId}&statsDataId=${statsDataId}&cdArea=${cdArea}&metaGetFlg=Y&cntGetFlg=N&sectionHeaderFlg=1`;
-  
-  console.log(`Fetching e-Stat: statsDataId=${statsDataId}, cdArea=${cdArea}`);
-  const res = await fetch(url);
-  if (!res.ok) {
-    console.error(`e-Stat API error: ${res.status}`);
-    return null;
-  }
-  const data = await res.json();
-  
-  const status = data?.GET_STATS_DATA?.RESULT?.STATUS;
-  if (status && status !== 0) {
-    console.error(`e-Stat data error: ${status}`);
-    return null;
-  }
-  
-  return data?.GET_STATS_DATA?.STATISTICAL_DATA || null;
-}
-
-async function findAreaCode(appId: string, address: string): Promise<{ code: string; name: string } | null> {
+function resolveAreaCode(address: string): { code: string; name: string } | null {
   const prefName = extractPrefecture(address);
   if (!prefName) return null;
-
   const prefCode = PREFECTURE_CODES[prefName];
   if (!prefCode) return null;
 
   const cityName = extractCity(address);
   console.log(`Extracted: pref=${prefName}(${prefCode}), city=${cityName}`);
 
-  // Fetch area classifications from the population table using prefecture code
-  const url = `${ESTAT_BASE}/getStatsData?appId=${appId}&statsDataId=${CENSUS_STATS.population}&cdArea=${prefCode}&metaGetFlg=Y&cntGetFlg=N&explanationGetFlg=N&limit=1`;
+  if (cityName) {
+    // Check Tokyo wards
+    if (prefCode === "13" && TOKYO_WARDS[cityName]) {
+      return { code: TOKYO_WARDS[cityName], name: cityName };
+    }
+    // Check major cities
+    if (MAJOR_CITIES[cityName]) {
+      return { code: MAJOR_CITIES[cityName], name: cityName };
+    }
+  }
+
+  // Fallback to prefecture level
+  return { code: prefCode + "000", name: prefName };
+}
+
+async function fetchEstatData(appId: string, statsDataId: string, cdArea: string, extraParams = ""): Promise<any> {
+  const url = `${ESTAT_BASE}/getStatsData?appId=${appId}&statsDataId=${statsDataId}&cdArea=${cdArea}&metaGetFlg=Y&cntGetFlg=N&sectionHeaderFlg=1${extraParams}`;
+  console.log(`Fetching e-Stat: table=${statsDataId}, area=${cdArea}`);
   
-  console.log(`Fetching area list: ${url.replace(appId, '***')}`);
   const res = await fetch(url);
   if (!res.ok) {
-    console.error(`e-Stat area fetch error: ${res.status}`);
-    // Fallback: use prefecture-level code
-    return { code: prefCode + "000", name: prefName };
+    console.error(`e-Stat HTTP error: ${res.status}`);
+    return null;
   }
-  
   const data = await res.json();
-  
-  // Check for API errors
   const status = data?.GET_STATS_DATA?.RESULT?.STATUS;
   if (status && status !== 0) {
-    console.error(`e-Stat API status: ${status}, msg: ${data?.GET_STATS_DATA?.RESULT?.ERROR_MSG}`);
-    return { code: prefCode + "000", name: prefName };
+    const msg = data?.GET_STATS_DATA?.RESULT?.ERROR_MSG || "";
+    console.error(`e-Stat status ${status}: ${msg}`);
+    return null;
   }
-
-  const classInfo = data?.GET_STATS_DATA?.STATISTICAL_DATA?.CLASS_INF?.CLASS_OBJ;
-  if (!classInfo) {
-    console.log("No CLASS_INF found, using prefecture code");
-    return { code: prefCode + "000", name: prefName };
-  }
-
-  // Find area classification
-  const classArr = Array.isArray(classInfo) ? classInfo : [classInfo];
-  const areaClass = classArr.find((c: any) => c["@id"] === "area");
-
-  if (!areaClass) {
-    console.log("No area class found, using prefecture code");
-    return { code: prefCode + "000", name: prefName };
-  }
-
-  const classes = Array.isArray(areaClass.CLASS) ? areaClass.CLASS : [areaClass.CLASS];
-  console.log(`Found ${classes.length} area codes`);
-
-  // Try to match city name
-  if (cityName) {
-    const searchName = cityName.replace(/[市区町村郡]$/, "");
-    const match = classes.find((c: any) => {
-      const name = c["@name"] || "";
-      return name.includes(searchName);
-    });
-    if (match) {
-      console.log(`Matched city: ${match["@name"]} (${match["@code"]})`);
-      return { code: match["@code"], name: match["@name"] };
-    }
-    console.log(`No match for city: ${searchName}`);
-  }
-
-  // Fallback: use prefecture-level data
-  return { code: prefCode + "000", name: prefName };
+  return data?.GET_STATS_DATA?.STATISTICAL_DATA || null;
 }
 
 function parsePopulationData(statData: any): { totalPopulation: number; malePopulation: number; femalePopulation: number; totalHouseholds: number } {
@@ -137,31 +101,55 @@ function parsePopulationData(statData: any): { totalPopulation: number; malePopu
 
   const values = Array.isArray(statData.DATA_INF.VALUE) ? statData.DATA_INF.VALUE : [statData.DATA_INF.VALUE];
 
-  for (const v of values) {
-    const val = parseInt(v["$"] || "0", 10);
-    if (isNaN(val) || val < 0) continue;
-
-    // Parse based on category codes
-    const cat01 = v["@cat01"] || "";
-    // cat01 codes: typically "000" = total population, "001" = male, "002" = female
-    // This varies by table, so we look at tab code too
-    const tab = v["@tab"] || "";
-
-    if (tab === "020" || cat01.includes("T")) {
-      // Total population
-      if (val > result.totalPopulation) result.totalPopulation = val;
+  // Get category labels from CLASS_INF
+  const classInfo = statData?.CLASS_INF?.CLASS_OBJ;
+  const classArr = Array.isArray(classInfo) ? classInfo : classInfo ? [classInfo] : [];
+  
+  const catLabels: Record<string, string> = {};
+  const tabLabels: Record<string, string> = {};
+  for (const cls of classArr) {
+    const id = cls["@id"];
+    const items = Array.isArray(cls.CLASS) ? cls.CLASS : cls.CLASS ? [cls.CLASS] : [];
+    for (const item of items) {
+      if (id === "cat01") catLabels[item["@code"]] = item["@name"] || "";
+      if (id === "tab") tabLabels[item["@code"]] = item["@name"] || "";
     }
   }
 
-  // Simpler approach: just get all values and identify by position
-  const nums = values
-    .map((v: any) => parseInt(v["$"] || "0", 10))
-    .filter((n: number) => !isNaN(n) && n > 0);
+  for (const v of values) {
+    const val = parseInt(v["$"] || "0", 10);
+    if (isNaN(val) || val <= 0) continue;
 
-  if (nums.length >= 1) result.totalPopulation = nums[0];
-  if (nums.length >= 2) result.malePopulation = nums[1];
-  if (nums.length >= 3) result.femalePopulation = nums[2];
-  if (nums.length >= 4) result.totalHouseholds = nums[3];
+    const cat01 = v["@cat01"] || "";
+    const tab = v["@tab"] || "";
+    const label = catLabels[cat01] || "";
+    const tabLabel = tabLabels[tab] || "";
+
+    // Identify by label content
+    if ((label.includes("総数") || label === "人口総数" || label.includes("人口") && label.includes("総")) && !label.includes("世帯")) {
+      if (label.includes("男") && !label.includes("女")) {
+        if (val > result.malePopulation) result.malePopulation = val;
+      } else if (label.includes("女")) {
+        if (val > result.femalePopulation) result.femalePopulation = val;
+      } else {
+        if (val > result.totalPopulation) result.totalPopulation = val;
+      }
+    }
+    if (label.includes("世帯") && label.includes("総数")) {
+      if (val > result.totalHouseholds) result.totalHouseholds = val;
+    }
+  }
+
+  // If no labeled match, try positional fallback
+  if (result.totalPopulation === 0) {
+    const nums = values
+      .map((v: any) => parseInt(v["$"] || "0", 10))
+      .filter((n: number) => !isNaN(n) && n > 0);
+    if (nums.length >= 1) result.totalPopulation = nums[0];
+    if (nums.length >= 2) result.malePopulation = nums[1];
+    if (nums.length >= 3) result.femalePopulation = nums[2];
+    if (nums.length >= 4) result.totalHouseholds = nums[3];
+  }
 
   return result;
 }
@@ -171,40 +159,37 @@ function parseAgeData(statData: any): { ageGroup: string; population: number; pe
 
   const values = Array.isArray(statData.DATA_INF.VALUE) ? statData.DATA_INF.VALUE : [statData.DATA_INF.VALUE];
 
-  // Get class info for age categories
   const classInfo = statData?.CLASS_INF?.CLASS_OBJ;
-  const catClass = Array.isArray(classInfo)
-    ? classInfo.find((c: any) => c["@id"] === "cat01")
-    : null;
-
+  const classArr = Array.isArray(classInfo) ? classInfo : classInfo ? [classInfo] : [];
+  
   const catLabels: Record<string, string> = {};
-  if (catClass) {
-    const cats = Array.isArray(catClass.CLASS) ? catClass.CLASS : [catClass.CLASS];
-    for (const c of cats) {
-      catLabels[c["@code"]] = c["@name"] || "";
+  for (const cls of classArr) {
+    if (cls["@id"] === "cat01") {
+      const items = Array.isArray(cls.CLASS) ? cls.CLASS : cls.CLASS ? [cls.CLASS] : [];
+      for (const item of items) {
+        catLabels[item["@code"]] = item["@name"] || "";
+      }
     }
   }
 
-  // Group by age categories
-  const ageGroups: Record<string, number> = {};
-  let totalPop = 0;
-
+  // Collect total-sex age data only (skip male/female breakdowns)
+  const ageValues: { label: string; val: number }[] = [];
+  
   for (const v of values) {
     const val = parseInt(v["$"] || "0", 10);
-    if (isNaN(val) || val < 0) continue;
-
+    if (isNaN(val) || val <= 0) continue;
     const cat01 = v["@cat01"] || "";
+    const cat02 = v["@cat02"] || "";
     const label = catLabels[cat01] || cat01;
-
-    // Skip totals
-    if (label.includes("総数") || label.includes("合計")) {
-      if (val > totalPop) totalPop = val;
-      continue;
-    }
-
-    // Map 5-year age groups to broader groups
-    if (label.match(/[0-9]/)) {
-      ageGroups[label] = (ageGroups[label] || 0) + val;
+    
+    // Only use "総数" (both sexes) rows - cat02 typically "000" or first code
+    // Skip if explicitly male or female
+    if (label.includes("男") || label.includes("女")) continue;
+    if (cat02 && cat02 !== "000" && cat02 !== "001") continue;
+    
+    if (label.includes("総数") || label.includes("合計") || label.includes("年齢「不詳」")) continue;
+    if (label.match(/\d/)) {
+      ageValues.push({ label, val });
     }
   }
 
@@ -214,17 +199,17 @@ function parseAgeData(statData: any): { ageGroup: string; population: number; pe
     "45〜54歳": 0, "55〜64歳": 0, "65歳以上": 0,
   };
 
-  for (const [label, count] of Object.entries(ageGroups)) {
+  for (const { label, val } of ageValues) {
     const ageMatch = label.match(/(\d+)/);
     if (!ageMatch) continue;
     const age = parseInt(ageMatch[1], 10);
-    if (age < 15) consolidated["0〜14歳"] += count;
-    else if (age < 25) consolidated["15〜24歳"] += count;
-    else if (age < 35) consolidated["25〜34歳"] += count;
-    else if (age < 45) consolidated["35〜44歳"] += count;
-    else if (age < 55) consolidated["45〜54歳"] += count;
-    else if (age < 65) consolidated["55〜64歳"] += count;
-    else consolidated["65歳以上"] += count;
+    if (age < 15) consolidated["0〜14歳"] += val;
+    else if (age < 25) consolidated["15〜24歳"] += val;
+    else if (age < 35) consolidated["25〜34歳"] += val;
+    else if (age < 45) consolidated["35〜44歳"] += val;
+    else if (age < 55) consolidated["45〜54歳"] += val;
+    else if (age < 65) consolidated["55〜64歳"] += val;
+    else consolidated["65歳以上"] += val;
   }
 
   const total = Object.values(consolidated).reduce((a, b) => a + b, 0) || 1;
@@ -258,8 +243,7 @@ serve(async (req) => {
 
     console.log(`Census lookup for: ${address}`);
 
-    // Find area code
-    const area = await findAreaCode(ESTAT_API_KEY, address);
+    const area = resolveAreaCode(address);
     if (!area) {
       return new Response(JSON.stringify({
         error: "住所から地域コードを特定できませんでした",
@@ -269,19 +253,25 @@ serve(async (req) => {
       });
     }
 
-    console.log(`Found area: ${area.name} (${area.code})`);
+    console.log(`Resolved area: ${area.name} (${area.code})`);
 
-    // Fetch census data in parallel
+    // 令和2年国勢調査 - use getStatsList to find tables, or use known working IDs
+    // Table: 人口等基本集計 全国 ... 市区町村
+    // Try multiple statsDataIds for robustness
+    const populationIds = ["0003445078", "0003448237"];
+    const ageIds = ["0003445094", "0003448303"];
+    const householdIds = ["0003445109", "0003448357"];
+
+    // Fetch all in parallel, try primary IDs first
     const [popData, ageData, householdData] = await Promise.all([
-      fetchEstatData(ESTAT_API_KEY, CENSUS_STATS.population, area.code),
-      fetchEstatData(ESTAT_API_KEY, CENSUS_STATS.agePopulation, area.code),
-      fetchEstatData(ESTAT_API_KEY, CENSUS_STATS.households, area.code),
+      fetchWithFallback(ESTAT_API_KEY, populationIds, area.code),
+      fetchWithFallback(ESTAT_API_KEY, ageIds, area.code),
+      fetchWithFallback(ESTAT_API_KEY, householdIds, area.code),
     ]);
 
     const population = popData ? parsePopulationData(popData) : null;
     const ageDistribution = ageData ? parseAgeData(ageData) : [];
 
-    // Parse household data
     let householdCount = 0;
     if (householdData?.DATA_INF?.VALUE) {
       const vals = Array.isArray(householdData.DATA_INF.VALUE)
@@ -315,3 +305,11 @@ serve(async (req) => {
     });
   }
 });
+
+async function fetchWithFallback(appId: string, statsDataIds: string[], cdArea: string): Promise<any> {
+  for (const id of statsDataIds) {
+    const data = await fetchEstatData(appId, id, cdArea);
+    if (data?.DATA_INF?.VALUE) return data;
+  }
+  return null;
+}
