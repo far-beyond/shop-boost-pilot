@@ -108,10 +108,27 @@ export default function Report() {
                   <label className="text-sm font-medium text-foreground">ターゲット（任意）</label>
                   <Textarea placeholder="例: 20〜30代女性" value={target} onChange={(e) => setTarget(e.target.value)} rows={2} />
                 </div>
-                <Button onClick={generateReport} disabled={report.loading} className="gap-2">
-                  {report.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <BarChart3 className="w-4 h-4" />}
-                  {report.loading ? "レポート生成中..." : "統合レポートを作成"}
-                </Button>
+                <div className="flex gap-3">
+                  <Button onClick={generateReport} disabled={report.loading} className="gap-2">
+                    {report.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <BarChart3 className="w-4 h-4" />}
+                    {report.loading ? "レポート生成中..." : "統合レポートを作成"}
+                  </Button>
+                  {hasData && !report.loading && (
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() =>
+                        exportReportPDF(
+                          { area: report.area, ad: report.ad, flyer: report.flyer },
+                          { storeName, address, industry, budget }
+                        )
+                      }
+                    >
+                      <FileDown className="w-4 h-4" />
+                      PDFダウンロード
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </motion.div>
