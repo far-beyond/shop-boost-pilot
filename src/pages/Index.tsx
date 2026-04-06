@@ -12,6 +12,18 @@ const features = [
     description: "商圏・客層・競合を分析し、店舗の強み・弱みを可視化します。",
   },
   {
+    icon: MapPin,
+    title: "商圏分析",
+    description: "半径1〜5kmの人口統計・年齢構成・世帯構成をAIが分析。",
+    isNew: true,
+  },
+  {
+    icon: Store,
+    title: "出店分析",
+    description: "出店候補地を100点満点でスコアリング。リスクと改善策を提示。",
+    isNew: true,
+  },
+  {
     icon: Zap,
     title: "優先施策の提案",
     description: "今すぐ取り組むべき施策を3つ、根拠付きで提案します。",
@@ -227,10 +239,10 @@ export default function Index() {
               MapBoost AI でできること
             </h2>
             <p className="text-muted-foreground max-w-lg mx-auto text-sm">
-              店舗情報を入力するだけで、4つの分析・提案を自動で行います。
+              店舗情報を入力するだけで、6つの分析・提案を自動で行います。
             </p>
           </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
             {features.map((f, i) => (
               <motion.div
                 key={f.title}
@@ -241,8 +253,13 @@ export default function Index() {
               >
                 <Card className="border border-border/60 shadow-sm hover:shadow-lg hover:border-primary/20 transition-all duration-300 h-full group">
                   <CardHeader className="pb-4">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 text-primary-foreground shadow-sm group-hover:scale-105 transition-transform" style={{ background: "var(--gradient-primary)" }}>
-                      <f.icon className="w-5 h-5" />
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-primary-foreground shadow-sm group-hover:scale-105 transition-transform" style={{ background: "var(--gradient-primary)" }}>
+                        <f.icon className="w-5 h-5" />
+                      </div>
+                      {(f as any).isNew && (
+                        <Badge variant="secondary" className="text-[10px] bg-accent/10 text-accent border-accent/20">NEW</Badge>
+                      )}
                     </div>
                     <CardTitle className="text-base">{f.title}</CardTitle>
                     <CardDescription className="text-sm leading-relaxed">{f.description}</CardDescription>
