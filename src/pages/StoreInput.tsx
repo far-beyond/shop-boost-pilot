@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,8 +10,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import Layout from "@/components/Layout";
-import { ArrowRight, Loader2, Store } from "lucide-react";
+import { ArrowRight, Loader2, Store, AlertTriangle } from "lucide-react";
 import { createDiagnosis, runAIDiagnosis } from "@/lib/diagnosisService";
+import { checkUsageLimit, incrementUsage } from "@/lib/usageLimitService";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 const mediaOptions = [
@@ -41,7 +43,15 @@ type StoreFormValues = z.infer<typeof storeSchema>;
 
 export default function StoreInput() {
   const navigate = useNavigate();
+  const { subscription } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  const [usageInfo, setUsageInfo] = useState<{ allowed: boolean; used: number; limit: number } | null>(null);
+
+  useEffect(() => {
+    if (!subscription?.subscribed) {
+      checkUsageLimit().then(setUsageInfo).catch(() => {});
+    }
+  }, [subscription]);
 
   const form = useForm<StoreFormValues>({
     resolver: zodResolver(storeSchema),
@@ -52,6 +62,15 @@ export default function StoreInput() {
   });
 
   const onSubmit = async (data: StoreFormValues) => {
+    // Check usage limit for free users
+    if (!subscription?.subscribed) {
+      const limit = await checkUsageLimit();
+      if (!limit.allowed) {
+        toast.error("今月の無料診断回数（3回）に達しました。Proプランにアップグレードしてください。");
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const diagnosis = await createDiagnosis({
@@ -76,6 +95,8 @@ export default function StoreInput() {
         runAIDiagnosis(diagnosis.id, "kpi"),
       ]);
 
+      // Increment usage after successful diagnosis
+      await incrementUsage();
       toast.success("診断が完了しました！");
       navigate(`/diagnosis/${diagnosis.id}`);
     } catch (err: any) {
@@ -89,6 +110,25 @@ export default function StoreInput() {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-12 max-w-2xl">
+        {usageInfo && !usageInfo.allowed && (
+          <Card className="mb-6 border-destructive/50 bg-destructive/5">
+            <CardContent className="flex items-center gap-3 py-4">
+              <AlertTriangle className="w-5 h-5 text-destructive shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-destructive">今月の無料診断回数（{usageInfo.limit}回）に達しました</p>
+                <p className="text-xs text-muted-foreground mt-1">Proプランにアップグレードすると無制限にご利用いただけます。</p>
+              </div>
+              <Button size="sm" asChild>
+                <Link to="/pricing">プランを見る</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+        {usageInfo && usageInfo.allowed && usageInfo.limit !== Infinity && (
+          <div className="mb-4 text-sm text-muted-foreground text-center">
+            今月の利用: {usageInfo.used} / {usageInfo.limit} 回
+          </div>
+        )}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-4">
             <Store className="w-4 h-4" />
