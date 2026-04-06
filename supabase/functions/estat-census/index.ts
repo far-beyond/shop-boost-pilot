@@ -194,12 +194,13 @@ serve(async (req) => {
 
     console.log(`Resolved area: ${area.name} (${area.code})`);
 
-    // 令和2年国勢調査 - use getStatsList to find tables, or use known working IDs
-    // Table: 人口等基本集計 全国 ... 市区町村
-    // Try multiple statsDataIds for robustness
-    const populationIds = ["0003445078", "0003448237"];
-    const ageIds = ["0003445094", "0003448303"];
-    const householdIds = ["0003445109", "0003448357"];
+    // 令和2年国勢調査 confirmed working table IDs
+    // 0003445078: 男女別人口 (市区町村)
+    // 0003448299: 年齢3区分・男女別人口 (市区町村)
+    // 0003445094: 住宅の所有関係 (used for household detail)
+    const populationIds = ["0003445078"];
+    const ageIds = ["0003448299"];
+    const householdIds = ["0003445094"];
 
     // Fetch all in parallel, try primary IDs first
     const [popData, ageData, householdData] = await Promise.all([
