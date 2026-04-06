@@ -68,6 +68,7 @@ const priorityColor = (p: string) => {
 };
 
 export default function FlyerPlan() {
+  const { t } = useLanguage();
   const [address, setAddress] = useState("");
   const [industry, setIndustry] = useState("");
   const [storeName, setStoreName] = useState("");
@@ -78,8 +79,8 @@ export default function FlyerPlan() {
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
 
   const runPlan = async () => {
-    if (!address) { toast.error("住所を入力してください"); return; }
-    if (!industry) { toast.error("業種を入力してください"); return; }
+    if (!address) { toast.error(t("common.enterAddress")); return; }
+    if (!industry) { toast.error(t("common.enterIndustry")); return; }
 
     setLoading(true);
     try {
@@ -89,9 +90,9 @@ export default function FlyerPlan() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data.result);
-      toast.success("チラシ配布計画が完成しました");
+      toast.success(t("flyer.planComplete"));
     } catch (e: any) {
-      toast.error(e.message || "計画の生成に失敗しました");
+      toast.error(e.message || t("flyer.planFailed"));
     } finally {
       setLoading(false);
     }
@@ -100,7 +101,7 @@ export default function FlyerPlan() {
   const copyText = (text: string, idx: number) => {
     navigator.clipboard.writeText(text);
     setCopiedIdx(idx);
-    toast.success("コピーしました");
+    toast.success(t("common.copied"));
     setTimeout(() => setCopiedIdx(null), 2000);
   };
 
@@ -118,11 +119,11 @@ export default function FlyerPlan() {
           <motion.div className="mb-8" {...fadeUp}>
             <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent mb-2">
               <Newspaper className="w-3.5 h-3.5" />
-              チラシ配布設計
+              {t("flyer.badge")}
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">チラシ配布プランナー</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">{t("flyer.title")}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              AIが最適な配布エリア・部数・キャッチコピーを自動設計します。
+              {t("flyer.subtitle")}
             </p>
           </motion.div>
 
@@ -132,7 +133,7 @@ export default function FlyerPlan() {
               <CardContent className="pt-6 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">店舗所在地 *</label>
+                    <label className="text-sm font-medium text-foreground">{t("flyer.storeLocation")} *</label>
                     <Input
                       placeholder="例: 東京都渋谷区神南1丁目"
                       value={address}
@@ -140,7 +141,7 @@ export default function FlyerPlan() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">業種 *</label>
+                    <label className="text-sm font-medium text-foreground">{t("flyer.industry")} *</label>
                     <Input
                       placeholder="例: 美容院、学習塾、居酒屋"
                       value={industry}
@@ -148,7 +149,7 @@ export default function FlyerPlan() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">店舗名（任意）</label>
+                    <label className="text-sm font-medium text-foreground">{t("flyer.storeName")}</label>
                     <Input
                       placeholder="例: ヘアサロン BLOOM"
                       value={storeName}
@@ -156,7 +157,7 @@ export default function FlyerPlan() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">予算目安（任意）</label>
+                    <label className="text-sm font-medium text-foreground">{t("flyer.budget")}</label>
                     <Input
                       placeholder="例: 5万円、10万円"
                       value={budget}
@@ -165,7 +166,7 @@ export default function FlyerPlan() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">ターゲット層（任意）</label>
+                  <label className="text-sm font-medium text-foreground">{t("flyer.targetAudience")}</label>
                   <Textarea
                     placeholder="例: 30〜40代の子育て世帯、近隣のオフィスワーカー"
                     value={target}
@@ -175,7 +176,7 @@ export default function FlyerPlan() {
                 </div>
                 <Button onClick={runPlan} disabled={loading} className="w-full sm:w-auto gap-2">
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                  {loading ? "計画生成中..." : "AIで配布計画を作成"}
+                  {loading ? t("flyer.generating") : t("flyer.generate")}
                 </Button>
               </CardContent>
             </Card>
@@ -201,7 +202,7 @@ export default function FlyerPlan() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
                       <FileText className="w-4 h-4 text-primary" />
-                      配布計画の概要
+                      {t("flyer.summary")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -213,10 +214,10 @@ export default function FlyerPlan() {
               {/* Stats Row */}
               <motion.div variants={fadeUp} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                  { label: "合計部数", value: result.totalQuantity.toLocaleString() + "部", icon: Newspaper },
-                  { label: "合計費用", value: "¥" + result.estimatedCost.totalCost.toLocaleString(), icon: DollarSign },
-                  { label: "期待反応率", value: result.expectedResponseRate, icon: TrendingUp },
-                  { label: "期待ROI", value: result.expectedROI, icon: Target },
+                  { label: t("flyer.totalQty"), value: result.totalQuantity.toLocaleString() + t("flyer.copies"), icon: Newspaper },
+                  { label: t("flyer.totalCost"), value: "¥" + result.estimatedCost.totalCost.toLocaleString(), icon: DollarSign },
+                  { label: t("flyer.expectedResponse"), value: result.expectedResponseRate, icon: TrendingUp },
+                  { label: t("flyer.expectedROI"), value: result.expectedROI, icon: Target },
                 ].map((s) => (
                   <Card key={s.label} className="border border-border/60">
                     <CardContent className="p-4">
@@ -236,7 +237,7 @@ export default function FlyerPlan() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-primary" />
-                      配布エリア計画
+                      {t("flyer.distAreas")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -246,7 +247,7 @@ export default function FlyerPlan() {
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-bold text-foreground">{area.areaName}</span>
                             <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${priorityColor(area.priority)}`}>
-                              優先度: {area.priority}
+                              {t("flyer.priority")}: {area.priority}
                             </span>
                           </div>
                           <Badge variant="outline" className="text-xs">
@@ -255,8 +256,8 @@ export default function FlyerPlan() {
                         </div>
                         <p className="text-xs text-muted-foreground mb-2">{area.reason}</p>
                         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                          <span>推定世帯: {area.estimatedHouseholds.toLocaleString()}</span>
-                          <span>ターゲット: {area.targetDescription}</span>
+                          <span>{t("flyer.estHouseholds")}: {area.estimatedHouseholds.toLocaleString()}</span>
+                          <span>{t("flyer.targetDesc")}: {area.targetDescription}</span>
                         </div>
                       </div>
                     ))}
@@ -268,7 +269,7 @@ export default function FlyerPlan() {
               <motion.div variants={fadeUp}>
                 <Card className="border border-border/60">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base">エリア別配布部数</CardTitle>
+                    <CardTitle className="text-base">{t("flyer.areaDistChart")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="h-[250px]">
@@ -293,16 +294,16 @@ export default function FlyerPlan() {
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base flex items-center gap-2">
                         <DollarSign className="w-4 h-4 text-primary" />
-                        費用内訳
+                        {t("flyer.costBreakdown")}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="space-y-2">
                         {[
-                          { label: "印刷単価", value: `¥${result.estimatedCost.printingCostPerUnit}/枚` },
-                          { label: "配布単価", value: `¥${result.estimatedCost.distributionCostPerUnit}/枚` },
-                          { label: "印刷費合計", value: `¥${result.estimatedCost.totalPrintingCost.toLocaleString()}` },
-                          { label: "配布費合計", value: `¥${result.estimatedCost.totalDistributionCost.toLocaleString()}` },
+                          { label: t("flyer.printUnit"), value: `¥${result.estimatedCost.printingCostPerUnit}${t("flyer.perSheet")}` },
+                          { label: t("flyer.distUnit"), value: `¥${result.estimatedCost.distributionCostPerUnit}${t("flyer.perSheet")}` },
+                          { label: t("flyer.printTotal"), value: `¥${result.estimatedCost.totalPrintingCost.toLocaleString()}` },
+                          { label: t("flyer.distTotal"), value: `¥${result.estimatedCost.totalDistributionCost.toLocaleString()}` },
                         ].map((item) => (
                           <div key={item.label} className="flex justify-between text-sm">
                             <span className="text-muted-foreground">{item.label}</span>
@@ -310,7 +311,7 @@ export default function FlyerPlan() {
                           </div>
                         ))}
                         <div className="border-t pt-2 flex justify-between text-sm font-bold">
-                          <span className="text-foreground">合計</span>
+                          <span className="text-foreground">{t("flyer.total")}</span>
                           <span className="text-primary">¥{result.estimatedCost.totalCost.toLocaleString()}</span>
                         </div>
                       </div>
@@ -323,12 +324,12 @@ export default function FlyerPlan() {
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base flex items-center gap-2">
                         <CalendarDays className="w-4 h-4 text-primary" />
-                        配布タイミング
+                        {t("flyer.timing")}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">最適な曜日</p>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">{t("flyer.bestDays")}</p>
                         <div className="flex flex-wrap gap-1.5">
                           {result.timing.bestDays.map((d) => (
                             <Badge key={d} variant="secondary" className="text-xs">{d}</Badge>
@@ -336,7 +337,7 @@ export default function FlyerPlan() {
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">最適な時間帯</p>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">{t("flyer.bestTime")}</p>
                         <div className="flex flex-wrap gap-1.5">
                           {result.timing.bestTimeSlots.map((t) => (
                             <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>
@@ -344,11 +345,11 @@ export default function FlyerPlan() {
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">推奨頻度</p>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">{t("flyer.frequency")}</p>
                         <p className="text-sm text-foreground">{result.timing.frequency}</p>
                       </div>
                       <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">季節アドバイス</p>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">{t("flyer.seasonalTips")}</p>
                         <p className="text-xs text-muted-foreground leading-relaxed">{result.timing.seasonalTips}</p>
                       </div>
                     </CardContent>
@@ -362,7 +363,7 @@ export default function FlyerPlan() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Megaphone className="w-4 h-4 text-primary" />
-                      キャッチコピー案
+                      {t("flyer.catchcopies")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -397,7 +398,7 @@ export default function FlyerPlan() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Lightbulb className="w-4 h-4 text-amber-500" />
-                      デザインアドバイス
+                      {t("flyer.designTips")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
