@@ -119,6 +119,45 @@ serve(async (req) => {
       });
     }
 
+    if (action === "get-plan-settings") {
+      const { data, error } = await supabase
+        .from("plan_settings")
+        .select("*")
+        .order("setting_key");
+      if (error) throw error;
+      const settings: Record<string, string> = {};
+      for (const row of data || []) settings[row.setting_key] = row.setting_value;
+      return new Response(JSON.stringify({ settings }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "update-plan-settings") {
+      const { settings } = await req.json().catch(() => ({ settings: null }));
+      // settings already parsed above, re-read from original body
+      const body = { action, settings: (await req.clone().json().catch(() => null)) || {} };
+      // We need to handle this differently - settings come from the original parse
+    }
+
+    // Dedicated handler with settings from initial parse
+    if (action === "save-plan-settings") {
+      const body = await req.clone().json().catch(() => ({}));
+      const settingsToSave = body.settings as Record<string, string> | undefined;
+      if (!settingsToSave || typeof settingsToSave !== "object") {
+        return new Response(JSON.stringify({ error: "Settings object required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      for (const [key, value] of Object.entries(settingsToSave)) {
+        const { error } = await supabase
+          .from("plan_settings")
+          .update({ setting_value: String(value), updated_by: userEmail, updated_at: new Date().toISOString() })
+          .eq("setting_key", key);
+        if (error) throw error;
+      }
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Unknown action" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("admin-billing error:", e);
