@@ -1,23 +1,35 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { MapPin, Users, Home, TrendingUp, Loader2, Search, Building2, AlertTriangle, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import Layout from "@/components/Layout";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { MapContainer, TileLayer, Circle, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Circle, Marker, Popup, useMap, GeoJSON, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import {
   fetchMapAreaAnalysis,
   type MapAreaAnalysisResult,
-  type PopulationZone,
-  type CompetitorStore,
 } from "@/lib/mapAreaService";
+import {
+  generateDummyTownPolygons,
+  getHeatmapColor,
+  getHeatmapValue,
+  calculateFlyerSelection,
+  type HeatmapMode,
+  type LayerMode,
+  type CandidatePin,
+  type TownFeatureCollection,
+  type TownPolygonProperties,
+} from "@/lib/mapGeoData";
+import MapControls from "@/components/map/MapControls";
+import FlyerSelectionPanel from "@/components/map/FlyerSelectionPanel";
+import CandidateComparison from "@/components/map/CandidateComparison";
 
 // Fix default marker icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -44,29 +56,33 @@ const competitorIcon = new L.DivIcon({
   iconAnchor: [6, 6],
 });
 
+const candidateIcon = new L.DivIcon({
+  html: `<div style="background:hsl(217,91%,55%);width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35);"></div>`,
+  className: "",
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
+});
+
 const RADIUS_OPTIONS = [
   { label: "1km", value: "1km", meters: 1000 },
   { label: "3km", value: "3km", meters: 3000 },
   { label: "5km", value: "5km", meters: 5000 },
 ];
 
-const DENSITY_COLORS: Record<string, string> = {
-  high: "rgba(239, 68, 68, 0.25)",
-  medium: "rgba(245, 158, 11, 0.20)",
-  low: "rgba(34, 197, 94, 0.15)",
-};
-
-const DENSITY_BORDERS: Record<string, string> = {
-  high: "rgba(239, 68, 68, 0.5)",
-  medium: "rgba(245, 158, 11, 0.4)",
-  low: "rgba(34, 197, 94, 0.3)",
-};
-
 function MapUpdater({ center, zoom }: { center: [number, number]; zoom: number }) {
   const map = useMap();
-  useEffect(() => {
+  useMemo(() => {
     map.setView(center, zoom, { animate: true });
   }, [center, zoom, map]);
+  return null;
+}
+
+function MapClickHandler({ onClick }: { onClick: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      onClick(e.latlng.lat, e.latlng.lng);
+    },
+  });
   return null;
 }
 
@@ -88,9 +104,30 @@ export default function MapAreaAnalysis() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<MapAreaAnalysisResult | null>(null);
 
+  // New feature states
+  const [heatmapMode, setHeatmapMode] = useState<HeatmapMode>("population");
+  const [activeLayer, setActiveLayer] = useState<LayerMode>("density");
+  const [flyerMode, setFlyerMode] = useState(false);
+  const [multiPinMode, setMultiPinMode] = useState(false);
+  const [selectedTownIds, setSelectedTownIds] = useState<string[]>([]);
+  const [candidates, setCandidates] = useState<CandidatePin[]>([]);
+  const [geoJsonKey, setGeoJsonKey] = useState(0); // force GeoJSON re-render
+
   const radiusMeta = RADIUS_OPTIONS.find((r) => r.value === radius)!;
-  const mapCenter = result?.center || [35.6812, 139.7671] as [number, number];
+  const mapCenter: [number, number] = result?.center || [35.6812, 139.7671];
   const mapZoom = radius === "1km" ? 15 : radius === "3km" ? 13 : 12;
+  const radiusKm = parseFloat(radius.replace("km", ""));
+
+  // Generate town polygons around center
+  const townPolygons = useMemo<TownFeatureCollection>(
+    () => generateDummyTownPolygons(mapCenter, radiusKm),
+    [mapCenter[0], mapCenter[1], radiusKm]
+  );
+
+  const flyerSelection = useMemo(
+    () => calculateFlyerSelection(selectedTownIds, townPolygons),
+    [selectedTownIds, townPolygons]
+  );
 
   const handleAnalyze = async () => {
     if (!address.trim()) {
@@ -99,9 +136,11 @@ export default function MapAreaAnalysis() {
     }
     setLoading(true);
     setError(null);
+    setSelectedTownIds([]);
     try {
       const data = await fetchMapAreaAnalysis(address, radius, industry || undefined);
       setResult(data);
+      setGeoJsonKey((k) => k + 1);
       toast.success("分析が完了しました");
     } catch (e: any) {
       const msg = e?.message || "分析中にエラーが発生しました";
@@ -111,6 +150,78 @@ export default function MapAreaAnalysis() {
       setLoading(false);
     }
   };
+
+  const handleMapClick = useCallback(
+    (lat: number, lng: number) => {
+      if (multiPinMode) {
+        const id = `cand-${Date.now()}`;
+        setCandidates((prev) => [
+          ...prev,
+          {
+            id,
+            label: `候補地 ${prev.length + 1}`,
+            lat,
+            lng,
+            score: Math.round(40 + Math.random() * 50),
+            population: Math.round(5000 + Math.random() * 30000),
+            competitors: Math.round(2 + Math.random() * 10),
+          },
+        ]);
+        toast.success("候補地を追加しました");
+      }
+    },
+    [multiPinMode]
+  );
+
+  const handleTownClick = useCallback(
+    (townId: string) => {
+      if (!flyerMode) return;
+      setSelectedTownIds((prev) =>
+        prev.includes(townId) ? prev.filter((id) => id !== townId) : [...prev, townId]
+      );
+    },
+    [flyerMode]
+  );
+
+  const geoJsonStyle = useCallback(
+    (feature: any) => {
+      const props = feature.properties as TownPolygonProperties;
+      const isSelected = selectedTownIds.includes(props.id);
+      const val = getHeatmapValue(props, heatmapMode);
+
+      if (activeLayer === "recommended") {
+        const isRec = props.population > 2500 && props.densityRank !== "low";
+        return {
+          fillColor: isRec ? "hsl(142, 71%, 45%)" : "hsl(0, 0%, 80%)",
+          fillOpacity: isSelected ? 0.7 : 0.35,
+          color: isSelected ? "hsl(217, 91%, 55%)" : "hsl(0, 0%, 60%)",
+          weight: isSelected ? 3 : 1,
+        };
+      }
+
+      return {
+        fillColor: getHeatmapColor(val, heatmapMode),
+        fillOpacity: isSelected ? 0.7 : 0.4,
+        color: isSelected ? "hsl(217, 91%, 55%)" : "rgba(0,0,0,0.2)",
+        weight: isSelected ? 3 : 1,
+      };
+    },
+    [heatmapMode, activeLayer, selectedTownIds]
+  );
+
+  const onEachFeature = useCallback(
+    (feature: any, layer: L.Layer) => {
+      const props = feature.properties as TownPolygonProperties;
+      layer.bindPopup(
+        `<strong>${props.name}</strong><br/>人口: ${props.population.toLocaleString()}人<br/>世帯数: ${props.households.toLocaleString()}<br/>平均年齢: ${props.avgAge}歳`
+      );
+      layer.on("click", () => handleTownClick(props.id));
+    },
+    [handleTownClick]
+  );
+
+  // Force GeoJSON re-render when style deps change
+  const computedGeoJsonKey = `${geoJsonKey}-${heatmapMode}-${activeLayer}-${selectedTownIds.join(",")}`;
 
   return (
     <Layout>
@@ -160,8 +271,45 @@ export default function MapAreaAnalysis() {
             </Card>
           </div>
 
-          {/* Legend overlay */}
-          {result && (
+          {/* Controls overlay (bottom-right) */}
+          <div className="absolute top-4 right-4 z-[1000] hidden lg:block lg:w-[280px]">
+            <MapControls
+              heatmapMode={heatmapMode}
+              onHeatmapModeChange={(m) => { setHeatmapMode(m); }}
+              activeLayer={activeLayer}
+              onLayerChange={setActiveLayer}
+              flyerMode={flyerMode}
+              onFlyerModeToggle={() => setFlyerMode((f) => !f)}
+              multiPinMode={multiPinMode}
+              onMultiPinModeToggle={() => setMultiPinMode((m) => !m)}
+            />
+          </div>
+
+          {/* Flyer selection panel (bottom-left) */}
+          {flyerMode && (
+            <div className="absolute bottom-4 left-4 z-[1000] w-[260px]">
+              <FlyerSelectionPanel
+                selection={flyerSelection}
+                towns={townPolygons}
+                onClear={() => setSelectedTownIds([])}
+                onRemoveTown={(id) => setSelectedTownIds((prev) => prev.filter((t) => t !== id))}
+              />
+            </div>
+          )}
+
+          {/* Candidate comparison (bottom-right) */}
+          {multiPinMode && (
+            <div className="absolute bottom-4 right-4 z-[1000] w-[260px]">
+              <CandidateComparison
+                candidates={candidates}
+                onRemove={(id) => setCandidates((prev) => prev.filter((c) => c.id !== id))}
+                onClear={() => setCandidates([])}
+              />
+            </div>
+          )}
+
+          {/* Legend */}
+          {result && !flyerMode && !multiPinMode && (
             <div className="absolute bottom-4 left-4 z-[1000]">
               <Card className="shadow-md bg-card/95 backdrop-blur-sm border-border/60">
                 <CardContent className="p-3 space-y-1.5">
@@ -169,14 +317,16 @@ export default function MapAreaAnalysis() {
                     <Layers className="w-3.5 h-3.5" /> 凡例
                   </p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="w-3 h-3 rounded-full bg-red-400/60 border border-red-500/50" /> 高密度
-                    <span className="w-3 h-3 rounded-full bg-yellow-400/50 border border-yellow-500/40 ml-2" /> 中密度
-                    <span className="w-3 h-3 rounded-full bg-green-400/40 border border-green-500/30 ml-2" /> 低密度
+                    <span className="w-3 h-3 rounded-sm" style={{ background: getHeatmapColor(5000, heatmapMode) }} /> 高
+                    <span className="w-3 h-3 rounded-sm" style={{ background: getHeatmapColor(2500, heatmapMode) }} /> 中
+                    <span className="w-3 h-3 rounded-sm" style={{ background: getHeatmapColor(500, heatmapMode) }} /> 低
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="w-3 h-3 rounded-full bg-red-500 border-2 border-white" /> 競合店舗
-                    <MapPin className="w-3 h-3 text-primary ml-2" /> 候補地
-                  </div>
+                  {activeLayer !== "recommended" && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span className="w-3 h-3 rounded-full bg-red-500 border-2 border-white" /> 競合店舗
+                      <MapPin className="w-3 h-3 text-primary ml-2" /> 候補地
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -193,6 +343,17 @@ export default function MapAreaAnalysis() {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <MapUpdater center={mapCenter} zoom={mapZoom} />
+            <MapClickHandler onClick={handleMapClick} />
+
+            {/* Town polygons */}
+            {(activeLayer === "density" || activeLayer === "recommended") && (
+              <GeoJSON
+                key={computedGeoJsonKey}
+                data={townPolygons}
+                style={geoJsonStyle}
+                onEachFeature={onEachFeature}
+              />
+            )}
 
             {/* Trade area circle */}
             <Circle
@@ -201,47 +362,40 @@ export default function MapAreaAnalysis() {
               pathOptions={{
                 color: "hsl(217, 91%, 55%)",
                 fillColor: "hsl(217, 91%, 55%)",
-                fillOpacity: 0.08,
+                fillOpacity: 0.06,
                 weight: 2,
                 dashArray: "6 4",
               }}
             />
 
             {/* Store candidate pin */}
-            {result && <Marker position={mapCenter} icon={storeIcon}>
-              <Popup>
-                <strong>候補地</strong><br />{address}
-              </Popup>
-            </Marker>}
-
-            {/* Population density zones */}
-            {result?.populationZones.map((zone) => (
-              <Circle
-                key={zone.id}
-                center={zone.center}
-                radius={zone.radius}
-                pathOptions={{
-                  color: DENSITY_BORDERS[zone.density],
-                  fillColor: DENSITY_COLORS[zone.density],
-                  fillOpacity: 1,
-                  weight: 1,
-                }}
-              >
+            {result && (
+              <Marker position={mapCenter} icon={storeIcon}>
                 <Popup>
-                  <strong>{zone.label}</strong><br />
-                  推定人口: {zone.population.toLocaleString()}人<br />
-                  密度: {zone.density === "high" ? "高" : zone.density === "medium" ? "中" : "低"}
+                  <strong>候補地</strong><br />{address}
                 </Popup>
-              </Circle>
-            ))}
+              </Marker>
+            )}
 
             {/* Competitor markers */}
-            {result?.competitors.map((comp) => (
-              <Marker key={comp.id} position={[comp.lat, comp.lng]} icon={competitorIcon}>
+            {activeLayer !== "recommended" &&
+              result?.competitors.map((comp) => (
+                <Marker key={comp.id} position={[comp.lat, comp.lng]} icon={competitorIcon}>
+                  <Popup>
+                    <strong>{comp.name}</strong><br />
+                    業種: {comp.industry}<br />
+                    距離: {comp.distance}m
+                  </Popup>
+                </Marker>
+              ))}
+
+            {/* Multi-pin candidates */}
+            {candidates.map((c) => (
+              <Marker key={c.id} position={[c.lat, c.lng]} icon={candidateIcon}>
                 <Popup>
-                  <strong>{comp.name}</strong><br />
-                  業種: {comp.industry}<br />
-                  距離: {comp.distance}m
+                  <strong>{c.label}</strong><br />
+                  スコア: {c.score}点<br />
+                  人口: {c.population.toLocaleString()}人
                 </Popup>
               </Marker>
             ))}
@@ -250,6 +404,20 @@ export default function MapAreaAnalysis() {
 
         {/* Analysis side panel */}
         <div className="w-full lg:w-[380px] border-t lg:border-t-0 lg:border-l border-border/60 bg-card overflow-y-auto">
+          {/* Mobile controls */}
+          <div className="lg:hidden p-3 border-b border-border/40">
+            <MapControls
+              heatmapMode={heatmapMode}
+              onHeatmapModeChange={setHeatmapMode}
+              activeLayer={activeLayer}
+              onLayerChange={setActiveLayer}
+              flyerMode={flyerMode}
+              onFlyerModeToggle={() => setFlyerMode((f) => !f)}
+              multiPinMode={multiPinMode}
+              onMultiPinModeToggle={() => setMultiPinMode((m) => !m)}
+            />
+          </div>
+
           {loading ? (
             <SidePanelSkeleton />
           ) : error ? (
@@ -264,6 +432,8 @@ export default function MapAreaAnalysis() {
     </Layout>
   );
 }
+
+// --- Sub-components ---
 
 function EmptyState() {
   return (
@@ -303,12 +473,6 @@ function SidePanelSkeleton() {
       </div>
       <Skeleton className="h-4 w-24" />
       <Skeleton className="h-32 rounded-lg" />
-      <Skeleton className="h-4 w-24" />
-      <Skeleton className="h-32 rounded-lg" />
-      <Skeleton className="h-4 w-24" />
-      {Array.from({ length: 3 }).map((_, i) => (
-        <Skeleton key={i} className="h-10 rounded-lg" />
-      ))}
     </div>
   );
 }
@@ -323,13 +487,11 @@ function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radi
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="font-bold text-base text-foreground">分析結果</h2>
         <Badge variant="secondary" className="text-xs">半径 {radius}</Badge>
       </div>
 
-      {/* Stats grid */}
       <div className="grid grid-cols-2 gap-3">
         <StatCard icon={<Users className="w-4 h-4 text-primary" />} label="総人口" value={summary.totalPopulation.toLocaleString()} unit="人" />
         <StatCard icon={<Home className="w-4 h-4 text-primary" />} label="世帯数" value={(summary.householdTypes.reduce((s, h) => s + h.count, 0) || Math.round(summary.totalPopulation / 2.3)).toLocaleString()} unit="世帯" />
@@ -342,7 +504,6 @@ function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radi
         </div>
       </div>
 
-      {/* Age distribution */}
       {summary.ageDistribution.length > 0 && (
         <section>
           <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">年齢構成</h3>
@@ -360,7 +521,6 @@ function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radi
         </section>
       )}
 
-      {/* Household types */}
       {summary.householdTypes.length > 0 && (
         <section>
           <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">世帯構成</h3>
@@ -378,7 +538,6 @@ function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radi
         </section>
       )}
 
-      {/* Competitors list */}
       {competitors.length > 0 && (
         <section>
           <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
@@ -398,7 +557,6 @@ function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radi
         </section>
       )}
 
-      {/* Recommendations */}
       {summary.recommendations.length > 0 && (
         <section>
           <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">推奨施策</h3>
