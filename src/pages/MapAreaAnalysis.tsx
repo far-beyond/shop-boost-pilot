@@ -236,7 +236,7 @@ function LeafletMap({
 }
 
 export default function MapAreaAnalysis() {
-  const { language } = useLanguage();
+  const { t, language } = useLanguage();
   const [address, setAddress] = useState("");
   const [industry, setIndustry] = useState("");
   const [radius, setRadius] = useState<string>("3km");
