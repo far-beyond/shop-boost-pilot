@@ -585,10 +585,10 @@ function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radi
       <div className="flex items-center justify-between">
         <h2 className="font-bold text-base text-foreground">分析結果</h2>
         <div className="flex items-center gap-1.5">
-          <Badge variant={badgeVariant as any} className="text-xs flex items-center gap-1">
-            {isRealData && !isOverseas && <Database className="w-3 h-3" />}
-            {isOverseas && <span>🌍</span>}
-            {badgeLabel}
+          <Badge variant={badge.variant} className="text-xs flex items-center gap-1">
+            {badge.icon && <span>{badge.icon}</span>}
+            {countryCode === "jp" && isRealData && <Database className="w-3 h-3" />}
+            {badge.label}
           </Badge>
           <Badge variant="outline" className="text-xs">半径 {radius}</Badge>
         </div>
