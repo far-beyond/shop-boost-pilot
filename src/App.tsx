@@ -18,6 +18,7 @@ import AdProposal from "./pages/AdProposal";
 import LocationMatch from "./pages/LocationMatch";
 import StoreCandidateInput from "./pages/StoreCandidateInput";
 import MediaPlan from "./pages/MediaPlan";
+import MapAreaAnalysis from "./pages/MapAreaAnalysis";
 import AgencyDashboard from "./pages/AgencyDashboard";
 import Report from "./pages/Report";
 import Pricing from "./pages/Pricing";
@@ -52,6 +53,7 @@ const AppRoutes = () => (
     <Route path="/location-match" element={<ProtectedRoute><LocationMatch /></ProtectedRoute>} />
     <Route path="/store-candidates" element={<ProtectedRoute><StoreCandidateInput /></ProtectedRoute>} />
     <Route path="/media-plan" element={<ProtectedRoute><MediaPlan /></ProtectedRoute>} />
+    <Route path="/map-analysis" element={<ProtectedRoute><MapAreaAnalysis /></ProtectedRoute>} />
     <Route path="/agency" element={<ProtectedRoute><AgencyDashboard /></ProtectedRoute>} />
     <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
     <Route path="/pricing" element={<Pricing />} />
