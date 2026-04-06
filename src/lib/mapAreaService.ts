@@ -215,30 +215,58 @@ export async function fetchMapAreaAnalysis(
   radius: string,
   industry?: string
 ): Promise<MapAreaAnalysisResult> {
-  // Geocode first (needed for Overpass)
-  const [center, censusData, aiAnalysis] = await Promise.all([
-    geocodeAddress(address),
-    fetchCensusData(address),
-    supabase.functions.invoke("area-analysis", {
-      body: { address, radius, industry, analysisType: "area" },
-    }).then(({ data, error }) => {
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      return data;
-    }),
-  ]);
-
-  const result = aiAnalysis.result;
-  const apiCensus = aiAnalysis.censusData;
-  const dataSource = aiAnalysis.dataSource || "AI推定分析";
   const radiusMeters = parseRadiusToMeters(radius);
 
-  // Use census data for population zones (color-coded circles around center)
-  const totalPop = censusData?.totalPopulation || result.population || 0;
-  const totalHouseholds = censusData?.totalHouseholds || result.households || 0;
+  // Step 1: Geocode to get center + country code
+  const geo = await geocodeAddress(address);
+  const { center, countryCode } = geo;
+  const isOverseas = countryCode !== "jp";
+
+  // Step 2: Fetch data sources in parallel (branch by country)
+  const aiAnalysisPromise = supabase.functions.invoke("area-analysis", {
+    body: { address, radius, industry, analysisType: "area" },
+  }).then(({ data, error }) => {
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+    return data;
+  });
+
+  let censusData: CensusData | null = null;
+  let overseasEstimate: { population: number; households: number; facilityCount: number } | null = null;
+
+  if (isOverseas) {
+    // Overseas: estimate population from Overpass facility density
+    const [aiAnalysis, estimate] = await Promise.all([
+      aiAnalysisPromise,
+      estimateOverseasPopulation(center, radiusMeters),
+    ]);
+    overseasEstimate = estimate;
+    var result = aiAnalysis.result;
+    var apiCensus = aiAnalysis.censusData;
+    var dataSource = "推定データ（海外）";
+  } else {
+    // Japan: use e-Stat census
+    const [aiAnalysis, census] = await Promise.all([
+      aiAnalysisPromise,
+      fetchCensusData(address),
+    ]);
+    censusData = census;
+    var result = aiAnalysis.result;
+    var apiCensus = aiAnalysis.censusData;
+    var dataSource = aiAnalysis.dataSource || "AI推定分析";
+  }
+
+  // Population & households
+  const totalPop = isOverseas
+    ? (overseasEstimate?.population || result.population || 0)
+    : (censusData?.totalPopulation || result.population || 0);
+  const totalHouseholds = isOverseas
+    ? (overseasEstimate?.households || result.households || 0)
+    : (censusData?.totalHouseholds || result.households || 0);
+
   const populationZones = generatePopulationZones(center, radiusMeters, totalPop);
 
-  // Fetch real competitors from Overpass API, fallback to generated data
+  // Competitors (Overpass — already global)
   let competitors: CompetitorStore[];
   try {
     competitors = await fetchCompetitorsFromOverpass(center, radiusMeters, industry);
@@ -249,9 +277,9 @@ export async function fetchMapAreaAnalysis(
     competitors = generateCompetitorMarkers(center, radiusMeters, result);
   }
 
-  // Build age distribution from census or AI
+  // Age distribution
   let ageDistribution: { ageGroup: string; percentage: number; count: number }[] = [];
-  if (censusData?.ageDistribution?.length) {
+  if (!isOverseas && censusData?.ageDistribution?.length) {
     ageDistribution = censusData.ageDistribution.map((ag) => ({
       ageGroup: ag.ageGroup,
       percentage: ag.percentage,
@@ -261,11 +289,26 @@ export async function fetchMapAreaAnalysis(
     ageDistribution = result.ageDistribution;
   }
 
+  // For overseas, build a synthetic censusData for display
+  const finalCensusData: CensusData | null = isOverseas
+    ? {
+        source: "Overpass API施設密度推定",
+        areaName: geo.displayName.split(",").slice(0, 2).join(", "),
+        areaCode: countryCode.toUpperCase(),
+        totalPopulation: totalPop,
+        totalHouseholds,
+        ageDistribution: ageDistribution.map((a) => ({ ageGroup: a.ageGroup, population: a.count, percentage: a.percentage })),
+        dataAvailable: overseasEstimate ? overseasEstimate.facilityCount > 0 : false,
+      }
+    : censusData || (apiCensus ? { ...apiCensus, dataAvailable: true } as CensusData : null);
+
   return {
     center,
     populationZones,
     competitors,
-    censusData: censusData || (apiCensus ? { ...apiCensus, dataAvailable: true } as CensusData : null),
+    censusData: finalCensusData,
+    countryCode,
+    isOverseas,
     summary: {
       totalPopulation: totalPop,
       totalHouseholds,
