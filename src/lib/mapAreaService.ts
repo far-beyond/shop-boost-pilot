@@ -127,20 +127,22 @@ async function fetchCensusForCountry(
   countryCode: string,
   address: string,
   center: [number, number],
-  radiusMeters: number
+  radiusMeters: number,
+  language: string = "ja"
 ): Promise<{ data: CensusData | null; dataSource: string }> {
+  const isEn = language === "en";
   switch (countryCode) {
     case "jp": {
       const data = await fetchJpCensusData(address);
-      return { data, dataSource: data?.dataAvailable ? "e-Stat 国勢調査" : "AI推定分析" };
+      return { data, dataSource: data?.dataAvailable ? (isEn ? "e-Stat Census" : "e-Stat 国勢調査") : (isEn ? "AI Estimated" : "AI推定分析") };
     }
     case "us": {
       const data = await fetchUsCensusData(center[0], center[1]);
-      return { data, dataSource: data?.dataAvailable ? "US Census (2020)" : "推定データ（海外）" };
+      return { data, dataSource: data?.dataAvailable ? "US Census (2020)" : (isEn ? "Estimated (Overseas)" : "推定データ（海外）") };
     }
     default: {
       const data = await fetchWorldPopData(center[0], center[1], countryCode, radiusMeters);
-      return { data, dataSource: data?.dataAvailable ? "WorldPop推計" : "推定データ（海外）" };
+      return { data, dataSource: data?.dataAvailable ? (isEn ? "WorldPop Est." : "WorldPop推計") : (isEn ? "Estimated (Overseas)" : "推定データ（海外）") };
     }
   }
 }
@@ -326,18 +328,20 @@ function parseRadiusToMeters(radius: string): number {
 function generatePopulationZones(
   center: [number, number],
   radiusMeters: number,
-  totalPop: number
+  totalPop: number,
+  language: string = "ja"
 ): PopulationZone[] {
   if (totalPop <= 0) return [];
   const zones: PopulationZone[] = [];
+  const isEn = language === "en";
   const directions = [
-    { label: "北部", offset: [0.005, 0] },
-    { label: "東部", offset: [0, 0.006] },
-    { label: "南部", offset: [-0.005, 0] },
-    { label: "西部", offset: [0, -0.006] },
-    { label: "中心部", offset: [0, 0] },
-    { label: "北東部", offset: [0.004, 0.004] },
-    { label: "南西部", offset: [-0.004, -0.004] },
+    { label: isEn ? "North" : "北部", offset: [0.005, 0] },
+    { label: isEn ? "East" : "東部", offset: [0, 0.006] },
+    { label: isEn ? "South" : "南部", offset: [-0.005, 0] },
+    { label: isEn ? "West" : "西部", offset: [0, -0.006] },
+    { label: isEn ? "Center" : "中心部", offset: [0, 0] },
+    { label: isEn ? "Northeast" : "北東部", offset: [0.004, 0.004] },
+    { label: isEn ? "Southwest" : "南西部", offset: [-0.004, -0.004] },
   ];
 
   directions.forEach((dir, i) => {
@@ -359,11 +363,15 @@ function generatePopulationZones(
 function generateCompetitorMarkers(
   center: [number, number],
   radiusMeters: number,
-  result: any
+  result: any,
+  language: string = "ja"
 ): CompetitorStore[] {
   const count = Math.max(3, Math.min(12, Math.floor(Math.random() * 5) + 5));
   const competitors: CompetitorStore[] = [];
-  const industries = ["飲食店", "小売店", "美容院", "コンビニ", "薬局", "カフェ", "フィットネス", "クリーニング"];
+  const isEn = language === "en";
+  const industries = isEn
+    ? ["Restaurant", "Retail", "Salon", "Convenience", "Pharmacy", "Cafe", "Fitness", "Laundry"]
+    : ["飲食店", "小売店", "美容院", "コンビニ", "薬局", "カフェ", "フィットネス", "クリーニング"];
 
   for (let i = 0; i < count; i++) {
     const angle = (2 * Math.PI * i) / count + (Math.random() - 0.5) * 0.5;
@@ -373,7 +381,7 @@ function generateCompetitorMarkers(
 
     competitors.push({
       id: `comp-${i}`,
-      name: `${industries[i % industries.length]}${i + 1}`,
+      name: `${industries[i % industries.length]}${isEn ? " " : ""}${i + 1}`,
       lat: center[0] + latOffset,
       lng: center[1] + lngOffset,
       industry: industries[i % industries.length],
@@ -394,16 +402,19 @@ function calculateTradeAreaScore(result: any): number {
   return Math.min(100, Math.max(0, score + Math.floor(Math.random() * 12)));
 }
 
-function extractRecommendations(result: any): string[] {
+function extractRecommendations(result: any, language: string = "ja"): string[] {
+  const isEn = language === "en";
   const recs: string[] = [];
-  if (result.primaryTarget) recs.push(`主要ターゲット: ${result.primaryTarget}`);
+  if (result.primaryTarget) recs.push(`${isEn ? "Primary Target: " : "主要ターゲット: "}${result.primaryTarget}`);
   if (result.suitableIndustries?.[0]) {
-    recs.push(`最適業種: ${result.suitableIndustries[0].industry}（${result.suitableIndustries[0].reason}）`);
+    const ind = result.suitableIndustries[0];
+    recs.push(isEn ? `Best Industry: ${ind.industry} (${ind.reason})` : `最適業種: ${ind.industry}（${ind.reason}）`);
   }
   if (result.visitMotivations?.length > 0) {
-    recs.push(`来店動機: ${result.visitMotivations.slice(0, 3).join("、")}`);
+    const sep = isEn ? ", " : "、";
+    recs.push(`${isEn ? "Visit Motivations: " : "来店動機: "}${result.visitMotivations.slice(0, 3).join(sep)}`);
   }
   if (result.areaCharacteristics) recs.push(result.areaCharacteristics);
-  if (recs.length === 0) recs.push("データを取得して分析を実行してください");
+  if (recs.length === 0) recs.push(isEn ? "Run an analysis to get data" : "データを取得して分析を実行してください");
   return recs;
 }
