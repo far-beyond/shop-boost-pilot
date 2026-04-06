@@ -96,6 +96,7 @@ function LeafletMap({
   onMapClick,
   heatmapMode,
   selectedTownIds,
+  labels,
 }: {
   center: [number, number];
   zoom: number;
@@ -110,6 +111,7 @@ function LeafletMap({
   onMapClick: (lat: number, lng: number) => void;
   heatmapMode: HeatmapMode;
   selectedTownIds: string[];
+  labels: { candidate: string; population: string; popUnit: string; households: string; avgAge: string; ageUnit: string; industry: string; distance: string; score: string; points: string };
 }) {
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
