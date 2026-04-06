@@ -31,10 +31,12 @@ export interface FlyerSelection {
 export type TownFeature = GeoJSON.Feature<GeoJSON.Polygon, TownPolygonProperties>;
 export type TownFeatureCollection = GeoJSON.FeatureCollection<GeoJSON.Polygon, TownPolygonProperties>;
 
-// Generate dummy town polygons around a center point
-export function generateDummyTownPolygons(
+// Generate town polygons around a given center point.
+// When censusData is provided, polygon properties reflect real values.
+export function generateTownPolygons(
   center: [number, number],
-  radiusKm: number
+  radiusKm: number,
+  censusData?: { totalPopulation?: number; totalHouseholds?: number; avgAge?: number }
 ): TownFeatureCollection {
   const towns: TownFeature[] = [];
   const gridSize = radiusKm <= 1 ? 3 : radiusKm <= 3 ? 5 : 7;
