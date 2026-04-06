@@ -234,26 +234,28 @@ export async function fetchMapAreaAnalysis(
   let censusData: CensusData | null = null;
   let overseasEstimate: { population: number; households: number; facilityCount: number } | null = null;
 
+  let result: any;
+  let apiCensus: any;
+  let dataSource: string;
+
   if (isOverseas) {
-    // Overseas: estimate population from Overpass facility density
     const [aiAnalysis, estimate] = await Promise.all([
       aiAnalysisPromise,
       estimateOverseasPopulation(center, radiusMeters),
     ]);
     overseasEstimate = estimate;
-    var result = aiAnalysis.result;
-    var apiCensus = aiAnalysis.censusData;
-    var dataSource = "推定データ（海外）";
+    result = aiAnalysis.result;
+    apiCensus = aiAnalysis.censusData;
+    dataSource = "推定データ（海外）";
   } else {
-    // Japan: use e-Stat census
     const [aiAnalysis, census] = await Promise.all([
       aiAnalysisPromise,
       fetchCensusData(address),
     ]);
     censusData = census;
-    var result = aiAnalysis.result;
-    var apiCensus = aiAnalysis.censusData;
-    var dataSource = aiAnalysis.dataSource || "AI推定分析";
+    result = aiAnalysis.result;
+    apiCensus = aiAnalysis.censusData;
+    dataSource = aiAnalysis.dataSource || "AI推定分析";
   }
 
   // Population & households
