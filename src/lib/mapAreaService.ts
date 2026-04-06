@@ -109,6 +109,19 @@ async function fetchWorldPopData(
   }
 }
 
+// Fetch Japan census data (e-Stat)
+async function fetchJpCensusData(address: string): Promise<CensusData | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("estat-census", {
+      body: { address },
+    });
+    if (error || !data?.result?.dataAvailable) return null;
+    return data.result as CensusData;
+  } catch {
+    return null;
+  }
+}
+
 // Fetch census data based on country code
 async function fetchCensusForCountry(
   countryCode: string,
@@ -118,7 +131,7 @@ async function fetchCensusForCountry(
 ): Promise<{ data: CensusData | null; dataSource: string }> {
   switch (countryCode) {
     case "jp": {
-      const data = await fetchCensusData(address);
+      const data = await fetchJpCensusData(address);
       return { data, dataSource: data?.dataAvailable ? "e-Stat 国勢調査" : "AI推定分析" };
     }
     case "us": {
