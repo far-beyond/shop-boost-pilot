@@ -120,24 +120,24 @@ export default function AdProposal() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">{t("ad.storeLocation")} *</label>
-                    <Input placeholder="例: 東京都渋谷区神南1丁目" value={address} onChange={(e) => setAddress(e.target.value)} />
+                    <Input placeholder={t("ad.addressPh")} value={address} onChange={(e) => setAddress(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">{t("ad.industry")} *</label>
-                    <Input placeholder="例: 美容院、学習塾、居酒屋" value={industry} onChange={(e) => setIndustry(e.target.value)} />
+                    <Input placeholder={t("ad.industryPh")} value={industry} onChange={(e) => setIndustry(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">{t("ad.storeName")}</label>
-                    <Input placeholder="例: ヘアサロン BLOOM" value={storeName} onChange={(e) => setStoreName(e.target.value)} />
+                    <Input placeholder={t("ad.storeNamePh")} value={storeName} onChange={(e) => setStoreName(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">{t("ad.monthlyBudget")}</label>
-                    <Input placeholder="例: 5万円、10万円" value={budget} onChange={(e) => setBudget(e.target.value)} />
+                    <Input placeholder={t("ad.budgetPh")} value={budget} onChange={(e) => setBudget(e.target.value)} />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">{t("ad.targetAudience")}</label>
-                  <Textarea placeholder="例: 30〜40代の子育て世帯、近隣のオフィスワーカー" value={target} onChange={(e) => setTarget(e.target.value)} rows={2} />
+                  <Textarea placeholder={t("ad.targetPh")} value={target} onChange={(e) => setTarget(e.target.value)} rows={2} />
                 </div>
                 <div className="flex gap-2 flex-wrap">
                   <Button onClick={runProposal} disabled={loading} className="gap-2">
@@ -151,7 +151,7 @@ export default function AdProposal() {
                       onClick={() => exportAdProposalPDF(result, { storeName, address, industry })}
                     >
                       <FileDown className="w-4 h-4" />
-                      PDFダウンロード
+                      {t("ad.pdfDownload")}
                     </Button>
                   )}
                 </div>
