@@ -93,7 +93,7 @@ export default function AreaAnalysis() {
       else setOpeningResult(data.result);
 
       if (data.censusData) setCensusData(data.censusData);
-      setDataSource(data.dataSource || "AI推定分析");
+      setDataSource(data.dataSource || t("area.aiEstimate"));
 
       toast.success(data.censusData
         ? t("area.analysisCompleteReal")
@@ -239,7 +239,7 @@ export default function AreaAnalysis() {
                         <CardHeader className="pb-2">
                           <CardTitle className="text-base flex items-center gap-2">
                             <Database className="w-4 h-4 text-emerald-600" />
-                            {t("area.censusTitle")}（{censusData.areaName}）
+                            {t("area.censusTitle")} ({censusData.areaName})
                           </CardTitle>
                           <p className="text-xs text-muted-foreground">{t("area.source")}: {censusData.source} ｜ {t("area.areaCode")}: {censusData.areaCode}</p>
                         </CardHeader>
@@ -255,7 +255,7 @@ export default function AreaAnalysis() {
                             </div>
                             <div className="p-3 rounded-lg bg-background border col-span-2 sm:col-span-1">
                               <p className="text-xs text-muted-foreground">{t("area.dataSource")}</p>
-                              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">e-Stat公式API</p>
+                              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">e-Stat API</p>
                             </div>
                           </div>
                           {censusData.ageDistribution.length > 0 && (
