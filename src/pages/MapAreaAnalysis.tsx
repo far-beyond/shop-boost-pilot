@@ -562,15 +562,18 @@ function SidePanelSkeleton() {
 }
 
 function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radius: string }) {
-  const { summary, competitors, censusData, isOverseas } = result;
+  const { summary, competitors, censusData, isOverseas, countryCode } = result;
   const isRealData = !!censusData?.dataAvailable;
 
-  const badgeLabel = isOverseas
-    ? "推定データ（海外）"
-    : isRealData
-      ? "実データ"
-      : "AI推定";
-  const badgeVariant = isOverseas ? "outline" : isRealData ? "default" : "secondary";
+  // Country-specific badge labels
+  const getBadgeInfo = () => {
+    if (!isRealData && isOverseas) return { label: "推定データ（海外）", variant: "outline" as const, icon: "🌍" };
+    if (countryCode === "jp" && isRealData) return { label: "国勢調査", variant: "default" as const, icon: "📊" };
+    if (countryCode === "us" && isRealData) return { label: "US Census", variant: "default" as const, icon: "🇺🇸" };
+    if (isRealData) return { label: "WorldPop推計", variant: "default" as const, icon: "🌐" };
+    return { label: "AI推定", variant: "secondary" as const, icon: "" };
+  };
+  const badge = getBadgeInfo();
 
   return (
     <motion.div
@@ -582,10 +585,10 @@ function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radi
       <div className="flex items-center justify-between">
         <h2 className="font-bold text-base text-foreground">分析結果</h2>
         <div className="flex items-center gap-1.5">
-          <Badge variant={badgeVariant as any} className="text-xs flex items-center gap-1">
-            {isRealData && !isOverseas && <Database className="w-3 h-3" />}
-            {isOverseas && <span>🌍</span>}
-            {badgeLabel}
+          <Badge variant={badge.variant} className="text-xs flex items-center gap-1">
+            {badge.icon && <span>{badge.icon}</span>}
+            {countryCode === "jp" && isRealData && <Database className="w-3 h-3" />}
+            {badge.label}
           </Badge>
           <Badge variant="outline" className="text-xs">半径 {radius}</Badge>
         </div>

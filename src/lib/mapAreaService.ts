@@ -78,8 +78,39 @@ async function geocodeAddress(address: string): Promise<GeocodingResult> {
   };
 }
 
-// Fetch census data directly from estat-census edge function
-async function fetchCensusData(address: string): Promise<CensusData | null> {
+// Fetch US Census data via us-census edge function
+async function fetchUsCensusData(lat: number, lng: number): Promise<CensusData | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("us-census", {
+      body: { lat, lng },
+    });
+    if (error || !data?.result?.dataAvailable) return null;
+    return data.result as CensusData;
+  } catch {
+    return null;
+  }
+}
+
+// Fetch WorldPop data via worldpop-census edge function
+async function fetchWorldPopData(
+  lat: number,
+  lng: number,
+  countryCode: string,
+  radiusMeters: number
+): Promise<CensusData | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("worldpop-census", {
+      body: { lat, lng, countryCode, radiusMeters },
+    });
+    if (error || !data?.result?.dataAvailable) return null;
+    return data.result as CensusData;
+  } catch {
+    return null;
+  }
+}
+
+// Fetch Japan census data (e-Stat)
+async function fetchJpCensusData(address: string): Promise<CensusData | null> {
   try {
     const { data, error } = await supabase.functions.invoke("estat-census", {
       body: { address },
@@ -90,35 +121,27 @@ async function fetchCensusData(address: string): Promise<CensusData | null> {
     return null;
   }
 }
-// Estimate population for overseas areas using Overpass facility density
-async function estimateOverseasPopulation(
+
+// Fetch census data based on country code
+async function fetchCensusForCountry(
+  countryCode: string,
+  address: string,
   center: [number, number],
   radiusMeters: number
-): Promise<{ population: number; households: number; facilityCount: number }> {
-  try {
-    const query = `[out:json][timeout:10];
-(
-  node["building"](around:${radiusMeters},${center[0]},${center[1]});
-  node["amenity"](around:${radiusMeters},${center[0]},${center[1]});
-  node["shop"](around:${radiusMeters},${center[0]},${center[1]});
-);
-out count;`;
-    const res = await fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: `data=${encodeURIComponent(query)}`,
-    });
-    if (!res.ok) throw new Error("Overpass count failed");
-    const data = await res.json();
-    const count = data.elements?.[0]?.tags?.total
-      ? parseInt(data.elements[0].tags.total, 10)
-      : data.elements?.length || 0;
-    // Rough heuristic: each OSM facility node ≈ 50-80 people in the area
-    const population = Math.max(1000, count * 65);
-    const households = Math.round(population / 2.5);
-    return { population, households, facilityCount: count };
-  } catch {
-    return { population: 0, households: 0, facilityCount: 0 };
+): Promise<{ data: CensusData | null; dataSource: string }> {
+  switch (countryCode) {
+    case "jp": {
+      const data = await fetchJpCensusData(address);
+      return { data, dataSource: data?.dataAvailable ? "e-Stat 国勢調査" : "AI推定分析" };
+    }
+    case "us": {
+      const data = await fetchUsCensusData(center[0], center[1]);
+      return { data, dataSource: data?.dataAvailable ? "US Census (2020)" : "推定データ（海外）" };
+    }
+    default: {
+      const data = await fetchWorldPopData(center[0], center[1], countryCode, radiusMeters);
+      return { data, dataSource: data?.dataAvailable ? "WorldPop推計" : "推定データ（海外）" };
+    }
   }
 }
 
@@ -222,49 +245,26 @@ export async function fetchMapAreaAnalysis(
   const { center, countryCode } = geo;
   const isOverseas = countryCode !== "jp";
 
-  // Step 2: Fetch data sources in parallel (branch by country)
-  const aiAnalysisPromise = supabase.functions.invoke("area-analysis", {
-    body: { address, radius, industry, analysisType: "area" },
-  }).then(({ data, error }) => {
-    if (error) throw error;
-    if (data?.error) throw new Error(data.error);
-    return data;
-  });
+  // Step 2: Fetch AI analysis + country-specific census in parallel
+  const [aiAnalysis, censusResult] = await Promise.all([
+    supabase.functions.invoke("area-analysis", {
+      body: { address, radius, industry, analysisType: "area" },
+    }).then(({ data, error }) => {
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    }),
+    fetchCensusForCountry(countryCode, address, center, radiusMeters),
+  ]);
 
-  let censusData: CensusData | null = null;
-  let overseasEstimate: { population: number; households: number; facilityCount: number } | null = null;
-
-  let result: any;
-  let apiCensus: any;
-  let dataSource: string;
-
-  if (isOverseas) {
-    const [aiAnalysis, estimate] = await Promise.all([
-      aiAnalysisPromise,
-      estimateOverseasPopulation(center, radiusMeters),
-    ]);
-    overseasEstimate = estimate;
-    result = aiAnalysis.result;
-    apiCensus = aiAnalysis.censusData;
-    dataSource = "推定データ（海外）";
-  } else {
-    const [aiAnalysis, census] = await Promise.all([
-      aiAnalysisPromise,
-      fetchCensusData(address),
-    ]);
-    censusData = census;
-    result = aiAnalysis.result;
-    apiCensus = aiAnalysis.censusData;
-    dataSource = aiAnalysis.dataSource || "AI推定分析";
-  }
+  const result = aiAnalysis.result;
+  const apiCensus = aiAnalysis.censusData;
+  const censusData = censusResult.data;
+  const dataSource = censusResult.dataSource;
 
   // Population & households
-  const totalPop = isOverseas
-    ? (overseasEstimate?.population || result.population || 0)
-    : (censusData?.totalPopulation || result.population || 0);
-  const totalHouseholds = isOverseas
-    ? (overseasEstimate?.households || result.households || 0)
-    : (censusData?.totalHouseholds || result.households || 0);
+  const totalPop = censusData?.totalPopulation || result.population || 0;
+  const totalHouseholds = censusData?.totalHouseholds || result.households || 0;
 
   const populationZones = generatePopulationZones(center, radiusMeters, totalPop);
 
@@ -279,9 +279,9 @@ export async function fetchMapAreaAnalysis(
     competitors = generateCompetitorMarkers(center, radiusMeters, result);
   }
 
-  // Age distribution
+  // Age distribution: prefer census data, fallback to AI
   let ageDistribution: { ageGroup: string; percentage: number; count: number }[] = [];
-  if (!isOverseas && censusData?.ageDistribution?.length) {
+  if (censusData?.ageDistribution?.length) {
     ageDistribution = censusData.ageDistribution.map((ag) => ({
       ageGroup: ag.ageGroup,
       percentage: ag.percentage,
@@ -291,18 +291,8 @@ export async function fetchMapAreaAnalysis(
     ageDistribution = result.ageDistribution;
   }
 
-  // For overseas, build a synthetic censusData for display
-  const finalCensusData: CensusData | null = isOverseas
-    ? {
-        source: "Overpass API施設密度推定",
-        areaName: geo.displayName.split(",").slice(0, 2).join(", "),
-        areaCode: countryCode.toUpperCase(),
-        totalPopulation: totalPop,
-        totalHouseholds,
-        ageDistribution: ageDistribution.map((a) => ({ ageGroup: a.ageGroup, population: a.count, percentage: a.percentage })),
-        dataAvailable: overseasEstimate ? overseasEstimate.facilityCount > 0 : false,
-      }
-    : censusData || (apiCensus ? { ...apiCensus, dataAvailable: true } as CensusData : null);
+  const finalCensusData: CensusData | null = censusData
+    || (apiCensus ? { ...apiCensus, dataAvailable: true } as CensusData : null);
 
   return {
     center,
