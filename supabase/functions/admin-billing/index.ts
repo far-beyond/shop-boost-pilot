@@ -41,7 +41,7 @@ serve(async (req) => {
     // For admin actions, only hardcoded admins
     const isHardAdmin = ADMIN_EMAILS.includes(userEmail);
 
-    const { action, email, note } = await req.json();
+    const { action, email, note, settings } = await req.json();
 
     if (action === "check-admin") {
       return new Response(JSON.stringify({ isAdmin: isHardAdmin }), {
@@ -125,28 +125,18 @@ serve(async (req) => {
         .select("*")
         .order("setting_key");
       if (error) throw error;
-      const settings: Record<string, string> = {};
-      for (const row of data || []) settings[row.setting_key] = row.setting_value;
-      return new Response(JSON.stringify({ settings }), {
+      const result: Record<string, string> = {};
+      for (const row of data || []) result[row.setting_key] = row.setting_value;
+      return new Response(JSON.stringify({ settings: result }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    if (action === "update-plan-settings") {
-      const { settings } = await req.json().catch(() => ({ settings: null }));
-      // settings already parsed above, re-read from original body
-      const body = { action, settings: (await req.clone().json().catch(() => null)) || {} };
-      // We need to handle this differently - settings come from the original parse
-    }
-
-    // Dedicated handler with settings from initial parse
     if (action === "save-plan-settings") {
-      const body = await req.clone().json().catch(() => ({}));
-      const settingsToSave = body.settings as Record<string, string> | undefined;
-      if (!settingsToSave || typeof settingsToSave !== "object") {
+      if (!settings || typeof settings !== "object") {
         return new Response(JSON.stringify({ error: "Settings object required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      for (const [key, value] of Object.entries(settingsToSave)) {
+      for (const [key, value] of Object.entries(settings as Record<string, string>)) {
         const { error } = await supabase
           .from("plan_settings")
           .update({ setting_value: String(value), updated_by: userEmail, updated_at: new Date().toISOString() })
