@@ -4,18 +4,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Layout from "@/components/Layout";
 import { toast } from "sonner";
 import { Target, Mail, Lock } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Auth() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const { t } = useLanguage();
 
   const handleGoogleLogin = async () => {
     setLoading(true);
@@ -24,7 +26,7 @@ export default function Auth() {
     });
     setLoading(false);
     if (error) {
-      toast.error("Googleログインに失敗しました");
+      toast.error(t("auth.googleFailed"));
     }
   };
 
@@ -40,7 +42,7 @@ export default function Auth() {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("確認メールを送信しました。メールをご確認ください。");
+      toast.success(t("auth.signupSuccess"));
     }
   };
 
@@ -50,7 +52,7 @@ export default function Auth() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) {
-      toast.error("ログインに失敗しました。メールアドレスとパスワードをご確認ください。");
+      toast.error(t("auth.loginFailed"));
     } else {
       navigate("/dashboard");
     }
@@ -63,16 +65,16 @@ export default function Auth() {
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 text-primary-foreground" style={{ background: "var(--gradient-primary)" }}>
             <Target className="w-6 h-6" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">MapBoost AI</h1>
-          <p className="text-muted-foreground mt-1">アカウントにログインまたは新規登録</p>
+          <h1 className="text-2xl font-bold text-foreground">{t("auth.title")}</h1>
+          <p className="text-muted-foreground mt-1">{t("auth.subtitle")}</p>
         </div>
 
         <Card>
           <Tabs defaultValue="login">
             <CardHeader className="pb-2">
               <TabsList className="w-full">
-                <TabsTrigger value="login" className="flex-1">ログイン</TabsTrigger>
-                <TabsTrigger value="signup" className="flex-1">新規登録</TabsTrigger>
+                <TabsTrigger value="login" className="flex-1">{t("auth.loginTab")}</TabsTrigger>
+                <TabsTrigger value="signup" className="flex-1">{t("auth.signupTab")}</TabsTrigger>
               </TabsList>
             </CardHeader>
 
@@ -80,29 +82,29 @@ export default function Auth() {
               <CardContent>
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email">メールアドレス</Label>
+                    <Label htmlFor="login-email">{t("auth.email")}</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input id="login-email" type="email" placeholder="you@example.com" className="pl-9" value={email} onChange={(e) => setEmail(e.target.value)} required />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="login-password">パスワード</Label>
+                    <Label htmlFor="login-password">{t("auth.password")}</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input id="login-password" type="password" placeholder="••••••••" className="pl-9" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
                     </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "処理中…" : "ログイン"}
+                    {loading ? t("auth.processing") : t("auth.loginBtn")}
                   </Button>
                   <div className="relative my-2">
                     <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
-                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">または</span></div>
+                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">{t("auth.or")}</span></div>
                   </div>
                   <Button type="button" variant="outline" className="w-full gap-2" disabled={loading} onClick={handleGoogleLogin}>
                     <svg className="w-4 h-4" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 0 0 1 12c0 1.77.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                    Googleでログイン
+                    {t("auth.googleLogin")}
                   </Button>
                 </form>
               </CardContent>
@@ -112,29 +114,29 @@ export default function Auth() {
               <CardContent>
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">メールアドレス</Label>
+                    <Label htmlFor="signup-email">{t("auth.email")}</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input id="signup-email" type="email" placeholder="you@example.com" className="pl-9" value={email} onChange={(e) => setEmail(e.target.value)} required />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">パスワード（6文字以上）</Label>
+                    <Label htmlFor="signup-password">{t("auth.passwordHint")}</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input id="signup-password" type="password" placeholder="••••••••" className="pl-9" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
                     </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "処理中…" : "アカウント作成"}
+                    {loading ? t("auth.processing") : t("auth.signupBtn")}
                   </Button>
                   <div className="relative my-2">
                     <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
-                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">または</span></div>
+                    <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">{t("auth.or")}</span></div>
                   </div>
                   <Button type="button" variant="outline" className="w-full gap-2" disabled={loading} onClick={handleGoogleLogin}>
                     <svg className="w-4 h-4" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 0 0 1 12c0 1.77.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                    Googleでアカウント作成
+                    {t("auth.googleSignup")}
                   </Button>
                 </form>
               </CardContent>
