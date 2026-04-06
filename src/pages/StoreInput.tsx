@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,8 +10,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import Layout from "@/components/Layout";
-import { ArrowRight, Loader2, Store } from "lucide-react";
+import { ArrowRight, Loader2, Store, AlertTriangle } from "lucide-react";
 import { createDiagnosis, runAIDiagnosis } from "@/lib/diagnosisService";
+import { checkUsageLimit, incrementUsage } from "@/lib/usageLimitService";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 const mediaOptions = [
@@ -41,7 +43,15 @@ type StoreFormValues = z.infer<typeof storeSchema>;
 
 export default function StoreInput() {
   const navigate = useNavigate();
+  const { subscription } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  const [usageInfo, setUsageInfo] = useState<{ allowed: boolean; used: number; limit: number } | null>(null);
+
+  useEffect(() => {
+    if (!subscription?.subscribed) {
+      checkUsageLimit().then(setUsageInfo).catch(() => {});
+    }
+  }, [subscription]);
 
   const form = useForm<StoreFormValues>({
     resolver: zodResolver(storeSchema),
@@ -52,6 +62,15 @@ export default function StoreInput() {
   });
 
   const onSubmit = async (data: StoreFormValues) => {
+    // Check usage limit for free users
+    if (!subscription?.subscribed) {
+      const limit = await checkUsageLimit();
+      if (!limit.allowed) {
+        toast.error("今月の無料診断回数（3回）に達しました。Proプランにアップグレードしてください。");
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const diagnosis = await createDiagnosis({
@@ -76,6 +95,8 @@ export default function StoreInput() {
         runAIDiagnosis(diagnosis.id, "kpi"),
       ]);
 
+      // Increment usage after successful diagnosis
+      await incrementUsage();
       toast.success("診断が完了しました！");
       navigate(`/diagnosis/${diagnosis.id}`);
     } catch (err: any) {
