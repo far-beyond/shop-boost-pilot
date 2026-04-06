@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Layout from "@/components/Layout";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { MapContainer, TileLayer, Circle, Marker, Popup, useMap, GeoJSON, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Circle, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import {
