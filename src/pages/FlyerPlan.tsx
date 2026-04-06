@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   Newspaper, MapPin, Loader2, Search, Copy, Check, Lightbulb,
-  CalendarDays, DollarSign, Target, TrendingUp, FileText, Megaphone,
+  CalendarDays, DollarSign, Target, TrendingUp, FileText, Megaphone, Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { exportFlyerPlanPDF } from "@/lib/flyerPdfExport";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -182,7 +183,18 @@ export default function FlyerPlan() {
           {/* Results */}
           {result && (
             <motion.div variants={stagger} initial="initial" animate="animate" className="space-y-6">
-              {/* Summary */}
+              {/* PDF Export + Summary */}
+              <motion.div variants={fadeUp} className="flex justify-end">
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => result && exportFlyerPlanPDF(result, { storeName, address, industry })}
+                >
+                  <Download className="w-4 h-4" />
+                  PDFダウンロード
+                </Button>
+              </motion.div>
+
               <motion.div variants={fadeUp}>
                 <Card className="border border-border/60">
                   <CardHeader className="pb-3">
