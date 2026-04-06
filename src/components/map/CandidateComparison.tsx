@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { CandidatePin } from "@/lib/mapGeoData";
 
 interface CandidateComparisonProps {
@@ -16,13 +17,15 @@ export default function CandidateComparison({
   onRemove,
   onClear,
 }: CandidateComparisonProps) {
+  const { t } = useLanguage();
+
   if (candidates.length === 0) {
     return (
       <Card className="shadow-md bg-card/95 backdrop-blur-sm border-border/60 border-dashed">
         <CardContent className="p-3 text-center">
           <MapPin className="w-5 h-5 text-muted-foreground mx-auto mb-1" />
           <p className="text-xs text-muted-foreground">
-            地図上をクリックして<br />候補地を追加してください
+            {t("map.candidateEmptyMsg")}
           </p>
         </CardContent>
       </Card>
@@ -36,15 +39,15 @@ export default function CandidateComparison({
       <CardContent className="p-3 space-y-2">
         <div className="flex items-center justify-between">
           <p className="text-xs font-semibold text-foreground flex items-center gap-1">
-            <MapPin className="w-3.5 h-3.5" /> 候補地比較 ({candidates.length})
+            <MapPin className="w-3.5 h-3.5" /> {t("map.candidateCompare")} ({candidates.length})
           </p>
           <Button variant="ghost" size="sm" onClick={onClear} className="h-5 px-1.5 text-[10px]">
-            クリア
+            {t("map.clear")}
           </Button>
         </div>
 
         <div className="space-y-2 max-h-60 overflow-y-auto">
-          {candidates.map((c, i) => (
+          {candidates.map((c) => (
             <div
               key={c.id}
               className={`rounded-md border p-2 text-xs space-y-1.5 ${
@@ -71,14 +74,14 @@ export default function CandidateComparison({
               </div>
 
               <div className="flex justify-between text-muted-foreground">
-                <span>スコア</span>
-                <span className="font-medium text-foreground">{c.score}点</span>
+                <span>{t("map.score")}</span>
+                <span className="font-medium text-foreground">{c.score}</span>
               </div>
               <Progress value={c.score} className="h-1.5" />
 
               <div className="grid grid-cols-2 gap-x-3 text-muted-foreground">
-                <span>人口: <span className="text-foreground font-medium">{c.population.toLocaleString()}</span></span>
-                <span>競合: <span className="text-foreground font-medium">{c.competitors}店</span></span>
+                <span>{t("map.popLabel")}: <span className="text-foreground font-medium">{c.population.toLocaleString()}</span></span>
+                <span>{t("map.compLabel")}: <span className="text-foreground font-medium">{c.competitors}</span></span>
               </div>
             </div>
           ))}

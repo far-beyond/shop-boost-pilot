@@ -2,6 +2,7 @@ import { Layers, Map, MousePointer, BarChart3, Users, Home, Calendar } from "luc
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { HeatmapMode, LayerMode } from "@/lib/mapGeoData";
 
 interface MapControlsProps {
@@ -15,18 +16,6 @@ interface MapControlsProps {
   onMultiPinModeToggle: () => void;
 }
 
-const HEATMAP_OPTIONS: { value: HeatmapMode; label: string; icon: React.ReactNode }[] = [
-  { value: "population", label: "人口密度", icon: <Users className="w-3 h-3" /> },
-  { value: "households", label: "世帯数", icon: <Home className="w-3 h-3" /> },
-  { value: "age", label: "年齢層", icon: <Calendar className="w-3 h-3" /> },
-];
-
-const LAYER_OPTIONS: { value: LayerMode; label: string }[] = [
-  { value: "density", label: "人口密度" },
-  { value: "competitors", label: "競合分布" },
-  { value: "recommended", label: "推奨エリア" },
-];
-
 export default function MapControls({
   heatmapMode,
   onHeatmapModeChange,
@@ -37,13 +26,27 @@ export default function MapControls({
   multiPinMode,
   onMultiPinModeToggle,
 }: MapControlsProps) {
+  const { t } = useLanguage();
+
+  const HEATMAP_OPTIONS: { value: HeatmapMode; label: string; icon: React.ReactNode }[] = [
+    { value: "population", label: t("map.popDensity"), icon: <Users className="w-3 h-3" /> },
+    { value: "households", label: t("map.householdCount"), icon: <Home className="w-3 h-3" /> },
+    { value: "age", label: t("map.ageGroup"), icon: <Calendar className="w-3 h-3" /> },
+  ];
+
+  const LAYER_OPTIONS: { value: LayerMode; label: string }[] = [
+    { value: "density", label: t("map.layerDensity") },
+    { value: "competitors", label: t("map.layerCompetitors") },
+    { value: "recommended", label: t("map.layerRecommended") },
+  ];
+
   return (
     <Card className="shadow-lg border-border/60 bg-card/95 backdrop-blur-sm">
       <CardContent className="p-2.5 space-y-2">
         {/* Heatmap mode */}
         <div>
           <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
-            <BarChart3 className="w-3 h-3" /> ヒートマップ
+            <BarChart3 className="w-3 h-3" /> {t("map.heatmap")}
           </p>
           <div className="flex gap-1">
             {HEATMAP_OPTIONS.map((opt) => (
@@ -65,7 +68,7 @@ export default function MapControls({
         {/* Layer switch */}
         <div>
           <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
-            <Layers className="w-3 h-3" /> レイヤー
+            <Layers className="w-3 h-3" /> {t("map.layer")}
           </p>
           <div className="flex gap-1">
             {LAYER_OPTIONS.map((opt) => (
@@ -93,7 +96,7 @@ export default function MapControls({
             className="h-7 text-[11px] gap-1"
           >
             <Map className="w-3 h-3" />
-            チラシ配布
+            {t("map.flyerDist")}
           </Button>
           <Button
             size="sm"
@@ -102,7 +105,7 @@ export default function MapControls({
             className="h-7 text-[11px] gap-1"
           >
             <MousePointer className="w-3 h-3" />
-            候補地比較
+            {t("map.candidateCompare")}
           </Button>
         </div>
       </CardContent>
