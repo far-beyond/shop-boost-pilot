@@ -49,7 +49,7 @@ export function AppSidebar() {
   const { user, signOut } = useAuth();
 
   const renderGroup = (label: string, items: typeof analysisItems) => (
-    <SidebarGroup defaultOpen>
+    <SidebarGroup>
       {!collapsed && <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">{label}</SidebarGroupLabel>}
       <SidebarGroupContent>
         <SidebarMenu>
