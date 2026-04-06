@@ -562,15 +562,18 @@ function SidePanelSkeleton() {
 }
 
 function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radius: string }) {
-  const { summary, competitors, censusData, isOverseas } = result;
+  const { summary, competitors, censusData, isOverseas, countryCode } = result;
   const isRealData = !!censusData?.dataAvailable;
 
-  const badgeLabel = isOverseas
-    ? "推定データ（海外）"
-    : isRealData
-      ? "実データ"
-      : "AI推定";
-  const badgeVariant = isOverseas ? "outline" : isRealData ? "default" : "secondary";
+  // Country-specific badge labels
+  const getBadgeInfo = () => {
+    if (!isRealData && isOverseas) return { label: "推定データ（海外）", variant: "outline" as const, icon: "🌍" };
+    if (countryCode === "jp" && isRealData) return { label: "国勢調査", variant: "default" as const, icon: "📊" };
+    if (countryCode === "us" && isRealData) return { label: "US Census", variant: "default" as const, icon: "🇺🇸" };
+    if (isRealData) return { label: "WorldPop推計", variant: "default" as const, icon: "🌐" };
+    return { label: "AI推定", variant: "secondary" as const, icon: "" };
+  };
+  const badge = getBadgeInfo();
 
   return (
     <motion.div
