@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, Users, Home, TrendingUp, Loader2, Search, Building2, AlertTriangle, CheckCircle2, BarChart3 } from "lucide-react";
+import { MapPin, Users, Home, TrendingUp, Loader2, Search, Building2, AlertTriangle, CheckCircle2, BarChart3, Database, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,6 +55,15 @@ type OpeningResult = {
   overallComment: string;
 };
 
+type CensusData = {
+  source: string;
+  areaName: string;
+  areaCode: string;
+  totalPopulation: number;
+  totalHouseholds: number;
+  ageDistribution: { ageGroup: string; population: number; percentage: number }[];
+};
+
 export default function AreaAnalysis() {
   const [activeTab, setActiveTab] = useState("area");
   const [address, setAddress] = useState("");
@@ -63,12 +72,16 @@ export default function AreaAnalysis() {
   const [loading, setLoading] = useState(false);
   const [areaResult, setAreaResult] = useState<AreaResult | null>(null);
   const [openingResult, setOpeningResult] = useState<OpeningResult | null>(null);
+  const [censusData, setCensusData] = useState<CensusData | null>(null);
+  const [dataSource, setDataSource] = useState<string>("");
 
   const runAnalysis = async () => {
     if (!address) { toast.error("住所を入力してください"); return; }
     if (activeTab === "opening" && !industry) { toast.error("業種を入力してください"); return; }
 
     setLoading(true);
+    setCensusData(null);
+    setDataSource("");
     try {
       const { data, error } = await supabase.functions.invoke("area-analysis", {
         body: { address, radius, industry, analysisType: activeTab },
@@ -79,7 +92,13 @@ export default function AreaAnalysis() {
       if (activeTab === "area") setAreaResult(data.result);
       else setOpeningResult(data.result);
 
-      toast.success("分析が完了しました");
+      if (data.censusData) setCensusData(data.censusData);
+      setDataSource(data.dataSource || "AI推定分析");
+
+      toast.success(data.censusData
+        ? "国勢調査データを基に分析が完了しました"
+        : "分析が完了しました（AI推定値）"
+      );
     } catch (e: any) {
       toast.error(e.message || "分析に失敗しました");
     } finally {
@@ -181,6 +200,70 @@ export default function AreaAnalysis() {
             <TabsContent value="area">
               {areaResult && (
                 <motion.div variants={stagger} initial="initial" animate="animate" className="space-y-6">
+                  {/* Data Source Badge */}
+                  <motion.div variants={fadeUp}>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {censusData ? (
+                        <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 py-1 px-3">
+                          <Database className="w-3.5 h-3.5" />
+                          実データ: {censusData.source}
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="gap-1.5 py-1 px-3">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          AI推定値
+                        </Badge>
+                      )}
+                      {dataSource && (
+                        <span className="text-xs text-muted-foreground">{dataSource}</span>
+                      )}
+                    </div>
+                  </motion.div>
+
+                  {/* Census Raw Data (if available) */}
+                  {censusData && (
+                    <motion.div variants={fadeUp}>
+                      <Card className="border-2 border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20 dark:border-emerald-800">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <Database className="w-4 h-4 text-emerald-600" />
+                            国勢調査データ（{censusData.areaName}）
+                          </CardTitle>
+                          <p className="text-xs text-muted-foreground">出典: {censusData.source} ｜ 地域コード: {censusData.areaCode}</p>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+                            <div className="p-3 rounded-lg bg-background border">
+                              <p className="text-xs text-muted-foreground">総人口</p>
+                              <p className="text-lg font-bold text-foreground">{censusData.totalPopulation.toLocaleString()}人</p>
+                            </div>
+                            <div className="p-3 rounded-lg bg-background border">
+                              <p className="text-xs text-muted-foreground">世帯数</p>
+                              <p className="text-lg font-bold text-foreground">{censusData.totalHouseholds.toLocaleString()}世帯</p>
+                            </div>
+                            <div className="p-3 rounded-lg bg-background border col-span-2 sm:col-span-1">
+                              <p className="text-xs text-muted-foreground">データソース</p>
+                              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">e-Stat公式API</p>
+                            </div>
+                          </div>
+                          {censusData.ageDistribution.length > 0 && (
+                            <div>
+                              <p className="text-xs font-medium text-muted-foreground mb-2">年齢構成（実データ）</p>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                {censusData.ageDistribution.map((ag, i) => (
+                                  <div key={i} className="p-2 rounded bg-background border text-center">
+                                    <p className="text-xs text-muted-foreground">{ag.ageGroup}</p>
+                                    <p className="text-sm font-bold text-foreground">{ag.percentage}%</p>
+                                    <p className="text-xs text-muted-foreground">{ag.population.toLocaleString()}人</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  )}
                   {/* Summary Stats */}
                   <motion.div variants={fadeUp} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     {[
