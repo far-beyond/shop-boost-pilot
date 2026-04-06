@@ -55,16 +55,27 @@ export type MapAreaAnalysisResult = {
   isOverseas: boolean;
 };
 
-// Geocode address using Nominatim
-async function geocodeAddress(address: string): Promise<[number, number]> {
-  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`;
+type GeocodingResult = {
+  center: [number, number];
+  countryCode: string;
+  displayName: string;
+};
+
+// Geocode address using Nominatim (returns country_code for overseas detection)
+async function geocodeAddress(address: string): Promise<GeocodingResult> {
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&addressdetails=1`;
   const res = await fetch(url, {
     headers: { "Accept-Language": "ja", "User-Agent": "ShopBoostPilot/1.0" },
   });
   if (!res.ok) throw new Error("ジオコーディングに失敗しました");
   const data = await res.json();
   if (!data || data.length === 0) throw new Error("住所が見つかりませんでした");
-  return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+  const item = data[0];
+  return {
+    center: [parseFloat(item.lat), parseFloat(item.lon)],
+    countryCode: (item.address?.country_code || "").toLowerCase(),
+    displayName: item.display_name || address,
+  };
 }
 
 // Fetch census data directly from estat-census edge function
