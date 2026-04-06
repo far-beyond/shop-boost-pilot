@@ -17,9 +17,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 
-const mediaOptions = [
+const mediaOptionKeys = [
   "Googleビジネスプロフィール", "Instagram", "X（Twitter）",
   "LINE公式アカウント", "チラシ・ポスティング", "Web広告（Google/Meta）", "食べログ・ホットペッパー等",
+];
+const mediaLabelKeys = [
+  "si.mediaGBP", "si.mediaIG", "si.mediaX",
+  "si.mediaLINE", "si.mediaFlyer", "si.mediaWebAd", "si.mediaPortal",
 ];
 
 export default function StoreInput() {
