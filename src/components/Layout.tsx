@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { FileText, Home, LayoutDashboard, LogIn, LogOut, MapPin, Megaphone, Newspaper, Target } from "lucide-react";
+import { FileText, Home, LayoutDashboard, LogIn, LogOut, MapPin, Megaphone, Newspaper, Target, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
@@ -10,6 +10,7 @@ const navItems = [
   { to: "/area-analysis", label: "地域分析", icon: MapPin, authRequired: true },
   { to: "/flyer-plan", label: "チラシ設計", icon: Newspaper, authRequired: true },
   { to: "/ad-proposal", label: "広告提案", icon: Megaphone, authRequired: true },
+  { to: "/location-match", label: "エリア適性", icon: Compass, authRequired: true },
   { to: "/dashboard", label: "ダッシュボード", icon: LayoutDashboard, authRequired: true },
 ];
 
