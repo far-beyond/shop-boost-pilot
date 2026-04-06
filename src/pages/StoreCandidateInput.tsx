@@ -39,6 +39,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function StoreCandidateInput() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
 

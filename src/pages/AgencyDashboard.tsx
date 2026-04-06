@@ -36,6 +36,7 @@ const statusLabel: Record<string, { text: string; color: string }> = {
 };
 
 export default function AgencyDashboard() {
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 

@@ -26,6 +26,7 @@ type ReportData = {
 };
 
 export default function Report() {
+  const { t } = useLanguage();
   const [address, setAddress] = useState("");
   const [industry, setIndustry] = useState("");
   const [storeName, setStoreName] = useState("");

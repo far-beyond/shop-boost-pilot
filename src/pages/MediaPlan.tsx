@@ -25,6 +25,7 @@ type MediaPlanResult = {
 };
 
 export default function MediaPlan() {
+  const { t } = useLanguage();
   const [address, setAddress] = useState("");
   const [industry, setIndustry] = useState("");
   const [storeName, setStoreName] = useState("");

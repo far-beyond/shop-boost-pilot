@@ -76,6 +76,7 @@ const compLevelBadge = (level: string) => {
 };
 
 export default function LocationMatch() {
+  const { t } = useLanguage();
   const [industry, setIndustry] = useState("");
   const [serviceDescription, setServiceDescription] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
