@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
+import { exportAdProposalPDF } from "@/lib/adPdfExport";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
