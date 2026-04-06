@@ -22,6 +22,8 @@ import AgencyDashboard from "./pages/AgencyDashboard";
 import Report from "./pages/Report";
 import Pricing from "./pages/Pricing";
 import AdminDashboard from "./pages/AdminDashboard";
+import Tokushoho from "./pages/Tokushoho";
+import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +55,8 @@ const AppRoutes = () => (
     <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
     <Route path="/pricing" element={<Pricing />} />
     <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+    <Route path="/tokushoho" element={<Tokushoho />} />
+    <Route path="/terms" element={<Terms />} />
     {/* Legacy routes redirect */}
     <Route path="/diagnosis" element={<Navigate to="/dashboard" replace />} />
     <Route path="/promo" element={<Navigate to="/dashboard" replace />} />
