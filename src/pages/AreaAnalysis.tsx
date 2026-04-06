@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, Users, Home, TrendingUp, Loader2, Search, Building2, AlertTriangle, CheckCircle2, BarChart3, Database, Sparkles } from "lucide-react";
+import { MapPin, Users, Home, TrendingUp, Loader2, Search, Building2, AlertTriangle, CheckCircle2, BarChart3, Database, Sparkles, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { exportAreaAnalysisPDF } from "@/lib/areaAnalysisPdfExport";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
@@ -188,10 +189,22 @@ export default function AreaAnalysis() {
                       />
                     </div>
                   </div>
-                  <Button onClick={runAnalysis} disabled={loading} className="w-full sm:w-auto gap-2">
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                    {loading ? "分析中..." : "AIで分析する"}
-                  </Button>
+                  <div className="flex gap-2 flex-wrap">
+                    <Button onClick={runAnalysis} disabled={loading} className="w-full sm:w-auto gap-2">
+                      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                      {loading ? "分析中..." : "AIで分析する"}
+                    </Button>
+                    {(areaResult || openingResult) && (
+                      <Button
+                        variant="outline"
+                        className="gap-2"
+                        onClick={() => exportAreaAnalysisPDF(areaResult, openingResult, { address, radius, industry })}
+                      >
+                        <FileDown className="w-4 h-4" />
+                        PDFダウンロード
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
