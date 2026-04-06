@@ -109,7 +109,24 @@ async function upsertSubscription(supabase: any, stripe: Stripe, subscription: S
     return;
   }
 
-  const periodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+  // current_period_end removed in Stripe API 2025-08-27.basil
+  // Use latest_invoice to get period end
+  let periodEnd: string | null = null;
+  const invoiceId = (subscription as any).latest_invoice;
+  if (invoiceId && typeof invoiceId === "string") {
+    try {
+      const invoice = await stripe.invoices.retrieve(invoiceId);
+      const lines = (invoice as any).lines?.data;
+      if (lines && lines.length > 0 && lines[0].period?.end) {
+        const endTs = lines[0].period.end;
+        periodEnd = typeof endTs === "number"
+          ? new Date(endTs * 1000).toISOString()
+          : endTs;
+      }
+    } catch (e) {
+      log("Could not retrieve invoice for period end", { error: (e as Error).message });
+    }
+  }
   const planName = subscription.status === "active" ? "pro" : "free";
 
   const { error } = await supabase

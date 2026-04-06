@@ -53,9 +53,26 @@ serve(async (req) => {
     let subscriptionEnd = null;
 
     if (hasActiveSub) {
-      const subscription = subscriptions.data[0];
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      productId = subscription.items.data[0].price.product;
+      const subscription = subscriptions.data[0] as any;
+      productId = subscription.items?.data?.[0]?.price?.product ?? null;
+
+      // In Stripe API 2025-08-27.basil, current_period_end is removed.
+      // Get period end from the latest invoice instead.
+      const invoiceId = subscription.latest_invoice;
+      if (invoiceId && typeof invoiceId === "string") {
+        try {
+          const invoice = await stripe.invoices.retrieve(invoiceId);
+          const lines = (invoice as any).lines?.data;
+          if (lines && lines.length > 0 && lines[0].period?.end) {
+            const endTs = lines[0].period.end;
+            subscriptionEnd = typeof endTs === "number"
+              ? new Date(endTs * 1000).toISOString()
+              : endTs;
+          }
+        } catch (e) {
+          console.log("[CHECK-SUB] Could not retrieve invoice:", (e as Error).message);
+        }
+      }
     }
 
     return new Response(JSON.stringify({
