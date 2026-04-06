@@ -289,6 +289,10 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="plan-settings">
+            <PlanSettingsTab />
+          </TabsContent>
         </Tabs>
       </div>
     </Layout>
