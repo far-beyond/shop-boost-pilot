@@ -16,7 +16,7 @@ import {
   type MapAreaAnalysisResult,
 } from "@/lib/mapAreaService";
 import {
-  generateDummyTownPolygons,
+  generateTownPolygons,
   getHeatmapColor,
   getHeatmapValue,
   calculateFlyerSelection,
