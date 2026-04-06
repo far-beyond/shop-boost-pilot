@@ -178,7 +178,7 @@ function LeafletMap({
     layersRef.current.storeMarker?.remove();
     if (result) {
       const marker = L.marker(center, { icon: storeIcon })
-        .bindPopup(`<strong>候補地</strong><br/>${address}`)
+        .bindPopup(`<strong>${labels.candidate}</strong><br/>${address}`)
         .addTo(map);
       layersRef.current.storeMarker = marker;
     }
@@ -195,7 +195,7 @@ function LeafletMap({
         onEachFeature: (feature, layer) => {
           const props = feature.properties as TownPolygonProperties;
           layer.bindPopup(
-            `<strong>${props.name}</strong><br/>人口: ${props.population.toLocaleString()}人<br/>世帯数: ${props.households.toLocaleString()}<br/>平均年齢: ${props.avgAge}歳`
+            `<strong>${props.name}</strong><br/>${labels.population}: ${props.population.toLocaleString()}${labels.popUnit}<br/>${labels.households}: ${props.households.toLocaleString()}<br/>${labels.avgAge}: ${props.avgAge}${labels.ageUnit}`
           );
           layer.on("click", () => onTownClick(props.id));
         },
@@ -213,7 +213,7 @@ function LeafletMap({
     if (activeLayer !== "recommended" && result) {
       for (const comp of result.competitors) {
         const m = L.marker([comp.lat, comp.lng], { icon: competitorIcon })
-          .bindPopup(`<strong>${comp.name}</strong><br/>業種: ${comp.industry}<br/>距離: ${comp.distance}m`)
+          .bindPopup(`<strong>${comp.name}</strong><br/>${labels.industry}: ${comp.industry}<br/>${labels.distance}: ${comp.distance}m`)
           .addTo(map);
         layersRef.current.competitorMarkers.push(m);
       }
@@ -228,7 +228,7 @@ function LeafletMap({
     layersRef.current.candidateMarkers = [];
     for (const c of candidates) {
       const m = L.marker([c.lat, c.lng], { icon: candidateIcon })
-        .bindPopup(`<strong>${c.label}</strong><br/>スコア: ${c.score}点<br/>人口: ${c.population.toLocaleString()}人`)
+        .bindPopup(`<strong>${c.label}</strong><br/>${labels.score}: ${c.score}${labels.points}<br/>${labels.population}: ${c.population.toLocaleString()}${labels.popUnit}`)
         .addTo(map);
       layersRef.current.candidateMarkers.push(m);
     }
