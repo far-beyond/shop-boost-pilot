@@ -73,15 +73,34 @@ function buildPrompt(
   targetAudience: string,
   budget: string,
   currentLocation: string,
-  preferences: string
+  preferences: string,
+  isEn = false,
 ) {
-  const system = `あなたは日本の店舗出店・集客戦略のエキスパートAIです。
+  const system = isEn
+    ? `You are an expert AI in store location strategy and customer acquisition. Analyze service characteristics and suggest optimal areas for store opening, advertising, and flyer distribution. Provide realistic proposals based on demographics, commercial characteristics, competition, and rent. Suggest 5 areas with advice from store opening, advertising, and flyer perspectives. Always respond in English.`
+    : `あなたは日本の店舗出店・集客戦略のエキスパートAIです。
 サービスの特性を分析し、最適な出店エリア・広告エリア・チラシ配布エリアを提案します。
 日本の各エリアの人口動態、商業特性、競合状況、家賃相場に基づいた現実的な提案を行ってください。
 必ず5つのエリアを提案し、それぞれに出店・広告・チラシの観点からアドバイスしてください。
 必ず日本語で回答してください。`;
 
-  const user = `以下のサービスに最適な出店・広告・チラシ配布エリアを提案してください。
+  const user = isEn
+    ? `Please suggest optimal areas for store opening, advertising, and flyer distribution for the following service.
+
+Industry: ${industry}
+Service Description: ${serviceDescription}
+${targetAudience ? `Target Audience: ${targetAudience}` : ""}
+${budget ? `Budget Scale: ${budget}` : ""}
+${currentLocation ? `Current Location / Preferred Area: ${currentLocation}` : ""}
+${preferences ? `Other Preferences: ${preferences}` : ""}
+
+Please include:
+1. 5 recommended areas ranked by match score
+2. Strengths and risks of each area
+3. Store opening advice, ad strategy, and flyer distribution strategy for each area
+4. Area comparison table
+5. Overall recommendation and specific action plan`
+    : `以下のサービスに最適な出店・広告・チラシ配布エリアを提案してください。
 
 業種: ${industry}
 サービス内容: ${serviceDescription}
@@ -111,7 +130,8 @@ serve(async (req) => {
       });
     }
 
-    const { industry, serviceDescription, targetAudience, budget, currentLocation, preferences } = await req.json();
+    const { industry, serviceDescription, targetAudience, budget, currentLocation, preferences, language } = await req.json();
+    const isEn = language === "en";
 
     if (!industry || !serviceDescription) {
       return new Response(JSON.stringify({ error: "業種とサービス内容は必須です" }), {
@@ -119,7 +139,7 @@ serve(async (req) => {
       });
     }
 
-    const { system, user } = buildPrompt(industry, serviceDescription, targetAudience || "", budget || "", currentLocation || "", preferences || "");
+    const { system, user } = buildPrompt(industry, serviceDescription, targetAudience || "", budget || "", currentLocation || "", preferences || "", isEn);
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

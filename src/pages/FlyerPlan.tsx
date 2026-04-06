@@ -68,7 +68,7 @@ const priorityColor = (p: string) => {
 };
 
 export default function FlyerPlan() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [address, setAddress] = useState("");
   const [industry, setIndustry] = useState("");
   const [storeName, setStoreName] = useState("");
@@ -85,7 +85,7 @@ export default function FlyerPlan() {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("flyer-plan", {
-        body: { address, industry, budget, target, storeName },
+        body: { address, industry, budget, target, storeName, language },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

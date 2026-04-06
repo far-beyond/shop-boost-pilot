@@ -28,7 +28,8 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
-    const { diagnosisId, type } = await req.json();
+    const { diagnosisId, type, language } = await req.json();
+    const isEn = language === "en";
 
     if (!diagnosisId) {
       return new Response(JSON.stringify({ error: "diagnosisId is required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -69,8 +70,12 @@ serve(async (req) => {
     let toolDef: any = null;
 
     if (type === "diagnosis") {
-      systemPrompt = "あなたは日本の実店舗向け集客コンサルタントAIです。店舗情報を分析して、具体的で実行可能な集客診断を行います。必ず日本語で回答してください。";
-      userPrompt = `以下の店舗情報を分析して、集客診断を行ってください。\n\n${storeInfo}`;
+      systemPrompt = isEn
+        ? "You are an expert customer acquisition consultant AI for physical retail stores. Analyze store information and provide specific, actionable customer acquisition diagnostics. Always respond in English."
+        : "あなたは日本の実店舗向け集客コンサルタントAIです。店舗情報を分析して、具体的で実行可能な集客診断を行います。必ず日本語で回答してください。";
+      userPrompt = isEn
+        ? `Analyze the following store information and provide a customer acquisition diagnosis.\n\n${storeInfo}`
+        : `以下の店舗情報を分析して、集客診断を行ってください。\n\n${storeInfo}`;
       toolDef = {
         type: "function",
         function: {
@@ -105,8 +110,12 @@ serve(async (req) => {
         },
       };
     } else if (type === "promo") {
-      systemPrompt = "あなたは日本の実店舗向けマーケティングコピーライターAIです。各媒体に最適な販促文を作成します。必ず日本語で回答してください。";
-      userPrompt = `以下の店舗情報に基づいて、各媒体向けの販促文を作成してください。\n\n${storeInfo}`;
+      systemPrompt = isEn
+        ? "You are a marketing copywriter AI for physical retail stores. Create optimal promotional text for each media channel. Always respond in English."
+        : "あなたは日本の実店舗向けマーケティングコピーライターAIです。各媒体に最適な販促文を作成します。必ず日本語で回答してください。";
+      userPrompt = isEn
+        ? `Based on the following store information, create promotional text for each media channel.\n\n${storeInfo}`
+        : `以下の店舗情報に基づいて、各媒体向けの販促文を作成してください。\n\n${storeInfo}`;
       toolDef = {
         type: "function",
         function: {
@@ -127,8 +136,12 @@ serve(async (req) => {
         },
       };
     } else if (type === "kpi") {
-      systemPrompt = "あなたは日本の実店舗向けKPIコンサルタントAIです。集客施策の効果を測るための指標と目標値を設計します。必ず日本語で回答してください。";
-      userPrompt = `以下の店舗情報に基づいて、集客施策のKPIを設計してください。\n\n${storeInfo}`;
+      systemPrompt = isEn
+        ? "You are a KPI consultant AI for physical retail stores. Design metrics and target values to measure the effectiveness of customer acquisition strategies. Always respond in English."
+        : "あなたは日本の実店舗向けKPIコンサルタントAIです。集客施策の効果を測るための指標と目標値を設計します。必ず日本語で回答してください。";
+      userPrompt = isEn
+        ? `Based on the following store information, design KPIs for customer acquisition strategies.\n\n${storeInfo}`
+        : `以下の店舗情報に基づいて、集客施策のKPIを設計してください。\n\n${storeInfo}`;
       toolDef = {
         type: "function",
         function: {

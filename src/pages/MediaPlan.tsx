@@ -21,7 +21,7 @@ const fadeUp = { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 } }
 type MediaPlanResult = { google: any | null; meta: any | null; flyer: any | null; };
 
 export default function MediaPlan() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [address, setAddress] = useState("");
   const [industry, setIndustry] = useState("");
   const [storeName, setStoreName] = useState("");
@@ -43,7 +43,7 @@ export default function MediaPlan() {
     if (!industry) { toast.error(t("media.errIndustry")); return; }
     setLoading(true);
     try {
-      const body = { address, industry, budget, target, storeName };
+      const body = { address, industry, budget, target, storeName, language };
       const [adRes, flyerRes] = await Promise.all([
         supabase.functions.invoke("ad-proposal", { body }),
         supabase.functions.invoke("flyer-plan", { body }),

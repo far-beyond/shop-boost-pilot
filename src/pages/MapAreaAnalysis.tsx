@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { MapPin, Users, Home, TrendingUp, Loader2, Search, Building2, AlertTriangle, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -235,6 +236,7 @@ function LeafletMap({
 }
 
 export default function MapAreaAnalysis() {
+  const { language } = useLanguage();
   const [address, setAddress] = useState("");
   const [industry, setIndustry] = useState("");
   const [radius, setRadius] = useState<string>("3km");
@@ -291,7 +293,7 @@ export default function MapAreaAnalysis() {
     setError(null);
     setSelectedTownIds([]);
     try {
-      const data = await fetchMapAreaAnalysis(address, radius, industry || undefined);
+      const data = await fetchMapAreaAnalysis(address, radius, industry || undefined, language);
       setResult(data);
       toast.success("分析が完了しました");
     } catch (e: any) {

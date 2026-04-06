@@ -73,9 +73,9 @@ export async function createDiagnosis(input: {
   return data;
 }
 
-export async function runAIDiagnosis(diagnosisId: string, type: "diagnosis" | "promo" | "kpi") {
+export async function runAIDiagnosis(diagnosisId: string, type: "diagnosis" | "promo" | "kpi", language: string = "ja") {
   const { data, error } = await supabase.functions.invoke("diagnose", {
-    body: { diagnosisId, type },
+    body: { diagnosisId, type, language },
   });
 
   if (error) throw error;

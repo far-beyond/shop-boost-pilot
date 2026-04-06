@@ -14,8 +14,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const tabKeys = ["Googleビジネスプロフィール", "Instagram", "X", "チラシ", "LINE", "広告見出し"];
 const tabLabelKeys = ["promo.tabGBP", "promo.tabIG", "promo.tabX", "promo.tabFlyer", "promo.tabLINE", "promo.tabAdHeadline"];
 
-async function adjustPromoText(text: string, tone: "soft" | "strong" | "alternative"): Promise<string> {
-  const { data, error } = await supabase.functions.invoke("adjust-promo", { body: { text, tone } });
+async function adjustPromoText(text: string, tone: "soft" | "strong" | "alternative", language: string = "ja"): Promise<string> {
+  const { data, error } = await supabase.functions.invoke("adjust-promo", { body: { text, tone, language } });
   if (error) throw error;
   if (data?.error) throw new Error(data.error);
   return data.result;
@@ -25,7 +25,7 @@ export default function PromoText() {
   const { id } = useParams<{ id: string }>();
   const [regenerating, setRegenerating] = useState(false);
   const [adjustingKey, setAdjustingKey] = useState<string | null>(null);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const { data: diagnosis, isLoading, error, refetch } = useQuery({
     queryKey: ["diagnosis", id],
@@ -42,7 +42,7 @@ export default function PromoText() {
     if (!id) return;
     setRegenerating(true);
     try {
-      await runAIDiagnosis(id, "promo");
+      await runAIDiagnosis(id, "promo", language);
       await refetch();
       toast.success(t("promo.regenerated"));
     } catch (err: any) {
@@ -60,7 +60,7 @@ export default function PromoText() {
     const key = `${tab}-${index}-${tone}`;
     setAdjustingKey(key);
     try {
-      const adjusted = await adjustPromoText(originalText, tone);
+      const adjusted = await adjustPromoText(originalText, tone, language);
       const updatedTexts = { ...texts };
       updatedTexts[tab] = [...(updatedTexts[tab] || [])];
       updatedTexts[tab][index] = adjusted;

@@ -78,13 +78,31 @@ const toolDef = {
   },
 };
 
-function buildPrompt(address: string, industry: string, budget: string, target: string, storeName: string) {
-  const system = `あなたは日本のチラシ・ポスティング配布戦略の専門家AIです。地域の特性、ターゲット層、業種に応じた最適な配布計画を設計します。
+function buildPrompt(address: string, industry: string, budget: string, target: string, storeName: string, isEn = false) {
+  const system = isEn
+    ? `You are an expert AI in flyer/leaflet distribution strategy. Design optimal distribution plans based on regional characteristics, target audience, and industry. Provide realistic cost estimates. Generate multiple compelling catchcopy patterns. Always respond in English.`
+    : `あなたは日本のチラシ・ポスティング配布戦略の専門家AIです。地域の特性、ターゲット層、業種に応じた最適な配布計画を設計します。
 日本のポスティング業界の相場（印刷費: A4片面カラー 3〜8円/枚、配布費: 3〜7円/枚）に基づいた現実的なコスト見積もりを出してください。
 キャッチコピーは日本の消費者に刺さる自然な日本語で、複数パターン生成してください。
 必ず日本語で回答してください。`;
 
-  const user = `以下の条件でチラシ配布計画を作成してください。
+  const user = isEn
+    ? `Please create a flyer distribution plan with the following conditions.
+
+Store Location: ${address}
+${storeName ? `Store Name: ${storeName}` : ""}
+Industry: ${industry}
+${budget ? `Budget: ${budget}` : "Budget: Not specified (please provide optimal suggestions)"}
+${target ? `Target Audience: ${target}` : ""}
+
+Include:
+1. Distribution areas (3-5): area name, reason, estimated households, recommended quantity, priority
+2. Total quantity and cost estimate (printing + distribution breakdown)
+3. Optimal distribution timing (days, time slots, seasons)
+4. Catchcopy ideas (5+ patterns, different tones)
+5. Flyer design tips
+6. Expected response rate and ROI`
+    : `以下の条件でチラシ配布計画を作成してください。
 
 店舗所在地: ${address}
 ${storeName ? `店舗名: ${storeName}` : ""}
@@ -114,7 +132,8 @@ serve(async (req) => {
       });
     }
 
-    const { address, industry, budget, target, storeName } = await req.json();
+    const { address, industry, budget, target, storeName, language } = await req.json();
+    const isEn = language === "en";
 
     if (!address || !industry) {
       return new Response(JSON.stringify({ error: "住所と業種は必須です" }), {
@@ -122,7 +141,7 @@ serve(async (req) => {
       });
     }
 
-    const { system, user } = buildPrompt(address, industry, budget || "", target || "", storeName || "");
+    const { system, user } = buildPrompt(address, industry, budget || "", target || "", storeName || "", isEn);
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
