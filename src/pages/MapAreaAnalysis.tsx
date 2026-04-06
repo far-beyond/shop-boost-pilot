@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { MapPin, Users, Home, TrendingUp, Loader2, Search, Building2, AlertTriangle, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Layout from "@/components/Layout";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { MapContainer, TileLayer, Circle, Marker, Popup, useMap, GeoJSON, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import {
@@ -69,23 +68,6 @@ const RADIUS_OPTIONS = [
   { label: "5km", value: "5km", meters: 5000 },
 ];
 
-function MapUpdater({ center, zoom }: { center: [number, number]; zoom: number }) {
-  const map = useMap();
-  useMemo(() => {
-    map.setView(center, zoom, { animate: true });
-  }, [center, zoom, map]);
-  return null;
-}
-
-function MapClickHandler({ onClick }: { onClick: (lat: number, lng: number) => void }) {
-  useMapEvents({
-    click(e) {
-      onClick(e.latlng.lat, e.latlng.lng);
-    },
-  });
-  return null;
-}
-
 function ScoreGauge({ score }: { score: number }) {
   const color = score >= 75 ? "text-green-500" : score >= 50 ? "text-yellow-500" : "text-red-500";
   return (
@@ -96,6 +78,160 @@ function ScoreGauge({ score }: { score: number }) {
   );
 }
 
+// Pure Leaflet map component (no react-leaflet)
+function LeafletMap({
+  center,
+  zoom,
+  radiusMeters,
+  result,
+  address,
+  townPolygons,
+  geoJsonStyle,
+  onTownClick,
+  activeLayer,
+  candidates,
+  onMapClick,
+  heatmapMode,
+  selectedTownIds,
+}: {
+  center: [number, number];
+  zoom: number;
+  radiusMeters: number;
+  result: MapAreaAnalysisResult | null;
+  address: string;
+  townPolygons: TownFeatureCollection;
+  geoJsonStyle: (feature: any) => L.PathOptions;
+  onTownClick: (townId: string) => void;
+  activeLayer: LayerMode;
+  candidates: CandidatePin[];
+  onMapClick: (lat: number, lng: number) => void;
+  heatmapMode: HeatmapMode;
+  selectedTownIds: string[];
+}) {
+  const mapRef = useRef<L.Map | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const layersRef = useRef<{
+    tradeCircle?: L.Circle;
+    storeMarker?: L.Marker;
+    geoJsonLayer?: L.GeoJSON;
+    competitorMarkers: L.Marker[];
+    candidateMarkers: L.Marker[];
+  }>({ competitorMarkers: [], candidateMarkers: [] });
+
+  // Initialize map
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
+    const map = L.map(containerRef.current, {
+      center,
+      zoom,
+      zoomControl: false,
+    });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+    map.on("click", (e) => onMapClick(e.latlng.lat, e.latlng.lng));
+    mapRef.current = map;
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
+  // Update map click handler
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.off("click");
+    map.on("click", (e) => onMapClick(e.latlng.lat, e.latlng.lng));
+  }, [onMapClick]);
+
+  // Update center/zoom
+  useEffect(() => {
+    mapRef.current?.setView(center, zoom, { animate: true });
+  }, [center, zoom]);
+
+  // Trade area circle
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    layersRef.current.tradeCircle?.remove();
+    const circle = L.circle(center, {
+      radius: radiusMeters,
+      color: "hsl(217, 91%, 55%)",
+      fillColor: "hsl(217, 91%, 55%)",
+      fillOpacity: 0.06,
+      weight: 2,
+      dashArray: "6 4",
+    }).addTo(map);
+    layersRef.current.tradeCircle = circle;
+  }, [center, radiusMeters]);
+
+  // Store marker
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    layersRef.current.storeMarker?.remove();
+    if (result) {
+      const marker = L.marker(center, { icon: storeIcon })
+        .bindPopup(`<strong>候補地</strong><br/>${address}`)
+        .addTo(map);
+      layersRef.current.storeMarker = marker;
+    }
+  }, [result, center, address]);
+
+  // GeoJSON polygons
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    layersRef.current.geoJsonLayer?.remove();
+    if (activeLayer === "density" || activeLayer === "recommended") {
+      const layer = L.geoJSON(townPolygons as any, {
+        style: geoJsonStyle,
+        onEachFeature: (feature, layer) => {
+          const props = feature.properties as TownPolygonProperties;
+          layer.bindPopup(
+            `<strong>${props.name}</strong><br/>人口: ${props.population.toLocaleString()}人<br/>世帯数: ${props.households.toLocaleString()}<br/>平均年齢: ${props.avgAge}歳`
+          );
+          layer.on("click", () => onTownClick(props.id));
+        },
+      }).addTo(map);
+      layersRef.current.geoJsonLayer = layer;
+    }
+  }, [townPolygons, activeLayer, geoJsonStyle, onTownClick, heatmapMode, selectedTownIds]);
+
+  // Competitor markers
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    layersRef.current.competitorMarkers.forEach((m) => m.remove());
+    layersRef.current.competitorMarkers = [];
+    if (activeLayer !== "recommended" && result) {
+      for (const comp of result.competitors) {
+        const m = L.marker([comp.lat, comp.lng], { icon: competitorIcon })
+          .bindPopup(`<strong>${comp.name}</strong><br/>業種: ${comp.industry}<br/>距離: ${comp.distance}m`)
+          .addTo(map);
+        layersRef.current.competitorMarkers.push(m);
+      }
+    }
+  }, [result, activeLayer]);
+
+  // Candidate markers
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    layersRef.current.candidateMarkers.forEach((m) => m.remove());
+    layersRef.current.candidateMarkers = [];
+    for (const c of candidates) {
+      const m = L.marker([c.lat, c.lng], { icon: candidateIcon })
+        .bindPopup(`<strong>${c.label}</strong><br/>スコア: ${c.score}点<br/>人口: ${c.population.toLocaleString()}人`)
+        .addTo(map);
+      layersRef.current.candidateMarkers.push(m);
+    }
+  }, [candidates]);
+
+  return <div ref={containerRef} className="h-full w-full" />;
+}
+
 export default function MapAreaAnalysis() {
   const [address, setAddress] = useState("");
   const [industry, setIndustry] = useState("");
@@ -104,21 +240,18 @@ export default function MapAreaAnalysis() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<MapAreaAnalysisResult | null>(null);
 
-  // New feature states
   const [heatmapMode, setHeatmapMode] = useState<HeatmapMode>("population");
   const [activeLayer, setActiveLayer] = useState<LayerMode>("density");
   const [flyerMode, setFlyerMode] = useState(false);
   const [multiPinMode, setMultiPinMode] = useState(false);
   const [selectedTownIds, setSelectedTownIds] = useState<string[]>([]);
   const [candidates, setCandidates] = useState<CandidatePin[]>([]);
-  const [geoJsonKey, setGeoJsonKey] = useState(0); // force GeoJSON re-render
 
   const radiusMeta = RADIUS_OPTIONS.find((r) => r.value === radius)!;
   const mapCenter: [number, number] = result?.center || [35.6812, 139.7671];
   const mapZoom = radius === "1km" ? 15 : radius === "3km" ? 13 : 12;
   const radiusKm = parseFloat(radius.replace("km", ""));
 
-  // Generate town polygons around center
   const townPolygons = useMemo<TownFeatureCollection>(
     () => generateDummyTownPolygons(mapCenter, radiusKm),
     [mapCenter[0], mapCenter[1], radiusKm]
@@ -140,7 +273,6 @@ export default function MapAreaAnalysis() {
     try {
       const data = await fetchMapAreaAnalysis(address, radius, industry || undefined);
       setResult(data);
-      setGeoJsonKey((k) => k + 1);
       toast.success("分析が完了しました");
     } catch (e: any) {
       const msg = e?.message || "分析中にエラーが発生しました";
@@ -154,11 +286,10 @@ export default function MapAreaAnalysis() {
   const handleMapClick = useCallback(
     (lat: number, lng: number) => {
       if (multiPinMode) {
-        const id = `cand-${Date.now()}`;
         setCandidates((prev) => [
           ...prev,
           {
-            id,
+            id: `cand-${Date.now()}`,
             label: `候補地 ${prev.length + 1}`,
             lat,
             lng,
@@ -209,20 +340,6 @@ export default function MapAreaAnalysis() {
     [heatmapMode, activeLayer, selectedTownIds]
   );
 
-  const onEachFeature = useCallback(
-    (feature: any, layer: L.Layer) => {
-      const props = feature.properties as TownPolygonProperties;
-      layer.bindPopup(
-        `<strong>${props.name}</strong><br/>人口: ${props.population.toLocaleString()}人<br/>世帯数: ${props.households.toLocaleString()}<br/>平均年齢: ${props.avgAge}歳`
-      );
-      layer.on("click", () => handleTownClick(props.id));
-    },
-    [handleTownClick]
-  );
-
-  // Force GeoJSON re-render when style deps change
-  const computedGeoJsonKey = `${geoJsonKey}-${heatmapMode}-${activeLayer}-${selectedTownIds.join(",")}`;
-
   return (
     <Layout>
       <div className="h-[calc(100vh-3.5rem)] flex flex-col lg:flex-row overflow-hidden">
@@ -271,11 +388,11 @@ export default function MapAreaAnalysis() {
             </Card>
           </div>
 
-          {/* Controls overlay (bottom-right) */}
+          {/* Controls overlay */}
           <div className="absolute top-4 right-4 z-[1000] hidden lg:block lg:w-[280px]">
             <MapControls
               heatmapMode={heatmapMode}
-              onHeatmapModeChange={(m) => { setHeatmapMode(m); }}
+              onHeatmapModeChange={setHeatmapMode}
               activeLayer={activeLayer}
               onLayerChange={setActiveLayer}
               flyerMode={flyerMode}
@@ -285,7 +402,7 @@ export default function MapAreaAnalysis() {
             />
           </div>
 
-          {/* Flyer selection panel (bottom-left) */}
+          {/* Flyer selection panel */}
           {flyerMode && (
             <div className="absolute bottom-4 left-4 z-[1000] w-[260px]">
               <FlyerSelectionPanel
@@ -297,7 +414,7 @@ export default function MapAreaAnalysis() {
             </div>
           )}
 
-          {/* Candidate comparison (bottom-right) */}
+          {/* Candidate comparison */}
           {multiPinMode && (
             <div className="absolute bottom-4 right-4 z-[1000] w-[260px]">
               <CandidateComparison
@@ -323,7 +440,7 @@ export default function MapAreaAnalysis() {
                   </div>
                   {activeLayer !== "recommended" && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="w-3 h-3 rounded-full bg-red-500 border-2 border-white" /> 競合店舗
+                      <span className="w-3 h-3 rounded-full bg-destructive border-2 border-white" /> 競合店舗
                       <MapPin className="w-3 h-3 text-primary ml-2" /> 候補地
                     </div>
                   )}
@@ -332,74 +449,21 @@ export default function MapAreaAnalysis() {
             </div>
           )}
 
-          <MapContainer
+          <LeafletMap
             center={mapCenter}
             zoom={mapZoom}
-            className="h-full w-full z-0"
-            zoomControl={false}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <MapUpdater center={mapCenter} zoom={mapZoom} />
-            <MapClickHandler onClick={handleMapClick} />
-
-            {/* Town polygons */}
-            {(activeLayer === "density" || activeLayer === "recommended") && (
-              <GeoJSON
-                key={computedGeoJsonKey}
-                data={townPolygons}
-                style={geoJsonStyle}
-                onEachFeature={onEachFeature}
-              />
-            )}
-
-            {/* Trade area circle */}
-            <Circle
-              center={mapCenter}
-              radius={radiusMeta.meters}
-              pathOptions={{
-                color: "hsl(217, 91%, 55%)",
-                fillColor: "hsl(217, 91%, 55%)",
-                fillOpacity: 0.06,
-                weight: 2,
-                dashArray: "6 4",
-              }}
-            />
-
-            {/* Store candidate pin */}
-            {result && (
-              <Marker position={mapCenter} icon={storeIcon}>
-                <Popup>
-                  <strong>候補地</strong><br />{address}
-                </Popup>
-              </Marker>
-            )}
-
-            {/* Competitor markers */}
-            {activeLayer !== "recommended" &&
-              result?.competitors.map((comp) => (
-                <Marker key={comp.id} position={[comp.lat, comp.lng]} icon={competitorIcon}>
-                  <Popup>
-                    <strong>{comp.name}</strong><br />
-                    業種: {comp.industry}<br />
-                    距離: {comp.distance}m
-                  </Popup>
-                </Marker>
-              ))}
-
-            {/* Multi-pin candidates */}
-            {candidates.map((c) => (
-              <Marker key={c.id} position={[c.lat, c.lng]} icon={candidateIcon}>
-                <Popup>
-                  <strong>{c.label}</strong><br />
-                  スコア: {c.score}点<br />
-                  人口: {c.population.toLocaleString()}人
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+            radiusMeters={radiusMeta.meters}
+            result={result}
+            address={address}
+            townPolygons={townPolygons}
+            geoJsonStyle={geoJsonStyle}
+            onTownClick={handleTownClick}
+            activeLayer={activeLayer}
+            candidates={candidates}
+            onMapClick={handleMapClick}
+            heatmapMode={heatmapMode}
+            selectedTownIds={selectedTownIds}
+          />
         </div>
 
         {/* Analysis side panel */}
