@@ -156,10 +156,10 @@ export default function StoreInput() {
                   <FormItem>
                     <FormLabel>{t("si.media")}</FormLabel>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {mediaOptions.map((m) => (
+                      {mediaOptionKeys.map((m, idx) => (
                         <label key={m} className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
                           <Checkbox checked={field.value?.includes(m)} onCheckedChange={(checked) => { const c = field.value ?? []; field.onChange(checked ? [...c, m] : c.filter((x) => x !== m)); }} />
-                          <span className="text-sm">{m}</span>
+                          <span className="text-sm">{t(mediaLabelKeys[idx])}</span>
                         </label>
                       ))}
                     </div>
