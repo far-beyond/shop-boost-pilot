@@ -4,6 +4,7 @@ import { LayoutDashboard, Loader2, Plus, FileText, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Layout from "@/components/Layout";
+import { useAuth } from "@/contexts/AuthContext";
 import { getUserDiagnoses } from "@/lib/diagnosisService";
 import { motion } from "framer-motion";
 import StatsCards from "@/components/dashboard/StatsCards";
