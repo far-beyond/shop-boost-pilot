@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { FileText, Home, LayoutDashboard, LogIn, LogOut, Target } from "lucide-react";
+import { FileText, Home, LayoutDashboard, LogIn, LogOut, MapPin, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 const navItems = [
   { to: "/", label: "トップ", icon: Home, authRequired: false },
   { to: "/input", label: "店舗入力", icon: FileText, authRequired: true },
+  { to: "/area-analysis", label: "地域分析", icon: MapPin, authRequired: true },
   { to: "/dashboard", label: "ダッシュボード", icon: LayoutDashboard, authRequired: true },
 ];
 
