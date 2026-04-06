@@ -35,24 +35,35 @@ export type MapAreaAnalysisResult = {
   summary: TradeAreaSummary;
 };
 
+// Geocode address using Nominatim
+async function geocodeAddress(address: string): Promise<[number, number]> {
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`;
+  const res = await fetch(url, {
+    headers: { "Accept-Language": "ja", "User-Agent": "ShopBoostPilot/1.0" },
+  });
+  if (!res.ok) throw new Error("ジオコーディングに失敗しました");
+  const data = await res.json();
+  if (!data || data.length === 0) throw new Error("住所が見つかりませんでした");
+  return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+}
+
 // Fetch map-based area analysis from API
 export async function fetchMapAreaAnalysis(
   address: string,
   radius: string,
   industry?: string
 ): Promise<MapAreaAnalysisResult> {
+  // Geocode first
+  const center = await geocodeAddress(address);
+
   const { data, error } = await supabase.functions.invoke("area-analysis", {
     body: { address, radius, industry, analysisType: "area" },
   });
   if (error) throw error;
   if (data?.error) throw new Error(data.error);
 
-  // Transform API result to map-compatible format
   const result = data.result;
   const radiusMeters = parseRadiusToMeters(radius);
-
-  // Default center (Tokyo Station) – will be overridden when geocoding is available
-  const center: [number, number] = [35.6812, 139.7671];
 
   const populationZones = generatePopulationZones(center, radiusMeters, result);
   const competitors = generateCompetitorMarkers(center, radiusMeters, result);
