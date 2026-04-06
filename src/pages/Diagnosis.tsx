@@ -8,18 +8,14 @@ import Layout from "@/components/Layout";
 import { getDiagnosis, type DiagnosisResult } from "@/lib/diagnosisService";
 import { exportDiagnosisPDF } from "@/lib/pdfExport";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-const fadeUp = {
-  initial: { opacity: 0, y: 16 },
-  animate: { opacity: 1, y: 0 },
-};
-
-const stagger = {
-  animate: { transition: { staggerChildren: 0.08 } },
-};
+const fadeUp = { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 } };
+const stagger = { animate: { transition: { staggerChildren: 0.08 } } };
 
 export default function Diagnosis() {
   const { id } = useParams<{ id: string }>();
+  const { t } = useLanguage();
 
   const { data: diagnosis, isLoading, error } = useQuery({
     queryKey: ["diagnosis", id],
@@ -28,21 +24,15 @@ export default function Diagnosis() {
   });
 
   if (isLoading) {
-    return (
-      <Layout>
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </Layout>
-    );
+    return <Layout><div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div></Layout>;
   }
 
   if (error || !diagnosis) {
     return (
       <Layout>
         <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
-          <p className="text-destructive">診断結果が見つかりませんでした</p>
-          <Link to="/dashboard"><Button variant="outline">ダッシュボードに戻る</Button></Link>
+          <p className="text-destructive">{t("diag.notFound")}</p>
+          <Link to="/dashboard"><Button variant="outline">{t("diag.backToDashboard")}</Button></Link>
         </div>
       </Layout>
     );
@@ -55,74 +45,35 @@ export default function Diagnosis() {
       <Layout>
         <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">診断結果を生成中です…</p>
+          <p className="text-muted-foreground">{t("diag.generating")}</p>
         </div>
       </Layout>
     );
   }
 
   const analysisCards = [
-    {
-      icon: CheckCircle2,
-      iconClass: "text-accent",
-      bgClass: "bg-accent/10",
-      title: "店舗の強み",
-      items: d.strengths,
-      marker: "✓",
-      markerClass: "text-accent",
-    },
-    {
-      icon: AlertTriangle,
-      iconClass: "text-destructive",
-      bgClass: "bg-destructive/10",
-      title: "弱み・課題",
-      items: d.weaknesses,
-      marker: "!",
-      markerClass: "text-destructive",
-    },
-    {
-      icon: Users,
-      iconClass: "text-primary",
-      bgClass: "bg-primary/10",
-      title: "狙うべき客層",
-      content: d.targetCustomers,
-    },
-    {
-      icon: TrendingUp,
-      iconClass: "text-primary",
-      bgClass: "bg-primary/10",
-      title: "差別化ポイント",
-      items: d.differentiationPoints,
-      marker: "◆",
-      markerClass: "text-primary",
-    },
+    { icon: CheckCircle2, iconClass: "text-accent", bgClass: "bg-accent/10", title: t("diag.strengths"), items: d.strengths, marker: "✓", markerClass: "text-accent" },
+    { icon: AlertTriangle, iconClass: "text-destructive", bgClass: "bg-destructive/10", title: t("diag.weaknesses"), items: d.weaknesses, marker: "!", markerClass: "text-destructive" },
+    { icon: Users, iconClass: "text-primary", bgClass: "bg-primary/10", title: t("diag.targetCustomers"), content: d.targetCustomers },
+    { icon: TrendingUp, iconClass: "text-primary", bgClass: "bg-primary/10", title: t("diag.differentiation"), items: d.differentiationPoints, marker: "◆", markerClass: "text-primary" },
   ];
 
   return (
     <Layout>
       <div className="min-h-[80vh]" style={{ background: "var(--gradient-hero)" }}>
         <div className="container mx-auto px-4 py-8 sm:py-12 max-w-4xl">
-          {/* Header */}
           <motion.div className="text-center mb-8 sm:mb-10" {...fadeUp}>
             <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary mb-3">
               <Target className="w-3.5 h-3.5" />
-              診断結果
+              {t("diag.badge")}
             </div>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-              {diagnosis.store_name}の集客診断
+              {diagnosis.store_name}{t("diag.title")}
             </h1>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              AIが分析した結果をもとに、最適な施策を提案します。
-            </p>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">{t("diag.subtitle")}</p>
           </motion.div>
 
-          {/* Analysis Grid */}
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8"
-            variants={stagger}
-            initial="initial"
-            animate="animate"
-          >
+          <motion.div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8" variants={stagger} initial="initial" animate="animate">
             {analysisCards.map((card, idx) => {
               const Icon = card.icon;
               return (
@@ -156,7 +107,6 @@ export default function Diagnosis() {
             })}
           </motion.div>
 
-          {/* Bottlenecks */}
           <motion.div {...fadeUp} transition={{ delay: 0.3 }}>
             <Card className="mb-6 sm:mb-8 border-border/60 shadow-sm">
               <CardHeader className="pb-3">
@@ -164,48 +114,38 @@ export default function Diagnosis() {
                   <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0">
                     <BarChart3 className="w-4 h-4 text-destructive" />
                   </div>
-                  集客ボトルネック
+                  {t("diag.bottlenecks")}
                 </CardTitle>
-                <CardDescription className="pl-10">現在の集客を妨げている主な要因</CardDescription>
+                <CardDescription className="pl-10">{t("diag.bottlenecksDesc")}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
                   {d.bottlenecks.map((b, i) => (
-                    <Badge key={i} variant="secondary" className="text-xs sm:text-sm py-1 sm:py-1.5 px-2.5 sm:px-3 rounded-lg font-normal">
-                      {b}
-                    </Badge>
+                    <Badge key={i} variant="secondary" className="text-xs sm:text-sm py-1 sm:py-1.5 px-2.5 sm:px-3 rounded-lg font-normal">{b}</Badge>
                   ))}
                 </div>
               </CardContent>
             </Card>
           </motion.div>
 
-          {/* Actions */}
           <motion.div {...fadeUp} transition={{ delay: 0.4 }}>
             <div className="flex items-center gap-2.5 mb-4">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "var(--gradient-primary)" }}>
                 <Zap className="w-4 h-4 text-primary-foreground" />
               </div>
-              <h2 className="text-lg sm:text-xl font-bold text-foreground">今すぐやるべき施策</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-foreground">{t("diag.actions")}</h2>
             </div>
 
             <div className="space-y-3 sm:space-y-4 mb-8 sm:mb-10">
               {d.actions.map((a, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 + i * 0.1 }}
-                >
+                <motion.div key={i} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.1 }}>
                   <Card className="border-border/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                     <div className="flex">
                       <div className="w-1.5 shrink-0" style={{ background: "var(--gradient-primary)" }} />
                       <div className="flex-1">
                         <CardHeader className="pb-2 pt-4 sm:pt-5 px-4 sm:px-6">
                           <CardTitle className="text-base sm:text-lg flex items-center gap-2.5">
-                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold text-primary-foreground shrink-0" style={{ background: "var(--gradient-primary)" }}>
-                              {i + 1}
-                            </span>
+                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold text-primary-foreground shrink-0" style={{ background: "var(--gradient-primary)" }}>{i + 1}</span>
                             {a.name}
                           </CardTitle>
                         </CardHeader>
@@ -213,9 +153,9 @@ export default function Diagnosis() {
                           <p className="text-sm text-muted-foreground mb-3 sm:mb-4 leading-relaxed">{a.reason}</p>
                           <div className="grid grid-cols-3 gap-2 sm:gap-4">
                             {[
-                              { label: "概算コスト", value: a.estimatedCost },
-                              { label: "難易度", value: a.difficulty },
-                              { label: "効果の目安", value: a.expectedEffect },
+                              { label: t("diag.estimatedCost"), value: a.estimatedCost },
+                              { label: t("diag.difficulty"), value: a.difficulty },
+                              { label: t("diag.expectedEffect"), value: a.expectedEffect },
                             ].map((metric) => (
                               <div key={metric.label} className="rounded-lg bg-muted/50 p-2 sm:p-3 text-center">
                                 <span className="text-[10px] sm:text-xs text-muted-foreground block mb-0.5">{metric.label}</span>
@@ -232,31 +172,15 @@ export default function Diagnosis() {
             </div>
           </motion.div>
 
-          {/* CTA Buttons */}
-          <motion.div
-            className="flex flex-col sm:flex-row flex-wrap justify-center gap-3"
-            {...fadeUp}
-            transition={{ delay: 0.7 }}
-          >
-            <Button
-              size="lg"
-              variant="outline"
-              className="gap-2 text-sm sm:text-base px-6 sm:px-8 w-full sm:w-auto shadow-sm"
-              onClick={() => exportDiagnosisPDF(diagnosis)}
-            >
-              <Download className="w-4 h-4" />
-              PDF出力
+          <motion.div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3" {...fadeUp} transition={{ delay: 0.7 }}>
+            <Button size="lg" variant="outline" className="gap-2 text-sm sm:text-base px-6 sm:px-8 w-full sm:w-auto shadow-sm" onClick={() => exportDiagnosisPDF(diagnosis)}>
+              <Download className="w-4 h-4" />{t("diag.pdfExport")}
             </Button>
             <Link to={`/promo/${id}`} className="w-full sm:w-auto">
-              <Button size="lg" className="gap-2 text-sm sm:text-base px-6 sm:px-8 w-full shadow-sm">
-                販促文を見る
-                <ArrowRight className="w-4 h-4" />
-              </Button>
+              <Button size="lg" className="gap-2 text-sm sm:text-base px-6 sm:px-8 w-full shadow-sm">{t("diag.viewPromo")}<ArrowRight className="w-4 h-4" /></Button>
             </Link>
             <Link to={`/kpi/${id}`} className="w-full sm:w-auto">
-              <Button size="lg" variant="outline" className="gap-2 text-sm sm:text-base px-6 sm:px-8 w-full shadow-sm">
-                KPI設計を見る
-              </Button>
+              <Button size="lg" variant="outline" className="gap-2 text-sm sm:text-base px-6 sm:px-8 w-full shadow-sm">{t("diag.viewKpi")}</Button>
             </Link>
           </motion.div>
         </div>
