@@ -26,6 +26,7 @@ import {
   type TownFeatureCollection,
   type TownPolygonProperties,
 } from "@/lib/mapGeoData";
+import { Database } from "lucide-react";
 import MapControls from "@/components/map/MapControls";
 import FlyerSelectionPanel from "@/components/map/FlyerSelectionPanel";
 import CandidateComparison from "@/components/map/CandidateComparison";
@@ -542,7 +543,8 @@ function SidePanelSkeleton() {
 }
 
 function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radius: string }) {
-  const { summary, competitors } = result;
+  const { summary, competitors, censusData } = result;
+  const isRealData = !!censusData?.dataAvailable;
 
   return (
     <motion.div
@@ -553,12 +555,24 @@ function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radi
     >
       <div className="flex items-center justify-between">
         <h2 className="font-bold text-base text-foreground">分析結果</h2>
-        <Badge variant="secondary" className="text-xs">半径 {radius}</Badge>
+        <div className="flex items-center gap-1.5">
+          <Badge variant={isRealData ? "default" : "secondary"} className="text-xs flex items-center gap-1">
+            {isRealData && <Database className="w-3 h-3" />}
+            {isRealData ? "実データ" : "AI推定"}
+          </Badge>
+          <Badge variant="outline" className="text-xs">半径 {radius}</Badge>
+        </div>
       </div>
+
+      {isRealData && censusData && (
+        <div className="text-xs text-muted-foreground bg-muted/50 rounded-md px-3 py-2 border border-border/40">
+          📊 {censusData.source}（{censusData.areaName}）
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <StatCard icon={<Users className="w-4 h-4 text-primary" />} label="総人口" value={summary.totalPopulation.toLocaleString()} unit="人" />
-        <StatCard icon={<Home className="w-4 h-4 text-primary" />} label="世帯数" value={(summary.householdTypes.reduce((s, h) => s + h.count, 0) || Math.round(summary.totalPopulation / 2.3)).toLocaleString()} unit="世帯" />
+        <StatCard icon={<Home className="w-4 h-4 text-primary" />} label="世帯数" value={summary.totalHouseholds.toLocaleString()} unit="世帯" />
         <StatCard icon={<Building2 className="w-4 h-4 text-amber-500" />} label="競合店舗" value={String(summary.competitorCount)} unit="店" />
         <div className="rounded-lg border border-border/60 bg-background p-3 flex flex-col items-center justify-center gap-1">
           <span className="text-xs text-muted-foreground font-medium flex items-center gap-1">

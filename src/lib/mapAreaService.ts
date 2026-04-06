@@ -19,6 +19,18 @@ export type CompetitorStore = {
   distance: number; // meters from target
 };
 
+export type CensusData = {
+  source: string;
+  areaName: string;
+  areaCode: string;
+  totalPopulation: number;
+  totalHouseholds: number;
+  malePopulation?: number;
+  femalePopulation?: number;
+  ageDistribution: { ageGroup: string; population: number; percentage: number }[];
+  dataAvailable: boolean;
+};
+
 export type TradeAreaSummary = {
   totalPopulation: number;
   ageDistribution: { ageGroup: string; percentage: number; count: number }[];
@@ -26,6 +38,11 @@ export type TradeAreaSummary = {
   competitorCount: number;
   tradeAreaScore: number; // 0-100
   recommendations: string[];
+  totalHouseholds: number;
+  dataSource: string;
+  primaryTarget?: string;
+  areaCharacteristics?: string;
+  competitiveEnvironment?: string;
 };
 
 export type MapAreaAnalysisResult = {
@@ -33,6 +50,7 @@ export type MapAreaAnalysisResult = {
   populationZones: PopulationZone[];
   competitors: CompetitorStore[];
   summary: TradeAreaSummary;
+  censusData: CensusData | null;
 };
 
 // Geocode address using Nominatim
@@ -47,38 +65,78 @@ async function geocodeAddress(address: string): Promise<[number, number]> {
   return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
 }
 
+// Fetch census data directly from estat-census edge function
+async function fetchCensusData(address: string): Promise<CensusData | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("estat-census", {
+      body: { address },
+    });
+    if (error || !data?.result?.dataAvailable) return null;
+    return data.result as CensusData;
+  } catch {
+    return null;
+  }
+}
+
 // Fetch map-based area analysis from API
 export async function fetchMapAreaAnalysis(
   address: string,
   radius: string,
   industry?: string
 ): Promise<MapAreaAnalysisResult> {
-  // Geocode first
-  const center = await geocodeAddress(address);
+  // Geocode and fetch census + AI analysis in parallel
+  const [center, censusData, aiAnalysis] = await Promise.all([
+    geocodeAddress(address),
+    fetchCensusData(address),
+    supabase.functions.invoke("area-analysis", {
+      body: { address, radius, industry, analysisType: "area" },
+    }).then(({ data, error }) => {
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    }),
+  ]);
 
-  const { data, error } = await supabase.functions.invoke("area-analysis", {
-    body: { address, radius, industry, analysisType: "area" },
-  });
-  if (error) throw error;
-  if (data?.error) throw new Error(data.error);
-
-  const result = data.result;
+  const result = aiAnalysis.result;
+  const apiCensus = aiAnalysis.censusData;
+  const dataSource = aiAnalysis.dataSource || "AI推定分析";
   const radiusMeters = parseRadiusToMeters(radius);
 
-  const populationZones = generatePopulationZones(center, radiusMeters, result);
+  // Use census data for population zones (color-coded circles around center)
+  const totalPop = censusData?.totalPopulation || result.population || 0;
+  const totalHouseholds = censusData?.totalHouseholds || result.households || 0;
+  const populationZones = generatePopulationZones(center, radiusMeters, totalPop);
   const competitors = generateCompetitorMarkers(center, radiusMeters, result);
+
+  // Build age distribution from census or AI
+  let ageDistribution: { ageGroup: string; percentage: number; count: number }[] = [];
+  if (censusData?.ageDistribution?.length) {
+    ageDistribution = censusData.ageDistribution.map((ag) => ({
+      ageGroup: ag.ageGroup,
+      percentage: ag.percentage,
+      count: ag.population,
+    }));
+  } else if (result.ageDistribution?.length) {
+    ageDistribution = result.ageDistribution;
+  }
 
   return {
     center,
     populationZones,
     competitors,
+    censusData: censusData || (apiCensus ? { ...apiCensus, dataAvailable: true } as CensusData : null),
     summary: {
-      totalPopulation: result.population || 0,
-      ageDistribution: result.ageDistribution || [],
+      totalPopulation: totalPop,
+      totalHouseholds,
+      ageDistribution,
       householdTypes: result.householdTypes || [],
       competitorCount: competitors.length,
       tradeAreaScore: calculateTradeAreaScore(result),
       recommendations: extractRecommendations(result),
+      dataSource,
+      primaryTarget: result.primaryTarget,
+      areaCharacteristics: result.areaCharacteristics,
+      competitiveEnvironment: result.competitiveEnvironment,
     },
   };
 }
@@ -91,9 +149,9 @@ function parseRadiusToMeters(radius: string): number {
 function generatePopulationZones(
   center: [number, number],
   radiusMeters: number,
-  result: any
+  totalPop: number
 ): PopulationZone[] {
-  const totalPop = result.population || 50000;
+  if (totalPop <= 0) return [];
   const zones: PopulationZone[] = [];
   const directions = [
     { label: "北部", offset: [0.005, 0] },
@@ -126,10 +184,8 @@ function generateCompetitorMarkers(
   radiusMeters: number,
   result: any
 ): CompetitorStore[] {
-  const envText = result.competitiveEnvironment || "";
   const count = Math.max(3, Math.min(12, Math.floor(Math.random() * 5) + 5));
   const competitors: CompetitorStore[] = [];
-
   const industries = ["飲食店", "小売店", "美容院", "コンビニ", "薬局", "カフェ", "フィットネス", "クリーニング"];
 
   for (let i = 0; i < count; i++) {
