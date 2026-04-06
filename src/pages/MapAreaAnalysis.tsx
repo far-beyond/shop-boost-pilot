@@ -236,7 +236,7 @@ function LeafletMap({
 }
 
 export default function MapAreaAnalysis() {
-  const { language } = useLanguage();
+  const { t, language } = useLanguage();
   const [address, setAddress] = useState("");
   const [industry, setIndustry] = useState("");
   const [radius, setRadius] = useState<string>("3km");
@@ -286,7 +286,7 @@ export default function MapAreaAnalysis() {
 
   const handleAnalyze = async () => {
     if (!address.trim()) {
-      toast.error("住所を入力してください");
+      toast.error(t("map.enterAddress"));
       return;
     }
     setLoading(true);
@@ -295,9 +295,9 @@ export default function MapAreaAnalysis() {
     try {
       const data = await fetchMapAreaAnalysis(address, radius, industry || undefined, language);
       setResult(data);
-      toast.success("分析が完了しました");
+      toast.success(t("map.analysisComplete"));
     } catch (e: any) {
-      const msg = e?.message || "分析中にエラーが発生しました";
+      const msg = e?.message || t("map.analysisError");
       setError(msg);
       toast.error(msg);
     } finally {
@@ -312,7 +312,7 @@ export default function MapAreaAnalysis() {
           ...prev,
           {
             id: `cand-${Date.now()}`,
-            label: `候補地 ${prev.length + 1}`,
+            label: `${t("map.candidateLabel")} ${prev.length + 1}`,
             lat,
             lng,
             score: Math.round(40 + Math.random() * 50),
@@ -320,7 +320,7 @@ export default function MapAreaAnalysis() {
             competitors: Math.round(2 + Math.random() * 10),
           },
         ]);
-        toast.success("候補地を追加しました");
+        toast.success(t("map.candidateAdded"));
       }
     },
     [multiPinMode]
@@ -373,7 +373,7 @@ export default function MapAreaAnalysis() {
               <CardContent className="p-3 space-y-2">
                 <div className="flex gap-2">
                   <Input
-                    placeholder="住所を入力（例：東京都渋谷区道玄坂1-1）"
+                    placeholder={t("map.searchPh")}
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     className="text-sm"
@@ -385,7 +385,7 @@ export default function MapAreaAnalysis() {
                 </div>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="業種（任意）"
+                    placeholder={t("map.industryPh")}
                     value={industry}
                     onChange={(e) => setIndustry(e.target.value)}
                     className="text-sm flex-1"
@@ -453,17 +453,17 @@ export default function MapAreaAnalysis() {
               <Card className="shadow-md bg-card/95 backdrop-blur-sm border-border/60">
                 <CardContent className="p-3 space-y-1.5">
                   <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5" /> 凡例
+                    <Layers className="w-3.5 h-3.5" /> {t("map.legend")}
                   </p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="w-3 h-3 rounded-sm" style={{ background: getHeatmapColor(5000, heatmapMode) }} /> 高
-                    <span className="w-3 h-3 rounded-sm" style={{ background: getHeatmapColor(2500, heatmapMode) }} /> 中
-                    <span className="w-3 h-3 rounded-sm" style={{ background: getHeatmapColor(500, heatmapMode) }} /> 低
+                    <span className="w-3 h-3 rounded-sm" style={{ background: getHeatmapColor(5000, heatmapMode) }} /> {t("map.high")}
+                    <span className="w-3 h-3 rounded-sm" style={{ background: getHeatmapColor(2500, heatmapMode) }} /> {t("map.medium")}
+                    <span className="w-3 h-3 rounded-sm" style={{ background: getHeatmapColor(500, heatmapMode) }} /> {t("map.low")}
                   </div>
                   {activeLayer !== "recommended" && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="w-3 h-3 rounded-full bg-destructive border-2 border-white" /> 競合店舗
-                      <MapPin className="w-3 h-3 text-primary ml-2" /> 候補地
+                      <span className="w-3 h-3 rounded-full bg-destructive border-2 border-white" /> {t("map.competitors")}
+                      <MapPin className="w-3 h-3 text-primary ml-2" /> {t("map.candidateLabel")}
                     </div>
                   )}
                 </CardContent>
@@ -522,28 +522,30 @@ export default function MapAreaAnalysis() {
 // --- Sub-components ---
 
 function EmptyState() {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col items-center justify-center h-full p-8 text-center">
       <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
         <MapPin className="w-7 h-7 text-muted-foreground" />
       </div>
-      <h3 className="font-semibold text-foreground mb-1">地図商圏分析</h3>
+      <h3 className="font-semibold text-foreground mb-1">{t("map.emptyTitle")}</h3>
       <p className="text-sm text-muted-foreground max-w-[260px]">
-        住所を入力して分析を開始してください。商圏内の人口分布・競合状況を地図上に可視化します。
+        {t("map.emptyDesc")}
       </p>
     </div>
   );
 }
 
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col items-center justify-center h-full p-8 text-center">
       <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mb-4">
         <AlertTriangle className="w-7 h-7 text-destructive" />
       </div>
-      <h3 className="font-semibold text-foreground mb-1">エラーが発生しました</h3>
+      <h3 className="font-semibold text-foreground mb-1">{t("map.errorTitle")}</h3>
       <p className="text-sm text-muted-foreground mb-4 max-w-[260px]">{message}</p>
-      <Button size="sm" onClick={onRetry}>再試行</Button>
+      <Button size="sm" onClick={onRetry}>{t("map.retry")}</Button>
     </div>
   );
 }
@@ -564,16 +566,16 @@ function SidePanelSkeleton() {
 }
 
 function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radius: string }) {
+  const { t } = useLanguage();
   const { summary, competitors, censusData, isOverseas, countryCode } = result;
   const isRealData = !!censusData?.dataAvailable;
 
-  // Country-specific badge labels
   const getBadgeInfo = () => {
-    if (!isRealData && isOverseas) return { label: "推定データ（海外）", variant: "outline" as const, icon: "🌍" };
-    if (countryCode === "jp" && isRealData) return { label: "国勢調査", variant: "default" as const, icon: "📊" };
-    if (countryCode === "us" && isRealData) return { label: "US Census", variant: "default" as const, icon: "🇺🇸" };
-    if (isRealData) return { label: "WorldPop推計", variant: "default" as const, icon: "🌐" };
-    return { label: "AI推定", variant: "secondary" as const, icon: "" };
+    if (!isRealData && isOverseas) return { label: t("map.estimateOverseas"), variant: "outline" as const, icon: "🌍" };
+    if (countryCode === "jp" && isRealData) return { label: t("map.censusJp"), variant: "default" as const, icon: "📊" };
+    if (countryCode === "us" && isRealData) return { label: t("map.censusUs"), variant: "default" as const, icon: "🇺🇸" };
+    if (isRealData) return { label: t("map.censusWorldpop"), variant: "default" as const, icon: "🌐" };
+    return { label: t("map.aiEstimate"), variant: "secondary" as const, icon: "" };
   };
   const badge = getBadgeInfo();
 
@@ -585,14 +587,14 @@ function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radi
       transition={{ duration: 0.3 }}
     >
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-base text-foreground">分析結果</h2>
+        <h2 className="font-bold text-base text-foreground">{t("map.resultTitle")}</h2>
         <div className="flex items-center gap-1.5">
           <Badge variant={badge.variant} className="text-xs flex items-center gap-1">
             {badge.icon && <span>{badge.icon}</span>}
             {countryCode === "jp" && isRealData && <Database className="w-3 h-3" />}
             {badge.label}
           </Badge>
-          <Badge variant="outline" className="text-xs">半径 {radius}</Badge>
+          <Badge variant="outline" className="text-xs">{t("map.radius")} {radius}</Badge>
         </div>
       </div>
 
@@ -603,12 +605,12 @@ function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radi
       )}
 
       <div className="grid grid-cols-2 gap-3">
-        <StatCard icon={<Users className="w-4 h-4 text-primary" />} label="総人口" value={summary.totalPopulation.toLocaleString()} unit="人" />
-        <StatCard icon={<Home className="w-4 h-4 text-primary" />} label="世帯数" value={summary.totalHouseholds.toLocaleString()} unit="世帯" />
-        <StatCard icon={<Building2 className="w-4 h-4 text-amber-500" />} label="競合店舗" value={String(summary.competitorCount)} unit="店" />
+        <StatCard icon={<Users className="w-4 h-4 text-primary" />} label={t("map.totalPop")} value={summary.totalPopulation.toLocaleString()} unit={t("map.popUnit")} />
+        <StatCard icon={<Home className="w-4 h-4 text-primary" />} label={t("map.households")} value={summary.totalHouseholds.toLocaleString()} unit={t("map.householdUnit")} />
+        <StatCard icon={<Building2 className="w-4 h-4 text-amber-500" />} label={t("map.competitors")} value={String(summary.competitorCount)} unit={t("map.storeUnit")} />
         <div className="rounded-lg border border-border/60 bg-background p-3 flex flex-col items-center justify-center gap-1">
           <span className="text-xs text-muted-foreground font-medium flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5 text-primary" /> 商圏スコア
+            <TrendingUp className="w-3.5 h-3.5 text-primary" /> {t("map.tradeAreaScore")}
           </span>
           <ScoreGauge score={summary.tradeAreaScore} />
         </div>
@@ -616,13 +618,13 @@ function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radi
 
       {summary.ageDistribution.length > 0 && (
         <section>
-          <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">年齢構成</h3>
+          <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">{t("map.ageComp")}</h3>
           <div className="space-y-2">
             {summary.ageDistribution.map((ag) => (
               <div key={ag.ageGroup} className="space-y-1">
                 <div className="flex justify-between text-xs">
                   <span className="text-foreground">{ag.ageGroup}</span>
-                  <span className="text-muted-foreground">{ag.percentage}% ({ag.count.toLocaleString()}人)</span>
+                  <span className="text-muted-foreground">{ag.percentage}% ({ag.count.toLocaleString()}{t("map.popUnit")})</span>
                 </div>
                 <Progress value={ag.percentage} className="h-1.5" />
               </div>
@@ -633,7 +635,7 @@ function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radi
 
       {summary.householdTypes.length > 0 && (
         <section>
-          <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">世帯構成</h3>
+          <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">{t("map.householdComp")}</h3>
           <div className="space-y-2">
             {summary.householdTypes.map((ht) => (
               <div key={ht.type} className="flex justify-between items-center text-xs bg-muted/40 rounded-md px-3 py-2">
@@ -651,7 +653,7 @@ function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radi
       {competitors.length > 0 && (
         <section>
           <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">
-            競合店舗 ({competitors.length}件)
+            {t("map.competitorList")} ({competitors.length}{t("map.items")})
           </h3>
           <div className="space-y-1.5 max-h-40 overflow-y-auto">
             {competitors.map((c) => (
@@ -660,7 +662,7 @@ function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radi
                   <span className="font-medium text-foreground">{c.name}</span>
                   <span className="text-muted-foreground ml-1.5">{c.industry}</span>
                 </div>
-                <span className="text-muted-foreground">{c.distance}m</span>
+                <span className="text-muted-foreground">{c.distance}{t("map.distanceUnit")}</span>
               </div>
             ))}
           </div>
@@ -669,7 +671,7 @@ function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radi
 
       {summary.recommendations.length > 0 && (
         <section>
-          <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">推奨施策</h3>
+          <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">{t("map.recommendations")}</h3>
           <div className="space-y-2">
             {summary.recommendations.map((rec, i) => (
               <div key={i} className="text-xs bg-primary/5 border border-primary/10 rounded-md px-3 py-2 text-foreground">
