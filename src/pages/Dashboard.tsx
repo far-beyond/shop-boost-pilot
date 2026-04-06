@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { LayoutDashboard, Loader2, Plus, FileText } from "lucide-react";
+import { LayoutDashboard, Loader2, Plus, FileText, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Layout from "@/components/Layout";
@@ -17,6 +17,7 @@ export default function Dashboard() {
     queryFn: getUserDiagnoses,
   });
   const { t } = useLanguage();
+  const { subscription } = useAuth();
 
   return (
     <Layout>
@@ -28,9 +29,26 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
           >
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary mb-2">
-                <LayoutDashboard className="w-3.5 h-3.5" />
-                {t("dash.badge")}
+              <div className="flex items-center gap-2 flex-wrap mb-2">
+                <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  {t("dash.badge")}
+                </div>
+                {subscription?.subscribed ? (
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent">
+                    <Crown className="w-3.5 h-3.5" />
+                    {t("dash.subBadge.pro")}
+                    {subscription.subscription_end && (
+                      <span className="text-muted-foreground ml-1">
+                        {t("dash.subBadge.until")} {new Date(subscription.subscription_end).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+                    {t("dash.subBadge.free")}
+                  </div>
+                )}
               </div>
               <h1 className="text-2xl md:text-3xl font-bold text-foreground">{t("dash.title")}</h1>
               <p className="text-sm text-muted-foreground mt-1">{t("dash.subtitle")}</p>
