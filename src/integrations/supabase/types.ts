@@ -101,6 +101,48 @@ export type Database = {
         }
         Relationships: []
       }
+      store_candidates: {
+        Row: {
+          address: string
+          created_at: string
+          id: string
+          industry: string
+          latitude: number | null
+          longitude: number | null
+          memo: string | null
+          status: string
+          store_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          id?: string
+          industry: string
+          latitude?: number | null
+          longitude?: number | null
+          memo?: string | null
+          status?: string
+          store_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          id?: string
+          industry?: string
+          latitude?: number | null
+          longitude?: number | null
+          memo?: string | null
+          status?: string
+          store_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
