@@ -109,7 +109,26 @@ export default function StoreInput() {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-12 max-w-2xl">
+        {usageInfo && !usageInfo.allowed && (
+          <Card className="mb-6 border-destructive/50 bg-destructive/5">
+            <CardContent className="flex items-center gap-3 py-4">
+              <AlertTriangle className="w-5 h-5 text-destructive shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-destructive">今月の無料診断回数（{usageInfo.limit}回）に達しました</p>
+                <p className="text-xs text-muted-foreground mt-1">Proプランにアップグレードすると無制限にご利用いただけます。</p>
+              </div>
+              <Button size="sm" asChild>
+                <Link to="/pricing">プランを見る</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+        {usageInfo && usageInfo.allowed && usageInfo.limit !== Infinity && (
+          <div className="mb-4 text-sm text-muted-foreground text-center">
+            今月の利用: {usageInfo.used} / {usageInfo.limit} 回
+          </div>
+        )}
+        <div className="container mx-auto px-4 py-12 max-w-2xl">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-4">
             <Store className="w-4 h-4" />
