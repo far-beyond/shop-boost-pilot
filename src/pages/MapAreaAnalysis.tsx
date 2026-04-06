@@ -254,9 +254,14 @@ export default function MapAreaAnalysis() {
   const mapZoom = radius === "1km" ? 15 : radius === "3km" ? 13 : 12;
   const radiusKm = parseFloat(radius.replace("km", ""));
 
-  // Only generate polygons after search, using real census data when available
-  const townPolygons = useMemo<TownFeatureCollection>(() => {
-    if (!result) return { type: "FeatureCollection", features: [] };
+  // Generate polygons after search, then resolve real place names asynchronously
+  const [townPolygons, setTownPolygons] = useState<TownFeatureCollection>({ type: "FeatureCollection", features: [] });
+
+  useEffect(() => {
+    if (!result) {
+      setTownPolygons({ type: "FeatureCollection", features: [] });
+      return;
+    }
     const censusData = result.censusData
       ? {
           totalPopulation: result.summary.totalPopulation,
@@ -266,7 +271,10 @@ export default function MapAreaAnalysis() {
             : undefined,
         }
       : undefined;
-    return generateTownPolygons(mapCenter, radiusKm, censusData);
+    const base = generateTownPolygons(mapCenter, radiusKm, censusData);
+    setTownPolygons(base);
+    // Resolve real place names in background
+    resolvePolygonNames(base).then((resolved) => setTownPolygons(resolved));
   }, [result, mapCenter[0], mapCenter[1], radiusKm]);
 
   const flyerSelection = useMemo(
