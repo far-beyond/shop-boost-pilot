@@ -325,6 +325,12 @@ const translations: Record<Language, Record<string, string>> = {
     "flyer.perSheet": "/枚",
     "flyer.planComplete": "チラシ配布計画が完成しました",
     "flyer.planFailed": "計画の生成に失敗しました",
+    "flyer.addressPh": "例: 東京都渋谷区神南1丁目",
+    "flyer.industryPh": "例: 美容院、学習塾、居酒屋",
+    "flyer.storeNamePh": "例: ヘアサロン BLOOM",
+    "flyer.budgetPh": "例: 5万円、10万円",
+    "flyer.targetPh": "例: 30〜40代の子育て世帯、近隣のオフィスワーカー",
+    "flyer.pdfDownload": "PDFダウンロード",
 
     // Ad Proposal
     "ad.badge": "広告提案",
