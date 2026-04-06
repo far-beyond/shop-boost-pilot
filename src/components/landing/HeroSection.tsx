@@ -71,48 +71,21 @@ export default function HeroSection() {
           </motion.div>
         </div>
 
-        {/* Mock screenshot overlay */}
+        {/* YouTube demo video */}
         <motion.div
-          className="mt-16 mx-auto max-w-4xl rounded-2xl border border-border/60 shadow-2xl overflow-hidden bg-card"
+          className="mt-16 mx-auto max-w-[800px]"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.5 }}
         >
-          <div className="h-8 bg-muted/60 border-b border-border/40 flex items-center px-4 gap-2">
-            <div className="w-3 h-3 rounded-full bg-destructive/60" />
-            <div className="w-3 h-3 rounded-full bg-accent/60" />
-            <div className="w-3 h-3 rounded-full bg-primary/40" />
-            <span className="ml-3 text-[11px] text-muted-foreground">MapBoost AI — {isEn ? "Trade Area Analysis" : "商圏分析"}</span>
-          </div>
-          <div className="h-64 md:h-80 bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center relative">
-            <svg className="absolute inset-0 w-full h-full opacity-[0.06]" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <pattern id="map-grid" width="24" height="24" patternUnits="userSpaceOnUse">
-                  <path d="M 24 0 L 0 0 0 24" fill="none" stroke="hsl(217 91% 55%)" strokeWidth="0.5" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#map-grid)" />
-            </svg>
-            {/* Simulated map elements */}
-            <div className="relative z-10 flex flex-col items-center gap-3">
-              <div className="flex gap-6">
-                {[
-                  { color: "bg-red-400/70", w: "w-24 h-24" },
-                  { color: "bg-amber-400/50", w: "w-32 h-32" },
-                  { color: "bg-green-400/40", w: "w-20 h-20" },
-                ].map((c, i) => (
-                  <motion.div
-                    key={i}
-                    className={`${c.w} ${c.color} rounded-full blur-xl`}
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 3, repeat: Infinity, delay: i * 0.5 }}
-                  />
-                ))}
-              </div>
-              <span className="text-xs text-muted-foreground/60 mt-4">
-                {isEn ? "Live analysis preview" : "リアルタイム分析プレビュー"}
-              </span>
-            </div>
+          <div className="relative w-full rounded-2xl border border-border/60 shadow-2xl overflow-hidden" style={{ paddingBottom: "56.25%" }}>
+            <iframe
+              className="absolute inset-0 w-full h-full"
+              src="https://www.youtube.com/embed/JGuL8-pJTtQ"
+              title="MapBoost AI Demo"
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
           </div>
         </motion.div>
       </div>
