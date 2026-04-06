@@ -53,7 +53,7 @@ const scoreBg = (s: number) => {
 };
 
 export default function LocationMatch() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [industry, setIndustry] = useState("");
   const [serviceDescription, setServiceDescription] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
@@ -70,7 +70,7 @@ export default function LocationMatch() {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("location-match", {
-        body: { industry, serviceDescription, targetAudience, budget, currentLocation, preferences },
+        body: { industry, serviceDescription, targetAudience, budget, currentLocation, preferences, language },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

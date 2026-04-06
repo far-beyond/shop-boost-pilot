@@ -29,7 +29,7 @@ const mediaLabelKeys = [
 export default function StoreInput() {
   const navigate = useNavigate();
   const { subscription } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [submitting, setSubmitting] = useState(false);
   const [usageInfo, setUsageInfo] = useState<{ allowed: boolean; used: number; limit: number } | null>(null);
 
@@ -74,9 +74,9 @@ export default function StoreInput() {
       });
       toast.info(t("si.aiStarted"));
       await Promise.all([
-        runAIDiagnosis(diagnosis.id, "diagnosis"),
-        runAIDiagnosis(diagnosis.id, "promo"),
-        runAIDiagnosis(diagnosis.id, "kpi"),
+        runAIDiagnosis(diagnosis.id, "diagnosis", language),
+        runAIDiagnosis(diagnosis.id, "promo", language),
+        runAIDiagnosis(diagnosis.id, "kpi", language),
       ]);
       await incrementUsage();
       toast.success(t("si.complete"));

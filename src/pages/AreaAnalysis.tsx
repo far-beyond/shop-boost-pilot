@@ -64,7 +64,7 @@ type CensusData = {
 };
 
 export default function AreaAnalysis() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState("area");
   const [address, setAddress] = useState("");
   const [radius, setRadius] = useState("3km");
@@ -84,7 +84,7 @@ export default function AreaAnalysis() {
     setDataSource("");
     try {
       const { data, error } = await supabase.functions.invoke("area-analysis", {
-        body: { address, radius, industry, analysisType: activeTab },
+        body: { address, radius, industry, analysisType: activeTab, language },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);

@@ -60,7 +60,7 @@ const priorityColor = (p: string) => {
 };
 
 export default function AdProposal() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [address, setAddress] = useState("");
   const [industry, setIndustry] = useState("");
   const [storeName, setStoreName] = useState("");
@@ -77,7 +77,7 @@ export default function AdProposal() {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("ad-proposal", {
-        body: { address, industry, budget, target, storeName },
+        body: { address, industry, budget, target, storeName, language },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
