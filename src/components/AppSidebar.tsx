@@ -1,11 +1,11 @@
 import {
   Home, MapPin, Megaphone, Compass, LayoutDashboard,
   Building2, FileText, Target as TargetIcon, Newspaper, BarChart3,
-  LogOut, LogIn,
+  LogOut, LogIn, Globe,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Sidebar,
   SidebarContent,
@@ -20,33 +20,33 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 
-const analysisItems = [
-  { title: "商圏・出店分析", url: "/area-analysis", icon: MapPin },
-  { title: "エリア適性", url: "/location-match", icon: Compass },
-  { title: "出店候補地管理", url: "/store-candidates", icon: Building2 },
-];
-
-const promotionItems = [
-  { title: "統合媒体プラン", url: "/media-plan", icon: Megaphone },
-  { title: "広告提案", url: "/ad-proposal", icon: TargetIcon },
-  { title: "チラシ設計", url: "/flyer-plan", icon: Newspaper },
-];
-
-const managementItems = [
-  { title: "案件管理", url: "/agency", icon: LayoutDashboard },
-  { title: "統合レポート", url: "/report", icon: BarChart3 },
-  { title: "診断一覧", url: "/dashboard", icon: FileText },
-];
-
-const diagnosisItems = [
-  { title: "店舗入力（診断）", url: "/input", icon: FileText },
-];
-
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const location = useLocation();
   const { user, signOut } = useAuth();
+  const { t, language, setLanguage } = useLanguage();
+
+  const analysisItems = [
+    { title: t("nav.areaAnalysis"), url: "/area-analysis", icon: MapPin },
+    { title: t("nav.locationMatch"), url: "/location-match", icon: Compass },
+    { title: t("nav.storeCandidates"), url: "/store-candidates", icon: Building2 },
+  ];
+
+  const promotionItems = [
+    { title: t("nav.mediaPlan"), url: "/media-plan", icon: Megaphone },
+    { title: t("nav.adProposal"), url: "/ad-proposal", icon: TargetIcon },
+    { title: t("nav.flyerPlan"), url: "/flyer-plan", icon: Newspaper },
+  ];
+
+  const managementItems = [
+    { title: t("nav.agencyDashboard"), url: "/agency", icon: LayoutDashboard },
+    { title: t("nav.report"), url: "/report", icon: BarChart3 },
+    { title: t("nav.diagnosisList"), url: "/dashboard", icon: FileText },
+  ];
+
+  const diagnosisItems = [
+    { title: t("nav.storeInput"), url: "/input", icon: FileText },
+  ];
 
   const renderGroup = (label: string, items: typeof analysisItems) => (
     <SidebarGroup>
@@ -76,7 +76,6 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r border-border/60">
       <SidebarContent className="pt-2">
-        {/* Top */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -89,7 +88,7 @@ export function AppSidebar() {
                     activeClassName="bg-primary/8 text-primary font-medium"
                   >
                     <Home className="w-4 h-4 shrink-0" />
-                    {!collapsed && <span>トップ</span>}
+                    {!collapsed && <span>{t("nav.home")}</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -99,15 +98,25 @@ export function AppSidebar() {
 
         {user && (
           <>
-            {renderGroup("分析", analysisItems)}
-            {renderGroup("販促", promotionItems)}
-            {renderGroup("管理", managementItems)}
-            {renderGroup("診断", diagnosisItems)}
+            {renderGroup(t("nav.analysis"), analysisItems)}
+            {renderGroup(t("nav.promotion"), promotionItems)}
+            {renderGroup(t("nav.management"), managementItems)}
+            {renderGroup(t("nav.diagnosis"), diagnosisItems)}
           </>
         )}
       </SidebarContent>
 
-      <SidebarFooter className="p-2">
+      <SidebarFooter className="p-2 space-y-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start gap-2 text-xs text-muted-foreground hover:text-foreground"
+          onClick={() => setLanguage(language === "ja" ? "en" : "ja")}
+        >
+          <Globe className="w-4 h-4" />
+          {!collapsed && (language === "ja" ? "English" : "日本語")}
+        </Button>
+
         {user ? (
           <Button
             variant="ghost"
@@ -116,13 +125,13 @@ export function AppSidebar() {
             onClick={signOut}
           >
             <LogOut className="w-4 h-4" />
-            {!collapsed && "ログアウト"}
+            {!collapsed && t("nav.logout")}
           </Button>
         ) : (
           <NavLink to="/auth">
             <Button size="sm" className="w-full justify-start gap-2 text-xs">
               <LogIn className="w-4 h-4" />
-              {!collapsed && "ログイン"}
+              {!collapsed && t("nav.login")}
             </Button>
           </NavLink>
         )}
