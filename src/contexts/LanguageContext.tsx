@@ -1199,7 +1199,7 @@ const translations: Record<Language, Record<string, string>> = {
     "legal.address": "Address",
     "legal.addressVal": "Shinjuku 5-4-1, Shinjuku-ku, Tokyo, Japan",
     "legal.contact": "Contact",
-    "legal.contactVal": "Email: support@mapboost.ai",
+    "legal.contactLink": "Contact us here",
     "legal.price": "Pricing",
     "legal.priceVal": "As displayed on the pricing page (tax included).",
     "legal.payment": "Payment Method",
@@ -1230,6 +1230,23 @@ const translations: Record<Language, Record<string, string>> = {
     "terms.s7.body": "The Company manages user personal information appropriately and does not use it for purposes other than providing and improving the Service.",
     "terms.s8.title": "(Governing Law and Jurisdiction)",
     "terms.s8.body": "These Terms shall be governed by the laws of Japan. Any disputes shall be subject to the exclusive jurisdiction of the Tokyo District Court as the court of first instance.",
+
+    // Contact
+    "footer.contact": "Contact",
+    "contact.title": "Contact Us",
+    "contact.subtitle": "Have a question or request? Feel free to reach out using the form below.",
+    "contact.name": "Name",
+    "contact.namePh": "John Smith",
+    "contact.email": "Email",
+    "contact.emailPh": "john@example.com",
+    "contact.message": "Message",
+    "contact.messagePh": "Please describe your inquiry...",
+    "contact.send": "Send Message",
+    "contact.required": "All fields are required",
+    "contact.success": "Your message has been sent. Thank you!",
+    "contact.error": "Failed to send. Please try again.",
+    "contact.thankYou": "Message Sent",
+    "contact.thankYouDesc": "Thank you for your message. We will review it and get back to you.",
   },
 };
 
