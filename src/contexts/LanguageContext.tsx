@@ -325,6 +325,12 @@ const translations: Record<Language, Record<string, string>> = {
     "flyer.perSheet": "/枚",
     "flyer.planComplete": "チラシ配布計画が完成しました",
     "flyer.planFailed": "計画の生成に失敗しました",
+    "flyer.addressPh": "例: 東京都渋谷区神南1丁目",
+    "flyer.industryPh": "例: 美容院、学習塾、居酒屋",
+    "flyer.storeNamePh": "例: ヘアサロン BLOOM",
+    "flyer.budgetPh": "例: 5万円、10万円",
+    "flyer.targetPh": "例: 30〜40代の子育て世帯、近隣のオフィスワーカー",
+    "flyer.pdfDownload": "PDFダウンロード",
 
     // Ad Proposal
     "ad.badge": "広告提案",
@@ -359,6 +365,12 @@ const translations: Record<Language, Record<string, string>> = {
     "ad.recommended": "推奨",
     "ad.proposalComplete": "広告提案が完成しました",
     "ad.proposalFailed": "提案の生成に失敗しました",
+    "ad.addressPh": "例: 東京都渋谷区神南1丁目",
+    "ad.industryPh": "例: 美容院、学習塾、居酒屋",
+    "ad.storeNamePh": "例: ヘアサロン BLOOM",
+    "ad.budgetPh": "例: 5万円、10万円",
+    "ad.targetPh": "例: 30〜40代の子育て世帯、近隣のオフィスワーカー",
+    "ad.pdfDownload": "PDFダウンロード",
 
     // Location Match
     "loc.badge": "エリアマッチング",
@@ -1082,6 +1094,12 @@ const translations: Record<Language, Record<string, string>> = {
     "flyer.perSheet": "/sheet",
     "flyer.planComplete": "Flyer distribution plan completed",
     "flyer.planFailed": "Failed to generate plan",
+    "flyer.addressPh": "e.g. 1 Jinnan, Shibuya, Tokyo",
+    "flyer.industryPh": "e.g. Hair salon, Tutoring, Pub",
+    "flyer.storeNamePh": "e.g. Hair Salon BLOOM",
+    "flyer.budgetPh": "e.g. ¥50,000, ¥100,000",
+    "flyer.targetPh": "e.g. Families with children aged 30-40, nearby office workers",
+    "flyer.pdfDownload": "Download PDF",
 
     // Ad Proposal
     "ad.badge": "Ad Proposal",
@@ -1116,6 +1134,12 @@ const translations: Record<Language, Record<string, string>> = {
     "ad.recommended": "Recommended",
     "ad.proposalComplete": "Ad proposal completed",
     "ad.proposalFailed": "Failed to generate proposal",
+    "ad.addressPh": "e.g. 1 Jinnan, Shibuya, Tokyo",
+    "ad.industryPh": "e.g. Hair salon, Tutoring, Pub",
+    "ad.storeNamePh": "e.g. Hair Salon BLOOM",
+    "ad.budgetPh": "e.g. ¥50,000, ¥100,000",
+    "ad.targetPh": "e.g. Families with children aged 30-40, nearby office workers",
+    "ad.pdfDownload": "Download PDF",
 
     // Location Match
     "loc.badge": "Area Matching",

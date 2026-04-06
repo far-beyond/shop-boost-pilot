@@ -238,8 +238,8 @@ export default function MediaPlan() {
                         <CardHeader className="pb-3"><CardTitle className="text-base">{t("media.timing")}</CardTitle></CardHeader>
                         <CardContent>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-muted-foreground">
-                            <div><p className="text-xs font-medium text-foreground mb-1">{t("media.bestDays")}</p><p>{result.flyer.timing?.bestDays?.join("、")}</p></div>
-                            <div><p className="text-xs font-medium text-foreground mb-1">{t("media.bestTime")}</p><p>{result.flyer.timing?.bestTimeSlots?.join("、")}</p></div>
+                            <div><p className="text-xs font-medium text-foreground mb-1">{t("media.bestDays")}</p><p>{result.flyer.timing?.bestDays?.join(", ")}</p></div>
+                            <div><p className="text-xs font-medium text-foreground mb-1">{t("media.bestTime")}</p><p>{result.flyer.timing?.bestTimeSlots?.join(", ")}</p></div>
                             <div><p className="text-xs font-medium text-foreground mb-1">{t("media.frequency")}</p><p>{result.flyer.timing?.frequency}</p></div>
                           </div>
                         </CardContent>

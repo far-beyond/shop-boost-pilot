@@ -107,8 +107,8 @@ export default function FlyerPlan() {
 
   const areaChartData = result?.distributionAreas.map((a) => ({
     name: a.areaName,
-    部数: a.recommendedQuantity,
-    世帯数: a.estimatedHouseholds,
+    quantity: a.recommendedQuantity,
+    households: a.estimatedHouseholds,
   })) || [];
 
   return (
@@ -135,7 +135,7 @@ export default function FlyerPlan() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">{t("flyer.storeLocation")} *</label>
                     <Input
-                      placeholder="例: 東京都渋谷区神南1丁目"
+                      placeholder={t("flyer.addressPh")}
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                     />
@@ -143,7 +143,7 @@ export default function FlyerPlan() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">{t("flyer.industry")} *</label>
                     <Input
-                      placeholder="例: 美容院、学習塾、居酒屋"
+                      placeholder={t("flyer.industryPh")}
                       value={industry}
                       onChange={(e) => setIndustry(e.target.value)}
                     />
@@ -151,7 +151,7 @@ export default function FlyerPlan() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">{t("flyer.storeName")}</label>
                     <Input
-                      placeholder="例: ヘアサロン BLOOM"
+                      placeholder={t("flyer.storeNamePh")}
                       value={storeName}
                       onChange={(e) => setStoreName(e.target.value)}
                     />
@@ -159,7 +159,7 @@ export default function FlyerPlan() {
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">{t("flyer.budget")}</label>
                     <Input
-                      placeholder="例: 5万円、10万円"
+                      placeholder={t("flyer.budgetPh")}
                       value={budget}
                       onChange={(e) => setBudget(e.target.value)}
                     />
@@ -168,7 +168,7 @@ export default function FlyerPlan() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">{t("flyer.targetAudience")}</label>
                   <Textarea
-                    placeholder="例: 30〜40代の子育て世帯、近隣のオフィスワーカー"
+                    placeholder={t("flyer.targetPh")}
                     value={target}
                     onChange={(e) => setTarget(e.target.value)}
                     rows={2}
@@ -193,7 +193,7 @@ export default function FlyerPlan() {
                   onClick={() => result && exportFlyerPlanPDF(result, { storeName, address, industry })}
                 >
                   <Download className="w-4 h-4" />
-                  PDFダウンロード
+                  {t("flyer.pdfDownload")}
                 </Button>
               </motion.div>
 
@@ -251,7 +251,7 @@ export default function FlyerPlan() {
                             </span>
                           </div>
                           <Badge variant="outline" className="text-xs">
-                            {area.recommendedQuantity.toLocaleString()}部
+                            {area.recommendedQuantity.toLocaleString()}{t("flyer.copies")}
                           </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground mb-2">{area.reason}</p>
@@ -279,7 +279,7 @@ export default function FlyerPlan() {
                           <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                           <YAxis tick={{ fontSize: 11 }} />
                           <Tooltip formatter={(v: number) => [v.toLocaleString(), ""]} />
-                          <Bar dataKey="部数" fill="hsl(217,91%,55%)" radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="quantity" fill="hsl(217,91%,55%)" radius={[4, 4, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -378,7 +378,7 @@ export default function FlyerPlan() {
                           >
                             {copiedIdx === i ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
                           </Button>
-                          <p className="text-base font-bold text-foreground mb-1 pr-8">「{cc.headline}」</p>
+                          <p className="text-base font-bold text-foreground mb-1 pr-8">{cc.headline}</p>
                           <p className="text-sm text-muted-foreground mb-2">{cc.subCopy}</p>
                           <div className="flex flex-wrap gap-1.5 mb-2">
                             <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">{cc.tone}</span>
