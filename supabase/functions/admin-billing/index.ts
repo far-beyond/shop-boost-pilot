@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 // Hardcoded admin emails - only these users can access admin functions
-const ADMIN_EMAILS = ["admin@mapboost.ai"];
+const ADMIN_EMAILS = ["admin@mapboost.ai", "pekepon6666@gmail.com"];
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
