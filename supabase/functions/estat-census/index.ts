@@ -45,6 +45,26 @@ function extractCity(address: string): string | null {
   return match ? match[1] : null;
 }
 
+async function fetchEstatData(appId: string, statsDataId: string, cdArea: string): Promise<any> {
+  const url = `${ESTAT_BASE}/getStatsData?appId=${appId}&statsDataId=${statsDataId}&cdArea=${cdArea}&metaGetFlg=Y&cntGetFlg=N&sectionHeaderFlg=1`;
+  
+  console.log(`Fetching e-Stat: statsDataId=${statsDataId}, cdArea=${cdArea}`);
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.error(`e-Stat API error: ${res.status}`);
+    return null;
+  }
+  const data = await res.json();
+  
+  const status = data?.GET_STATS_DATA?.RESULT?.STATUS;
+  if (status && status !== 0) {
+    console.error(`e-Stat data error: ${status}`);
+    return null;
+  }
+  
+  return data?.GET_STATS_DATA?.STATISTICAL_DATA || null;
+}
+
 async function findAreaCode(appId: string, address: string): Promise<{ code: string; name: string } | null> {
   const prefName = extractPrefecture(address);
   if (!prefName) return null;
