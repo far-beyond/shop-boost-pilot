@@ -11,6 +11,7 @@ import Diagnosis from "./pages/Diagnosis";
 import PromoText from "./pages/PromoText";
 import KPIDesign from "./pages/KPIDesign";
 import Dashboard from "./pages/Dashboard";
+import AreaAnalysis from "./pages/AreaAnalysis";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const AppRoutes = () => (
     <Route path="/promo/:id" element={<ProtectedRoute><PromoText /></ProtectedRoute>} />
     <Route path="/kpi/:id" element={<ProtectedRoute><KPIDesign /></ProtectedRoute>} />
     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+    <Route path="/area-analysis" element={<ProtectedRoute><AreaAnalysis /></ProtectedRoute>} />
     {/* Legacy routes redirect */}
     <Route path="/diagnosis" element={<Navigate to="/dashboard" replace />} />
     <Route path="/promo" element={<Navigate to="/dashboard" replace />} />
