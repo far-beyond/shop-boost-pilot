@@ -90,8 +90,39 @@ async function fetchCensusData(address: string): Promise<CensusData | null> {
     return null;
   }
 }
+// Estimate population for overseas areas using Overpass facility density
+async function estimateOverseasPopulation(
+  center: [number, number],
+  radiusMeters: number
+): Promise<{ population: number; households: number; facilityCount: number }> {
+  try {
+    const query = `[out:json][timeout:10];
+(
+  node["building"](around:${radiusMeters},${center[0]},${center[1]});
+  node["amenity"](around:${radiusMeters},${center[0]},${center[1]});
+  node["shop"](around:${radiusMeters},${center[0]},${center[1]});
+);
+out count;`;
+    const res = await fetch("https://overpass-api.de/api/interpreter", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `data=${encodeURIComponent(query)}`,
+    });
+    if (!res.ok) throw new Error("Overpass count failed");
+    const data = await res.json();
+    const count = data.elements?.[0]?.tags?.total
+      ? parseInt(data.elements[0].tags.total, 10)
+      : data.elements?.length || 0;
+    // Rough heuristic: each OSM facility node ≈ 50-80 people in the area
+    const population = Math.max(1000, count * 65);
+    const households = Math.round(population / 2.5);
+    return { population, households, facilityCount: count };
+  } catch {
+    return { population: 0, households: 0, facilityCount: 0 };
+  }
+}
 
-// --- Overpass API (OpenStreetMap) competitor fetching ---
+
 
 const INDUSTRY_OSM_TAGS: Record<string, string[]> = {
   "居酒屋": ['amenity=restaurant', 'amenity=bar', 'amenity=pub'],
