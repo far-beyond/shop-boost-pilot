@@ -1094,6 +1094,12 @@ const translations: Record<Language, Record<string, string>> = {
     "flyer.perSheet": "/sheet",
     "flyer.planComplete": "Flyer distribution plan completed",
     "flyer.planFailed": "Failed to generate plan",
+    "flyer.addressPh": "e.g. 1 Jinnan, Shibuya, Tokyo",
+    "flyer.industryPh": "e.g. Hair salon, Tutoring, Pub",
+    "flyer.storeNamePh": "e.g. Hair Salon BLOOM",
+    "flyer.budgetPh": "e.g. ¥50,000, ¥100,000",
+    "flyer.targetPh": "e.g. Families with children aged 30-40, nearby office workers",
+    "flyer.pdfDownload": "Download PDF",
 
     // Ad Proposal
     "ad.badge": "Ad Proposal",
@@ -1128,6 +1134,12 @@ const translations: Record<Language, Record<string, string>> = {
     "ad.recommended": "Recommended",
     "ad.proposalComplete": "Ad proposal completed",
     "ad.proposalFailed": "Failed to generate proposal",
+    "ad.addressPh": "e.g. 1 Jinnan, Shibuya, Tokyo",
+    "ad.industryPh": "e.g. Hair salon, Tutoring, Pub",
+    "ad.storeNamePh": "e.g. Hair Salon BLOOM",
+    "ad.budgetPh": "e.g. ¥50,000, ¥100,000",
+    "ad.targetPh": "e.g. Families with children aged 30-40, nearby office workers",
+    "ad.pdfDownload": "Download PDF",
 
     // Location Match
     "loc.badge": "Area Matching",
