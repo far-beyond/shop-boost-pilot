@@ -60,7 +60,7 @@ export default function PromoText() {
     const key = `${tab}-${index}-${tone}`;
     setAdjustingKey(key);
     try {
-      const adjusted = await adjustPromoText(originalText, tone);
+      const adjusted = await adjustPromoText(originalText, tone, language);
       const updatedTexts = { ...texts };
       updatedTexts[tab] = [...(updatedTexts[tab] || [])];
       updatedTexts[tab][index] = adjusted;
