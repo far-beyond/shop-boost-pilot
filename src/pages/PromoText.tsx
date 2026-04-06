@@ -99,14 +99,14 @@ export default function PromoText() {
             <p className="text-muted-foreground">{t("promo.generating")}</p>
           </div>
         ) : (
-          <Tabs defaultValue={tabs[0]}>
+          <Tabs defaultValue={tabKeys[0]}>
             <TabsList className="flex flex-wrap h-auto gap-1 mb-6">
-              {tabs.map((tab) => (
-                <TabsTrigger key={tab} value={tab} className="text-xs sm:text-sm">{tab}</TabsTrigger>
+              {tabKeys.map((tab, idx) => (
+                <TabsTrigger key={tab} value={tab} className="text-xs sm:text-sm">{t(tabLabelKeys[idx])}</TabsTrigger>
               ))}
             </TabsList>
 
-            {tabs.map((tab) => (
+            {tabKeys.map((tab) => (
               <TabsContent key={tab} value={tab} className="space-y-4">
                 {(texts[tab] || []).map((text, i) => {
                   const isAdjusting = (tone: string) => adjustingKey === `${tab}-${i}-${tone}`;
