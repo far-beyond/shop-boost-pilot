@@ -70,9 +70,19 @@ export function generateTownPolygons(
       const halfLat = latStep * 0.48;
       const halfLng = lngStep * 0.48;
 
-      const population = Math.round(800 + Math.random() * 4200 - dist * 300);
-      const households = Math.round(population / (2 + Math.random() * 0.8));
-      const avgAge = Math.round(35 + Math.random() * 20);
+      const basePop = censusData?.totalPopulation || 0;
+      const baseHouseholds = censusData?.totalHouseholds || 0;
+      const baseAge = censusData?.avgAge || 42;
+      const townCount = idx + gridSize * gridSize; // estimate total for distribution
+      const population = basePop > 0
+        ? Math.round((basePop / (gridSize * gridSize)) * (0.6 + Math.random() * 0.8))
+        : Math.round(800 + Math.random() * 4200 - dist * 300);
+      const households = baseHouseholds > 0
+        ? Math.round((baseHouseholds / (gridSize * gridSize)) * (0.6 + Math.random() * 0.8))
+        : Math.round(population / (2 + Math.random() * 0.8));
+      const avgAge = basePop > 0
+        ? Math.round(baseAge + (Math.random() - 0.5) * 6)
+        : Math.round(35 + Math.random() * 20);
       const densityRank: TownPolygonProperties["densityRank"] =
         population > 3500 ? "high" : population > 1800 ? "medium" : "low";
 
