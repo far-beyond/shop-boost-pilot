@@ -114,72 +114,51 @@ function parsePopulationData(statData: any): { totalPopulation: number; malePopu
   return result;
 }
 
+// Table 0003448299: age 3-group by municipality
+// cat01: "100"=総数, "110"=15歳未満, "120"=15～64歳, "130"=65歳以上
+// cat02: "100"=総数, "110"=男, "120"=女
+// tab: "020"=人口, "105"=割合
 function parseAgeData(statData: any): { ageGroup: string; population: number; percentage: number }[] {
   if (!statData?.DATA_INF?.VALUE) return [];
 
   const values = Array.isArray(statData.DATA_INF.VALUE) ? statData.DATA_INF.VALUE : [statData.DATA_INF.VALUE];
 
-  const classInfo = statData?.CLASS_INF?.CLASS_OBJ;
-  const classArr = Array.isArray(classInfo) ? classInfo : classInfo ? [classInfo] : [];
-  
-  const catLabels: Record<string, string> = {};
-  for (const cls of classArr) {
-    if (cls["@id"] === "cat01") {
-      const items = Array.isArray(cls.CLASS) ? cls.CLASS : cls.CLASS ? [cls.CLASS] : [];
-      for (const item of items) {
-        catLabels[item["@code"]] = item["@name"] || "";
-      }
-    }
-  }
+  const ageMap: Record<string, { population: number; percentage: number }> = {};
+  let totalPop = 0;
 
-  // Collect total-sex age data only (skip male/female breakdowns)
-  const ageValues: { label: string; val: number }[] = [];
-  
   for (const v of values) {
-    const val = parseInt(v["$"] || "0", 10);
-    if (isNaN(val) || val <= 0) continue;
+    const val = parseFloat(v["$"] || "0");
+    if (isNaN(val) || val < 0) continue;
     const cat01 = v["@cat01"] || "";
     const cat02 = v["@cat02"] || "";
-    const label = catLabels[cat01] || cat01;
-    
-    // Only use "総数" (both sexes) rows - cat02 typically "000" or first code
-    // Skip if explicitly male or female
-    if (label.includes("男") || label.includes("女")) continue;
-    if (cat02 && cat02 !== "000" && cat02 !== "001") continue;
-    
-    if (label.includes("総数") || label.includes("合計") || label.includes("年齢「不詳」")) continue;
-    if (label.match(/\d/)) {
-      ageValues.push({ label, val });
+    const tab = v["@tab"] || "";
+
+    // Only total sex (cat02 = "100")
+    if (cat02 !== "100") continue;
+
+    if (tab === "020") {
+      // Population count
+      if (cat01 === "100") totalPop = val;
+      else if (cat01 === "110") ageMap["0〜14歳"] = { population: val, percentage: 0 };
+      else if (cat01 === "120") ageMap["15〜64歳"] = { population: val, percentage: 0 };
+      else if (cat01 === "130") ageMap["65歳以上"] = { population: val, percentage: 0 };
+    } else if (tab === "105") {
+      // Percentage
+      if (cat01 === "110" && ageMap["0〜14歳"]) ageMap["0〜14歳"].percentage = val;
+      else if (cat01 === "120" && ageMap["15〜64歳"]) ageMap["15〜64歳"].percentage = val;
+      else if (cat01 === "130" && ageMap["65歳以上"]) ageMap["65歳以上"].percentage = val;
     }
   }
 
-  // Consolidate into standard groups
-  const consolidated: Record<string, number> = {
-    "0〜14歳": 0, "15〜24歳": 0, "25〜34歳": 0, "35〜44歳": 0,
-    "45〜54歳": 0, "55〜64歳": 0, "65歳以上": 0,
-  };
+  // If no percentage data, calculate from total
+  const total = totalPop || Object.values(ageMap).reduce((s, v) => s + v.population, 0) || 1;
 
-  for (const { label, val } of ageValues) {
-    const ageMatch = label.match(/(\d+)/);
-    if (!ageMatch) continue;
-    const age = parseInt(ageMatch[1], 10);
-    if (age < 15) consolidated["0〜14歳"] += val;
-    else if (age < 25) consolidated["15〜24歳"] += val;
-    else if (age < 35) consolidated["25〜34歳"] += val;
-    else if (age < 45) consolidated["35〜44歳"] += val;
-    else if (age < 55) consolidated["45〜54歳"] += val;
-    else if (age < 65) consolidated["55〜64歳"] += val;
-    else consolidated["65歳以上"] += val;
-  }
-
-  const total = Object.values(consolidated).reduce((a, b) => a + b, 0) || 1;
-
-  return Object.entries(consolidated)
-    .filter(([, count]) => count > 0)
-    .map(([ageGroup, population]) => ({
+  return Object.entries(ageMap)
+    .filter(([, v]) => v.population > 0)
+    .map(([ageGroup, v]) => ({
       ageGroup,
-      population,
-      percentage: Math.round((population / total) * 1000) / 10,
+      population: v.population,
+      percentage: v.percentage || Math.round((v.population / total) * 1000) / 10,
     }));
 }
 
