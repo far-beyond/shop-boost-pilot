@@ -58,14 +58,14 @@ export default function UseCasesSection() {
         : "出店分析 → 人口推移 → 収益シミュレーション",
     },
     {
-      emoji: "🚬",
-      title: isEn ? "Unmanned Stores" : "喫煙所・無人店舗",
+      emoji: "💪",
+      title: isEn ? "Fitness Gyms" : "フィットネスジム",
       desc: isEn
-        ? "Suggest optimal installation points from foot traffic data per location."
-        : "立地ごとの人流データから最適な設置場所を提案",
+        ? "Analyze age groups and household composition in the trade area to propose optimal targets and acquisition strategies."
+        : "商圏内の年齢層・世帯構成から、最適なターゲットと集客施策を提案",
       flow: isEn
-        ? "Population Density → Traffic Flow Design → Revenue Forecast"
-        : "人口密度分析 → 動線設計 → 収益予測",
+        ? "Age Distribution Analysis → Area Ads → Membership Campaign Design"
+        : "年齢構成分析 → エリア広告 → 入会キャンペーン設計",
     },
   ];
 
