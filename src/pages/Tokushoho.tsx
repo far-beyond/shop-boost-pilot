@@ -1,6 +1,7 @@
+import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function Tokushoho() {
   const { t } = useLanguage();
@@ -9,7 +10,7 @@ export default function Tokushoho() {
     { label: t("legal.seller"), value: t("legal.sellerVal") },
     { label: t("legal.representative"), value: t("legal.representativeVal") },
     { label: t("legal.address"), value: t("legal.addressVal") },
-    { label: t("legal.contact"), value: t("legal.contactVal") },
+    { label: t("legal.contact"), value: null, isLink: true },
     { label: t("legal.price"), value: t("legal.priceVal") },
     { label: t("legal.payment"), value: t("legal.paymentVal") },
     { label: t("legal.delivery"), value: t("legal.deliveryVal") },
@@ -31,7 +32,9 @@ export default function Tokushoho() {
                       {row.label}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground border-b border-border/40 whitespace-pre-line">
-                      {row.value}
+                      {row.isLink ? (
+                        <Link to="/contact" className="text-primary hover:underline">{t("legal.contactLink")}</Link>
+                      ) : row.value}
                     </td>
                   </tr>
                 ))}
