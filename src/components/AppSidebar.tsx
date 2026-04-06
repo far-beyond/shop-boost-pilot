@@ -28,6 +28,7 @@ export function AppSidebar() {
 
   const analysisItems = [
     { title: t("nav.areaAnalysis"), url: "/area-analysis", icon: MapPin },
+    { title: t("nav.mapAnalysis"), url: "/map-analysis", icon: MapPin },
     { title: t("nav.locationMatch"), url: "/location-match", icon: Compass },
     { title: t("nav.storeCandidates"), url: "/store-candidates", icon: Building2 },
   ];
