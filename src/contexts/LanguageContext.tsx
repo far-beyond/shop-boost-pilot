@@ -598,7 +598,7 @@ const translations: Record<Language, Record<string, string>> = {
     "legal.address": "所在地",
     "legal.addressVal": "東京都新宿区新宿5-4-1",
     "legal.contact": "お問い合わせ",
-    "legal.contactVal": "メール: support@mapboost.ai",
+    "legal.contactLink": "お問い合わせフォームはこちら",
     "legal.price": "販売価格",
     "legal.priceVal": "各プランページに表示された価格（税込）に準じます。",
     "legal.payment": "お支払い方法",
