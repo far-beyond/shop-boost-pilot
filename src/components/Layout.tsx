@@ -36,6 +36,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <Link to="/tokushoho" className="hover:text-foreground transition-colors">{t("footer.tokushoho")}</Link>
                 <span className="text-border">|</span>
                 <Link to="/terms" className="hover:text-foreground transition-colors">{t("footer.terms")}</Link>
+                <span className="text-border">|</span>
+                <Link to="/contact" className="hover:text-foreground transition-colors">{t("footer.contact")}</Link>
               </div>
             </div>
           </footer>

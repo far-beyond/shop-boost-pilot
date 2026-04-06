@@ -14,38 +14,34 @@ import { ArrowRight, Loader2, Store, AlertTriangle } from "lucide-react";
 import { createDiagnosis, runAIDiagnosis } from "@/lib/diagnosisService";
 import { checkUsageLimit, incrementUsage } from "@/lib/usageLimitService";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 
 const mediaOptions = [
-  "Googleビジネスプロフィール",
-  "Instagram",
-  "X（Twitter）",
-  "LINE公式アカウント",
-  "チラシ・ポスティング",
-  "Web広告（Google/Meta）",
-  "食べログ・ホットペッパー等",
+  "Googleビジネスプロフィール", "Instagram", "X（Twitter）",
+  "LINE公式アカウント", "チラシ・ポスティング", "Web広告（Google/Meta）", "食べログ・ホットペッパー等",
 ];
-
-const storeSchema = z.object({
-  storeName: z.string().trim().min(1, "店舗名を入力してください").max(100),
-  industry: z.string().trim().min(1, "業種を入力してください").max(100),
-  address: z.string().trim().min(1, "住所を入力してください").max(200),
-  station: z.string().trim().max(100).optional().default(""),
-  target: z.string().trim().max(200).optional().default(""),
-  strengths: z.string().trim().max(500).optional().default(""),
-  concerns: z.string().trim().max(500).optional().default(""),
-  budget: z.string().trim().max(100).optional().default(""),
-  competitors: z.string().trim().max(500).optional().default(""),
-  media: z.array(z.string()).optional().default([]),
-});
-
-type StoreFormValues = z.infer<typeof storeSchema>;
 
 export default function StoreInput() {
   const navigate = useNavigate();
   const { subscription } = useAuth();
+  const { t } = useLanguage();
   const [submitting, setSubmitting] = useState(false);
   const [usageInfo, setUsageInfo] = useState<{ allowed: boolean; used: number; limit: number } | null>(null);
+
+  const storeSchema = z.object({
+    storeName: z.string().trim().min(1, t("si.errName")).max(100),
+    industry: z.string().trim().min(1, t("si.errIndustry")).max(100),
+    address: z.string().trim().min(1, t("si.errAddress")).max(200),
+    station: z.string().trim().max(100).optional().default(""),
+    target: z.string().trim().max(200).optional().default(""),
+    strengths: z.string().trim().max(500).optional().default(""),
+    concerns: z.string().trim().max(500).optional().default(""),
+    budget: z.string().trim().max(100).optional().default(""),
+    competitors: z.string().trim().max(500).optional().default(""),
+    media: z.array(z.string()).optional().default([]),
+  });
+  type StoreFormValues = z.infer<typeof storeSchema>;
 
   useEffect(() => {
     if (!subscription?.subscribed) {
@@ -55,53 +51,35 @@ export default function StoreInput() {
 
   const form = useForm<StoreFormValues>({
     resolver: zodResolver(storeSchema),
-    defaultValues: {
-      storeName: "", industry: "", address: "", station: "", target: "",
-      strengths: "", concerns: "", budget: "", competitors: "", media: [],
-    },
+    defaultValues: { storeName: "", industry: "", address: "", station: "", target: "", strengths: "", concerns: "", budget: "", competitors: "", media: [] },
   });
 
   const onSubmit = async (data: StoreFormValues) => {
-    // Check usage limit for free users
     if (!subscription?.subscribed) {
       const limit = await checkUsageLimit();
-      if (!limit.allowed) {
-        toast.error("今月の無料診断回数（3回）に達しました。Proプランにアップグレードしてください。");
-        return;
-      }
+      if (!limit.allowed) { toast.error(t("si.limitMsg")); return; }
     }
-
     setSubmitting(true);
     try {
       const diagnosis = await createDiagnosis({
-        store_name: data.storeName,
-        industry: data.industry,
-        address: data.address,
-        station: data.station || undefined,
-        target_audience: data.target || undefined,
-        strengths: data.strengths || undefined,
-        concerns: data.concerns || undefined,
-        budget: data.budget || undefined,
-        competitors: data.competitors || undefined,
+        store_name: data.storeName, industry: data.industry, address: data.address,
+        station: data.station || undefined, target_audience: data.target || undefined,
+        strengths: data.strengths || undefined, concerns: data.concerns || undefined,
+        budget: data.budget || undefined, competitors: data.competitors || undefined,
         media: data.media?.length ? data.media : undefined,
       });
-
-      toast.info("AIが診断を開始しました…");
-
-      // Run all AI analyses in parallel
+      toast.info(t("si.aiStarted"));
       await Promise.all([
         runAIDiagnosis(diagnosis.id, "diagnosis"),
         runAIDiagnosis(diagnosis.id, "promo"),
         runAIDiagnosis(diagnosis.id, "kpi"),
       ]);
-
-      // Increment usage after successful diagnosis
       await incrementUsage();
-      toast.success("診断が完了しました！");
+      toast.success(t("si.complete"));
       navigate(`/diagnosis/${diagnosis.id}`);
     } catch (err: any) {
       console.error(err);
-      toast.error(err.message || "診断の開始に失敗しました");
+      toast.error(err.message || t("si.error"));
     } finally {
       setSubmitting(false);
     }
@@ -115,113 +93,68 @@ export default function StoreInput() {
             <CardContent className="flex items-center gap-3 py-4">
               <AlertTriangle className="w-5 h-5 text-destructive shrink-0" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-destructive">今月の無料診断回数（{usageInfo.limit}回）に達しました</p>
-                <p className="text-xs text-muted-foreground mt-1">Proプランにアップグレードすると無制限にご利用いただけます。</p>
+                <p className="text-sm font-medium text-destructive">{t("usage.limitReached")} ({usageInfo.limit}{t("si.times")})</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("usage.upgradeHint")}</p>
               </div>
-              <Button size="sm" asChild>
-                <Link to="/pricing">プランを見る</Link>
-              </Button>
+              <Button size="sm" asChild><Link to="/pricing">{t("usage.viewPlans")}</Link></Button>
             </CardContent>
           </Card>
         )}
         {usageInfo && usageInfo.allowed && usageInfo.limit !== Infinity && (
           <div className="mb-4 text-sm text-muted-foreground text-center">
-            今月の利用: {usageInfo.used} / {usageInfo.limit} 回
+            {t("usage.monthly")}: {usageInfo.used} / {usageInfo.limit} {t("si.times")}
           </div>
         )}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-4">
-            <Store className="w-4 h-4" />
-            店舗情報入力
+            <Store className="w-4 h-4" />{t("si.badge")}
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">店舗の情報を教えてください</h1>
-          <p className="text-muted-foreground">入力内容をもとに、AIが集客診断と施策を提案します。</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">{t("si.title")}</h1>
+          <p className="text-muted-foreground">{t("si.subtitle")}</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>基本情報</CardTitle>
-            <CardDescription>できるだけ詳しく入力いただくと、より精度の高い診断が可能です。</CardDescription>
+            <CardTitle>{t("si.basicInfo")}</CardTitle>
+            <CardDescription>{t("si.basicInfoDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField control={form.control} name="storeName" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>店舗名 <span className="text-destructive">*</span></FormLabel>
-                    <FormControl><Input placeholder="例：カフェ モカ 渋谷店" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
+                  <FormItem><FormLabel>{t("si.storeName")} <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder={t("si.storeNamePh")} {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="industry" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>業種 <span className="text-destructive">*</span></FormLabel>
-                    <FormControl><Input placeholder="例：カフェ・喫茶店" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
+                  <FormItem><FormLabel>{t("si.industry")} <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder={t("si.industryPh")} {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="address" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>住所 <span className="text-destructive">*</span></FormLabel>
-                    <FormControl><Input placeholder="例：東京都渋谷区道玄坂1-2-3" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
+                  <FormItem><FormLabel>{t("si.address")} <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder={t("si.addressPh")} {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="station" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>最寄駅</FormLabel>
-                    <FormControl><Input placeholder="例：渋谷駅 徒歩5分" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
+                  <FormItem><FormLabel>{t("si.station")}</FormLabel><FormControl><Input placeholder={t("si.stationPh")} {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="target" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>ターゲット層</FormLabel>
-                    <FormControl><Input placeholder="例：20〜30代 会社員・フリーランス" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
+                  <FormItem><FormLabel>{t("si.target")}</FormLabel><FormControl><Input placeholder={t("si.targetPh")} {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="strengths" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>店の強み</FormLabel>
-                    <FormControl><Textarea placeholder="例：自家焙煎コーヒー、Wi-Fi完備、電源あり" rows={3} {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
+                  <FormItem><FormLabel>{t("si.strengths")}</FormLabel><FormControl><Textarea placeholder={t("si.strengthsPh")} rows={3} {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="concerns" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>現在の悩み</FormLabel>
-                    <FormControl><Textarea placeholder="例：平日昼間の集客が弱い、SNS活用ができていない" rows={3} {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
+                  <FormItem><FormLabel>{t("si.concerns")}</FormLabel><FormControl><Textarea placeholder={t("si.concernsPh")} rows={3} {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="budget" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>月の広告・販促予算</FormLabel>
-                    <FormControl><Input placeholder="例：5万円〜10万円" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
+                  <FormItem><FormLabel>{t("si.budget")}</FormLabel><FormControl><Input placeholder={t("si.budgetPh")} {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="competitors" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>競合店舗</FormLabel>
-                    <FormControl><Textarea placeholder="例：スターバックス渋谷店、タリーズ道玄坂店" rows={2} {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
+                  <FormItem><FormLabel>{t("si.competitors")}</FormLabel><FormControl><Textarea placeholder={t("si.competitorsPh")} rows={2} {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField control={form.control} name="media" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>利用したい媒体（複数選択可）</FormLabel>
+                    <FormLabel>{t("si.media")}</FormLabel>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {mediaOptions.map((m) => (
                         <label key={m} className="flex items-center gap-2 cursor-pointer p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors">
-                          <Checkbox
-                            checked={field.value?.includes(m)}
-                            onCheckedChange={(checked) => {
-                              const current = field.value ?? [];
-                              field.onChange(checked ? [...current, m] : current.filter((x) => x !== m));
-                            }}
-                          />
+                          <Checkbox checked={field.value?.includes(m)} onCheckedChange={(checked) => { const c = field.value ?? []; field.onChange(checked ? [...c, m] : c.filter((x) => x !== m)); }} />
                           <span className="text-sm">{m}</span>
                         </label>
                       ))}
@@ -229,19 +162,8 @@ export default function StoreInput() {
                     <FormMessage />
                   </FormItem>
                 )} />
-
                 <Button type="submit" size="lg" className="w-full gap-2 text-base" disabled={submitting}>
-                  {submitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      AIが分析中…（30秒ほどかかります）
-                    </>
-                  ) : (
-                    <>
-                      診断を開始する
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
+                  {submitting ? (<><Loader2 className="w-4 h-4 animate-spin" />{t("si.analyzing")}</>) : (<>{t("si.start")}<ArrowRight className="w-4 h-4" /></>)}
                 </Button>
               </form>
             </Form>
