@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { MapPin, Users, Home, TrendingUp, Loader2, Search, Building2, AlertTriangle, CheckCircle2, BarChart3, Database, Sparkles, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,11 +20,8 @@ import {
 const fadeUp = { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 } };
 const stagger = { animate: { transition: { staggerChildren: 0.08 } } };
 
-const RADIUS_OPTIONS = [
-  { value: "1km", label: "半径1km" },
-  { value: "3km", label: "半径3km" },
-  { value: "5km", label: "半径5km" },
-];
+const RADIUS_KEYS = ["area.radius1km", "area.radius3km", "area.radius5km"];
+const RADIUS_VALUES = ["1km", "3km", "5km"];
 
 const PIE_COLORS = [
   "hsl(217, 91%, 55%)", "hsl(200, 85%, 52%)", "hsl(162, 63%, 42%)",
@@ -66,6 +64,7 @@ type CensusData = {
 };
 
 export default function AreaAnalysis() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState("area");
   const [address, setAddress] = useState("");
   const [radius, setRadius] = useState("3km");
@@ -77,8 +76,8 @@ export default function AreaAnalysis() {
   const [dataSource, setDataSource] = useState<string>("");
 
   const runAnalysis = async () => {
-    if (!address) { toast.error("住所を入力してください"); return; }
-    if (activeTab === "opening" && !industry) { toast.error("業種を入力してください"); return; }
+    if (!address) { toast.error(t("area.enterAddress")); return; }
+    if (activeTab === "opening" && !industry) { toast.error(t("area.enterIndustry")); return; }
 
     setLoading(true);
     setCensusData(null);
@@ -97,11 +96,11 @@ export default function AreaAnalysis() {
       setDataSource(data.dataSource || "AI推定分析");
 
       toast.success(data.censusData
-        ? "国勢調査データを基に分析が完了しました"
-        : "分析が完了しました（AI推定値）"
+        ? t("area.analysisCompleteReal")
+        : t("area.analysisCompleteFallback")
       );
     } catch (e: any) {
-      toast.error(e.message || "分析に失敗しました");
+      toast.error(e.message || t("area.analysisFailed"));
     } finally {
       setLoading(false);
     }
@@ -128,10 +127,10 @@ export default function AreaAnalysis() {
           <motion.div className="mb-8" {...fadeUp}>
             <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary mb-2">
               <MapPin className="w-3.5 h-3.5" />
-              地域分析
+              {t("area.badge")}
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">商圏・出店分析</h1>
-            <p className="text-sm text-muted-foreground mt-1">住所を入力して、AIが地域の人口統計・市場性を分析します。</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">{t("area.title")}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{t("area.subtitle")}</p>
           </motion.div>
 
           {/* Tabs */}
@@ -139,11 +138,11 @@ export default function AreaAnalysis() {
             <TabsList className="grid w-full grid-cols-2 max-w-md">
               <TabsTrigger value="area" className="gap-2">
                 <Users className="w-4 h-4" />
-                商圏分析
+                {t("area.tabArea")}
               </TabsTrigger>
               <TabsTrigger value="opening" className="gap-2">
                 <Building2 className="w-4 h-4" />
-                出店分析
+                {t("area.tabOpening")}
               </TabsTrigger>
             </TabsList>
 
@@ -153,26 +152,26 @@ export default function AreaAnalysis() {
                 <CardContent className="pt-6 space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">住所・エリア名</label>
+                      <label className="text-sm font-medium text-foreground">{t("area.address")}</label>
                       <Input
-                        placeholder="例: 東京都渋谷区神南1丁目"
+                        placeholder={t("area.addressPh")}
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
                       />
                     </div>
                     {activeTab === "area" && (
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-foreground">商圏半径</label>
+                        <label className="text-sm font-medium text-foreground">{t("area.radius")}</label>
                         <div className="flex gap-2">
-                          {RADIUS_OPTIONS.map((r) => (
+                          {RADIUS_VALUES.map((rv, idx) => (
                             <Button
-                              key={r.value}
-                              variant={radius === r.value ? "default" : "outline"}
+                              key={rv}
+                              variant={radius === rv ? "default" : "outline"}
                               size="sm"
-                              onClick={() => setRadius(r.value)}
+                              onClick={() => setRadius(rv)}
                               className="flex-1"
                             >
-                              {r.label}
+                              {t(RADIUS_KEYS[idx])}
                             </Button>
                           ))}
                         </div>
@@ -180,10 +179,10 @@ export default function AreaAnalysis() {
                     )}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-foreground">
-                        業種{activeTab === "area" ? "（任意）" : ""}
+                        {t("area.industry")}{activeTab === "area" ? t("area.industryOptional") : ""}
                       </label>
                       <Input
-                        placeholder="例: カフェ、学習塾、美容院"
+                        placeholder={t("area.industryPh")}
                         value={industry}
                         onChange={(e) => setIndustry(e.target.value)}
                       />
@@ -192,7 +191,7 @@ export default function AreaAnalysis() {
                   <div className="flex gap-2 flex-wrap">
                     <Button onClick={runAnalysis} disabled={loading} className="w-full sm:w-auto gap-2">
                       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                      {loading ? "分析中..." : "AIで分析する"}
+                      {loading ? t("area.analyzing") : t("area.analyze")}
                     </Button>
                     {(areaResult || openingResult) && (
                       <Button
@@ -201,7 +200,7 @@ export default function AreaAnalysis() {
                         onClick={() => exportAreaAnalysisPDF(areaResult, openingResult, { address, radius, industry })}
                       >
                         <FileDown className="w-4 h-4" />
-                        PDFダウンロード
+                        {t("area.pdfDownload")}
                       </Button>
                     )}
                   </div>
@@ -219,12 +218,12 @@ export default function AreaAnalysis() {
                       {censusData ? (
                         <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 py-1 px-3">
                           <Database className="w-3.5 h-3.5" />
-                          実データ: {censusData.source}
+                          {t("area.realData")}: {censusData.source}
                         </Badge>
                       ) : (
                         <Badge variant="secondary" className="gap-1.5 py-1 px-3">
                           <Sparkles className="w-3.5 h-3.5" />
-                          AI推定値
+                          {t("area.aiEstimate")}
                         </Badge>
                       )}
                       {dataSource && (
@@ -240,34 +239,34 @@ export default function AreaAnalysis() {
                         <CardHeader className="pb-2">
                           <CardTitle className="text-base flex items-center gap-2">
                             <Database className="w-4 h-4 text-emerald-600" />
-                            国勢調査データ（{censusData.areaName}）
+                            {t("area.censusTitle")}（{censusData.areaName}）
                           </CardTitle>
-                          <p className="text-xs text-muted-foreground">出典: {censusData.source} ｜ 地域コード: {censusData.areaCode}</p>
+                          <p className="text-xs text-muted-foreground">{t("area.source")}: {censusData.source} ｜ {t("area.areaCode")}: {censusData.areaCode}</p>
                         </CardHeader>
                         <CardContent>
                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
                             <div className="p-3 rounded-lg bg-background border">
-                              <p className="text-xs text-muted-foreground">総人口</p>
-                              <p className="text-lg font-bold text-foreground">{censusData.totalPopulation.toLocaleString()}人</p>
+                              <p className="text-xs text-muted-foreground">{t("area.totalPop")}</p>
+                              <p className="text-lg font-bold text-foreground">{censusData.totalPopulation.toLocaleString()}{t("area.people")}</p>
                             </div>
                             <div className="p-3 rounded-lg bg-background border">
-                              <p className="text-xs text-muted-foreground">世帯数</p>
-                              <p className="text-lg font-bold text-foreground">{censusData.totalHouseholds.toLocaleString()}世帯</p>
+                              <p className="text-xs text-muted-foreground">{t("area.households")}</p>
+                              <p className="text-lg font-bold text-foreground">{censusData.totalHouseholds.toLocaleString()}{t("area.householdsUnit")}</p>
                             </div>
                             <div className="p-3 rounded-lg bg-background border col-span-2 sm:col-span-1">
-                              <p className="text-xs text-muted-foreground">データソース</p>
+                              <p className="text-xs text-muted-foreground">{t("area.dataSource")}</p>
                               <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">e-Stat公式API</p>
                             </div>
                           </div>
                           {censusData.ageDistribution.length > 0 && (
                             <div>
-                              <p className="text-xs font-medium text-muted-foreground mb-2">年齢構成（実データ）</p>
+                              <p className="text-xs font-medium text-muted-foreground mb-2">{t("area.ageCompReal")}</p>
                               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                 {censusData.ageDistribution.map((ag, i) => (
                                   <div key={i} className="p-2 rounded bg-background border text-center">
                                     <p className="text-xs text-muted-foreground">{ag.ageGroup}</p>
                                     <p className="text-sm font-bold text-foreground">{ag.percentage}%</p>
-                                    <p className="text-xs text-muted-foreground">{ag.population.toLocaleString()}人</p>
+                                    <p className="text-xs text-muted-foreground">{ag.population.toLocaleString()}{t("area.people")}</p>
                                   </div>
                                 ))}
                               </div>
@@ -280,10 +279,10 @@ export default function AreaAnalysis() {
                   {/* Summary Stats */}
                   <motion.div variants={fadeUp} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     {[
-                      { label: "エリア", value: areaResult.areaName, icon: MapPin },
-                      { label: "推定人口", value: areaResult.population.toLocaleString() + "人", icon: Users },
-                      { label: "推定世帯数", value: areaResult.households.toLocaleString() + "世帯", icon: Home },
-                      { label: "商圏半径", value: radius, icon: TrendingUp },
+                      { label: t("area.areaLabel"), value: areaResult.areaName, icon: MapPin },
+                      { label: t("area.estPop"), value: areaResult.population.toLocaleString() + t("area.people"), icon: Users },
+                      { label: t("area.estHouseholds"), value: areaResult.households.toLocaleString() + t("area.householdsUnit"), icon: Home },
+                      { label: t("area.radiusLabel"), value: radius, icon: TrendingUp },
                     ].map((s) => (
                       <Card key={s.label} className="border border-border/60">
                         <CardContent className="p-4">
@@ -301,12 +300,12 @@ export default function AreaAnalysis() {
                   <motion.div variants={fadeUp}>
                     <Card className="border border-border/60">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-base">エリアの特徴</CardTitle>
+                        <CardTitle className="text-base">{t("area.areaFeatures")}</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <p className="text-sm text-muted-foreground leading-relaxed">{areaResult.areaCharacteristics}</p>
                         <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/10">
-                          <p className="text-xs font-medium text-primary mb-1">主要ターゲット</p>
+                          <p className="text-xs font-medium text-primary mb-1">{t("area.mainTarget")}</p>
                           <p className="text-sm text-foreground">{areaResult.primaryTarget}</p>
                         </div>
                       </CardContent>
@@ -318,7 +317,7 @@ export default function AreaAnalysis() {
                     <motion.div variants={fadeUp}>
                       <Card className="border border-border/60">
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-base">年齢構成</CardTitle>
+                          <CardTitle className="text-base">{t("area.ageComp")}</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="h-[250px]">
@@ -327,7 +326,7 @@ export default function AreaAnalysis() {
                                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(220,16%,92%)" />
                                 <XAxis dataKey="ageGroup" tick={{ fontSize: 11 }} />
                                 <YAxis tick={{ fontSize: 11 }} />
-                                <Tooltip formatter={(v: number) => [v.toLocaleString() + "人", "人口"]} />
+                                <Tooltip formatter={(v: number) => [v.toLocaleString() + t("area.people"), t("area.population")]} />
                                 <Bar dataKey="count" fill="hsl(217,91%,55%)" radius={[4, 4, 0, 0]} />
                               </BarChart>
                             </ResponsiveContainer>
@@ -339,7 +338,7 @@ export default function AreaAnalysis() {
                     <motion.div variants={fadeUp}>
                       <Card className="border border-border/60">
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-base">世帯構成</CardTitle>
+                          <CardTitle className="text-base">{t("area.householdComp")}</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="h-[250px]">
@@ -357,7 +356,7 @@ export default function AreaAnalysis() {
                                     <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                                   ))}
                                 </Pie>
-                                <Tooltip formatter={(v: number) => [v + "%", "割合"]} />
+                                <Tooltip formatter={(v: number) => [v + "%", t("area.percentage")]} />
                               </PieChart>
                             </ResponsiveContainer>
                           </div>
@@ -373,7 +372,7 @@ export default function AreaAnalysis() {
                         <CardHeader className="pb-3">
                           <CardTitle className="text-base flex items-center gap-2">
                             <CheckCircle2 className="w-4 h-4 text-green-600" />
-                            向いている業種
+                            {t("area.suitableInd")}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
@@ -397,7 +396,7 @@ export default function AreaAnalysis() {
                         <CardHeader className="pb-3">
                           <CardTitle className="text-base flex items-center gap-2">
                             <AlertTriangle className="w-4 h-4 text-orange-500" />
-                            不利な業種
+                            {t("area.unsuitableInd")}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
@@ -417,7 +416,7 @@ export default function AreaAnalysis() {
                     <motion.div variants={fadeUp}>
                       <Card className="border border-border/60">
                         <CardHeader className="pb-3">
-                          <CardTitle className="text-base">来店動機の傾向</CardTitle>
+                          <CardTitle className="text-base">{t("area.visitMotivations")}</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <div className="flex flex-wrap gap-2">
@@ -432,7 +431,7 @@ export default function AreaAnalysis() {
                     <motion.div variants={fadeUp}>
                       <Card className="border border-border/60">
                         <CardHeader className="pb-3">
-                          <CardTitle className="text-base">競合環境</CardTitle>
+                          <CardTitle className="text-base">{t("area.competition")}</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <p className="text-sm text-muted-foreground leading-relaxed">{areaResult.competitiveEnvironment}</p>
@@ -470,7 +469,7 @@ export default function AreaAnalysis() {
                           </div>
                           <div className="text-center sm:text-left">
                             <Badge className="bg-white/20 text-primary-foreground border-0 mb-2">
-                              成功確率: {openingResult.successProbability}
+                              {t("area.successProb")}: {openingResult.successProbability}
                             </Badge>
                             <p className="text-primary-foreground/90 text-sm leading-relaxed max-w-md">
                               {openingResult.overallComment}
@@ -485,7 +484,7 @@ export default function AreaAnalysis() {
                   <motion.div variants={fadeUp}>
                     <Card className="border border-border/60">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-base">スコア内訳</CardTitle>
+                        <CardTitle className="text-base">{t("area.scoreBreakdown")}</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -528,9 +527,9 @@ export default function AreaAnalysis() {
                   {/* Target & Estimates */}
                   <motion.div variants={fadeUp} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {[
-                      { label: "想定ターゲット", value: openingResult.targetCustomer, icon: Users },
-                      { label: "想定客単価", value: openingResult.estimatedUnitPrice, icon: BarChart3 },
-                      { label: "想定来店頻度", value: openingResult.estimatedVisitFrequency, icon: TrendingUp },
+                      { label: t("area.targetCustomer"), value: openingResult.targetCustomer, icon: Users },
+                      { label: t("area.unitPrice"), value: openingResult.estimatedUnitPrice, icon: BarChart3 },
+                      { label: t("area.visitFreq"), value: openingResult.estimatedVisitFrequency, icon: TrendingUp },
                     ].map((s) => (
                       <Card key={s.label} className="border border-border/60">
                         <CardContent className="p-4">
@@ -551,7 +550,7 @@ export default function AreaAnalysis() {
                         <CardHeader className="pb-3">
                           <CardTitle className="text-base flex items-center gap-2">
                             <AlertTriangle className="w-4 h-4 text-orange-500" />
-                            リスク要因
+                            {t("area.riskFactors")}
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
@@ -559,11 +558,11 @@ export default function AreaAnalysis() {
                             <div key={i} className="p-3 rounded-lg bg-muted/50 space-y-1.5">
                               <div className="flex items-center gap-2">
                                 <Badge variant={getSeverityColor(r.severity) as any} className="text-[10px]">
-                                  {r.severity}リスク
+                                  {r.severity}{t("area.risk")}
                                 </Badge>
                                 <span className="text-sm font-medium text-foreground">{r.risk}</span>
                               </div>
-                              <p className="text-xs text-muted-foreground">対策: {r.mitigation}</p>
+                              <p className="text-xs text-muted-foreground">{t("area.countermeasure")}: {r.mitigation}</p>
                             </div>
                           ))}
                         </CardContent>
@@ -575,7 +574,7 @@ export default function AreaAnalysis() {
                         <CardHeader className="pb-3">
                           <CardTitle className="text-base flex items-center gap-2">
                             <CheckCircle2 className="w-4 h-4 text-green-600" />
-                            改善アドバイス
+                            {t("area.improvements")}
                           </CardTitle>
                         </CardHeader>
                         <CardContent>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -38,6 +39,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function StoreCandidateInput() {
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
 

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   FileText, Loader2, Search, MapPin, Megaphone, Newspaper,
   Target, TrendingUp, DollarSign, Users, BarChart3, FileDown,
@@ -25,6 +26,7 @@ type ReportData = {
 };
 
 export default function Report() {
+  const { t } = useLanguage();
   const [address, setAddress] = useState("");
   const [industry, setIndustry] = useState("");
   const [storeName, setStoreName] = useState("");

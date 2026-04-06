@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   MapPin, Loader2, Search, Target, TrendingUp, Shield, AlertTriangle,
   Crown, Building2, Megaphone, Newspaper, Users, ChevronRight, Star, FileDown,
@@ -75,6 +76,7 @@ const compLevelBadge = (level: string) => {
 };
 
 export default function LocationMatch() {
+  const { t } = useLanguage();
   const [industry, setIndustry] = useState("");
   const [serviceDescription, setServiceDescription] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
