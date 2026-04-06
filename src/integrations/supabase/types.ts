@@ -77,6 +77,27 @@ export type Database = {
         }
         Relationships: []
       }
+      free_whitelist: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          note: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          note?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          note?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
