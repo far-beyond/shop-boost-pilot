@@ -60,6 +60,7 @@ const priorityColor = (p: string) => {
 };
 
 export default function AdProposal() {
+  const { t } = useLanguage();
   const [address, setAddress] = useState("");
   const [industry, setIndustry] = useState("");
   const [storeName, setStoreName] = useState("");
@@ -70,8 +71,8 @@ export default function AdProposal() {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const runProposal = async () => {
-    if (!address) { toast.error("住所を入力してください"); return; }
-    if (!industry) { toast.error("業種を入力してください"); return; }
+    if (!address) { toast.error(t("common.enterAddress")); return; }
+    if (!industry) { toast.error(t("common.enterIndustry")); return; }
 
     setLoading(true);
     try {
@@ -81,9 +82,9 @@ export default function AdProposal() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data.result);
-      toast.success("広告提案が完成しました");
+      toast.success(t("ad.proposalComplete"));
     } catch (e: any) {
-      toast.error(e.message || "提案の生成に失敗しました");
+      toast.error(e.message || t("ad.proposalFailed"));
     } finally {
       setLoading(false);
     }
@@ -92,7 +93,7 @@ export default function AdProposal() {
   const copyText = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
     setCopiedKey(key);
-    toast.success("コピーしました");
+    toast.success(t("common.copied"));
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
@@ -104,11 +105,11 @@ export default function AdProposal() {
           <motion.div className="mb-8" {...fadeUp}>
             <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary mb-2">
               <Megaphone className="w-3.5 h-3.5" />
-              広告提案
+              {t("ad.badge")}
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">広告プランナー</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">{t("ad.title")}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              AIがGoogle広告・Meta広告の最適プランを自動設計します。
+              {t("ad.subtitle")}
             </p>
           </motion.div>
 
@@ -118,30 +119,30 @@ export default function AdProposal() {
               <CardContent className="pt-6 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">店舗所在地 *</label>
+                    <label className="text-sm font-medium text-foreground">{t("ad.storeLocation")} *</label>
                     <Input placeholder="例: 東京都渋谷区神南1丁目" value={address} onChange={(e) => setAddress(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">業種 *</label>
+                    <label className="text-sm font-medium text-foreground">{t("ad.industry")} *</label>
                     <Input placeholder="例: 美容院、学習塾、居酒屋" value={industry} onChange={(e) => setIndustry(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">店舗名（任意）</label>
+                    <label className="text-sm font-medium text-foreground">{t("ad.storeName")}</label>
                     <Input placeholder="例: ヘアサロン BLOOM" value={storeName} onChange={(e) => setStoreName(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">月間広告予算（任意）</label>
+                    <label className="text-sm font-medium text-foreground">{t("ad.monthlyBudget")}</label>
                     <Input placeholder="例: 5万円、10万円" value={budget} onChange={(e) => setBudget(e.target.value)} />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">ターゲット層（任意）</label>
+                  <label className="text-sm font-medium text-foreground">{t("ad.targetAudience")}</label>
                   <Textarea placeholder="例: 30〜40代の子育て世帯、近隣のオフィスワーカー" value={target} onChange={(e) => setTarget(e.target.value)} rows={2} />
                 </div>
                 <div className="flex gap-2 flex-wrap">
                   <Button onClick={runProposal} disabled={loading} className="gap-2">
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                    {loading ? "提案生成中..." : "AIで広告提案を作成"}
+                    {loading ? t("ad.generating") : t("ad.generate")}
                   </Button>
                   {result && (
                     <Button
@@ -167,7 +168,7 @@ export default function AdProposal() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Lightbulb className="w-4 h-4 text-primary" />
-                      広告戦略の概要
+                      {t("ad.strategySummary")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -179,10 +180,10 @@ export default function AdProposal() {
               {/* Overall Strategy Stats */}
               <motion.div variants={fadeUp} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                  { label: "推奨プラットフォーム", value: result.overallStrategy.recommendedPlatform, icon: Target },
-                  { label: "月間合計予算", value: `¥${result.overallStrategy.monthlyTotalBudget.toLocaleString()}`, icon: DollarSign },
-                  { label: "期待ROAS", value: result.overallStrategy.expectedROAS, icon: TrendingUp },
-                  { label: "Google CPA", value: result.googleAds.expectedCPA, icon: MousePointerClick },
+                  { label: t("ad.recPlatform"), value: result.overallStrategy.recommendedPlatform, icon: Target },
+                  { label: t("ad.monthlyTotal"), value: `¥${result.overallStrategy.monthlyTotalBudget.toLocaleString()}`, icon: DollarSign },
+                  { label: t("ad.expectedROAS"), value: result.overallStrategy.expectedROAS, icon: TrendingUp },
+                  { label: t("ad.googleCPA"), value: result.googleAds.expectedCPA, icon: MousePointerClick },
                 ].map((s) => (
                   <Card key={s.label} className="border border-border/60">
                     <CardContent className="p-4">
@@ -200,8 +201,8 @@ export default function AdProposal() {
               <motion.div variants={fadeUp}>
                 <Tabs defaultValue="google" className="w-full">
                   <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="google">Google 広告</TabsTrigger>
-                    <TabsTrigger value="meta">Meta 広告</TabsTrigger>
+                    <TabsTrigger value="google">{t("ad.googleAds")}</TabsTrigger>
+                    <TabsTrigger value="meta">{t("ad.metaAds")}</TabsTrigger>
                   </TabsList>
 
                   {/* Google Ads */}
@@ -209,19 +210,19 @@ export default function AdProposal() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <Card className="border border-border/60">
                         <CardContent className="p-4">
-                          <p className="text-xs text-muted-foreground">キャンペーンタイプ</p>
+                          <p className="text-xs text-muted-foreground">{t("ad.campaignType")}</p>
                           <p className="text-sm font-bold text-foreground mt-1">{result.googleAds.campaignType}</p>
                         </CardContent>
                       </Card>
                       <Card className="border border-border/60">
                         <CardContent className="p-4">
-                          <p className="text-xs text-muted-foreground">日予算</p>
+                          <p className="text-xs text-muted-foreground">{t("ad.dailyBudget")}</p>
                           <p className="text-sm font-bold text-foreground mt-1">¥{result.googleAds.dailyBudget.toLocaleString()}</p>
                         </CardContent>
                       </Card>
                       <Card className="border border-border/60">
                         <CardContent className="p-4">
-                          <p className="text-xs text-muted-foreground">期待CTR</p>
+                          <p className="text-xs text-muted-foreground">{t("ad.expectedCTR")}</p>
                           <p className="text-sm font-bold text-foreground mt-1">{result.googleAds.expectedCTR}</p>
                         </CardContent>
                       </Card>
@@ -230,7 +231,7 @@ export default function AdProposal() {
                     {/* Keywords */}
                     <Card className="border border-border/60">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-base">推奨キーワード</CardTitle>
+                        <CardTitle className="text-base">{t("ad.recKeywords")}</CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -255,7 +256,7 @@ export default function AdProposal() {
                     {/* Ad Copies */}
                     <Card className="border border-border/60">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-base">広告文案</CardTitle>
+                        <CardTitle className="text-base">{t("ad.adCopies")}</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         {result.googleAds.adCopies.map((ad, i) => (
@@ -284,19 +285,19 @@ export default function AdProposal() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <Card className="border border-border/60">
                         <CardContent className="p-4">
-                          <p className="text-xs text-muted-foreground">キャンペーン目的</p>
+                          <p className="text-xs text-muted-foreground">{t("ad.campaignObj")}</p>
                           <p className="text-sm font-bold text-foreground mt-1">{result.metaAds.campaignObjective}</p>
                         </CardContent>
                       </Card>
                       <Card className="border border-border/60">
                         <CardContent className="p-4">
-                          <p className="text-xs text-muted-foreground">日予算</p>
+                          <p className="text-xs text-muted-foreground">{t("ad.dailyBudget")}</p>
                           <p className="text-sm font-bold text-foreground mt-1">¥{result.metaAds.dailyBudget.toLocaleString()}</p>
                         </CardContent>
                       </Card>
                       <Card className="border border-border/60">
                         <CardContent className="p-4">
-                          <p className="text-xs text-muted-foreground">期待CPM / CTR</p>
+                          <p className="text-xs text-muted-foreground">{t("ad.expectedCPM_CTR")}</p>
                           <p className="text-sm font-bold text-foreground mt-1">{result.metaAds.expectedCPM} / {result.metaAds.expectedCTR}</p>
                         </CardContent>
                       </Card>
@@ -307,7 +308,7 @@ export default function AdProposal() {
                       <CardHeader className="pb-3">
                         <CardTitle className="text-base flex items-center gap-2">
                           <Users className="w-4 h-4 text-primary" />
-                          ターゲットオーディエンス
+                          {t("ad.targetAudiences")}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
@@ -318,8 +319,8 @@ export default function AdProposal() {
                               <Badge variant="outline" className="text-[10px]">{aud.estimatedReach}</Badge>
                             </div>
                             <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-2">
-                              <span>年齢: {aud.ageRange}</span>
-                              <span>性別: {aud.gender}</span>
+                              <span>{t("ad.age")}: {aud.ageRange}</span>
+                              <span>{t("ad.gender")}: {aud.gender}</span>
                             </div>
                             <div className="flex flex-wrap gap-1.5">
                               {aud.interests.map((int, j) => (
@@ -334,7 +335,7 @@ export default function AdProposal() {
                     {/* Ad Creatives */}
                     <Card className="border border-border/60">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-base">広告クリエイティブ案</CardTitle>
+                        <CardTitle className="text-base">{t("ad.adCreatives")}</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         {result.metaAds.adCreatives.map((cr, i) => (
@@ -368,13 +369,13 @@ export default function AdProposal() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Target className="w-4 h-4 text-primary" />
-                      総合戦略・運用Tips
+                      {t("ad.overallStrategy")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
                       <p className="text-sm font-bold text-foreground mb-1">
-                        推奨: {result.overallStrategy.recommendedPlatform}
+                        {t("ad.recommended")}: {result.overallStrategy.recommendedPlatform}
                       </p>
                       <p className="text-xs text-muted-foreground">{result.overallStrategy.reason}</p>
                     </div>
