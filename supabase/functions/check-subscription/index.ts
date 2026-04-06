@@ -54,12 +54,12 @@ serve(async (req) => {
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
-      if (subscription.current_period_end) {
-        try {
-          subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-        } catch {
-          subscriptionEnd = null;
-        }
+      console.log("[CHECK-SUB] raw current_period_end:", JSON.stringify(subscription.current_period_end), "type:", typeof subscription.current_period_end);
+      const periodEnd = subscription.current_period_end;
+      if (periodEnd && typeof periodEnd === "number") {
+        subscriptionEnd = new Date(periodEnd * 1000).toISOString();
+      } else if (periodEnd && typeof periodEnd === "string") {
+        subscriptionEnd = periodEnd;
       }
       productId = subscription.items.data[0]?.price?.product ?? null;
     }
