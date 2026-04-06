@@ -286,7 +286,7 @@ export default function MapAreaAnalysis() {
 
   const handleAnalyze = async () => {
     if (!address.trim()) {
-      toast.error("住所を入力してください");
+      toast.error(t("map.enterAddress"));
       return;
     }
     setLoading(true);
@@ -295,9 +295,9 @@ export default function MapAreaAnalysis() {
     try {
       const data = await fetchMapAreaAnalysis(address, radius, industry || undefined, language);
       setResult(data);
-      toast.success("分析が完了しました");
+      toast.success(t("map.analysisComplete"));
     } catch (e: any) {
-      const msg = e?.message || "分析中にエラーが発生しました";
+      const msg = e?.message || t("map.analysisError");
       setError(msg);
       toast.error(msg);
     } finally {
@@ -312,7 +312,7 @@ export default function MapAreaAnalysis() {
           ...prev,
           {
             id: `cand-${Date.now()}`,
-            label: `候補地 ${prev.length + 1}`,
+            label: `${t("map.candidateLabel")} ${prev.length + 1}`,
             lat,
             lng,
             score: Math.round(40 + Math.random() * 50),
@@ -320,7 +320,7 @@ export default function MapAreaAnalysis() {
             competitors: Math.round(2 + Math.random() * 10),
           },
         ]);
-        toast.success("候補地を追加しました");
+        toast.success(t("map.candidateAdded"));
       }
     },
     [multiPinMode]
@@ -373,7 +373,7 @@ export default function MapAreaAnalysis() {
               <CardContent className="p-3 space-y-2">
                 <div className="flex gap-2">
                   <Input
-                    placeholder="住所を入力（例：東京都渋谷区道玄坂1-1）"
+                    placeholder={t("map.searchPh")}
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     className="text-sm"
@@ -385,7 +385,7 @@ export default function MapAreaAnalysis() {
                 </div>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="業種（任意）"
+                    placeholder={t("map.industryPh")}
                     value={industry}
                     onChange={(e) => setIndustry(e.target.value)}
                     className="text-sm flex-1"
@@ -453,17 +453,17 @@ export default function MapAreaAnalysis() {
               <Card className="shadow-md bg-card/95 backdrop-blur-sm border-border/60">
                 <CardContent className="p-3 space-y-1.5">
                   <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5" /> 凡例
+                    <Layers className="w-3.5 h-3.5" /> {t("map.legend")}
                   </p>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="w-3 h-3 rounded-sm" style={{ background: getHeatmapColor(5000, heatmapMode) }} /> 高
-                    <span className="w-3 h-3 rounded-sm" style={{ background: getHeatmapColor(2500, heatmapMode) }} /> 中
-                    <span className="w-3 h-3 rounded-sm" style={{ background: getHeatmapColor(500, heatmapMode) }} /> 低
+                    <span className="w-3 h-3 rounded-sm" style={{ background: getHeatmapColor(5000, heatmapMode) }} /> {t("map.high")}
+                    <span className="w-3 h-3 rounded-sm" style={{ background: getHeatmapColor(2500, heatmapMode) }} /> {t("map.medium")}
+                    <span className="w-3 h-3 rounded-sm" style={{ background: getHeatmapColor(500, heatmapMode) }} /> {t("map.low")}
                   </div>
                   {activeLayer !== "recommended" && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="w-3 h-3 rounded-full bg-destructive border-2 border-white" /> 競合店舗
-                      <MapPin className="w-3 h-3 text-primary ml-2" /> 候補地
+                      <span className="w-3 h-3 rounded-full bg-destructive border-2 border-white" /> {t("map.competitors")}
+                      <MapPin className="w-3 h-3 text-primary ml-2" /> {t("map.candidateLabel")}
                     </div>
                   )}
                 </CardContent>
