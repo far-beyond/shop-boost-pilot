@@ -2,8 +2,11 @@ import { Link } from "react-router-dom";
 import { Target } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const { t } = useLanguage();
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -27,8 +30,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           <footer className="border-t border-border/60 bg-card/50 py-8 mt-auto">
             <div className="container mx-auto px-4 text-center text-xs text-muted-foreground space-y-1">
-              <p className="font-medium">© 2024 MapBoost AI</p>
-              <p>ローカルマーケティング分析ツール — 地域分析・出店分析・広告提案・チラシ配布設計</p>
+              <p className="font-medium">{t("footer.copyright")}</p>
+              <p>{t("footer.description")}</p>
             </div>
           </footer>
         </div>

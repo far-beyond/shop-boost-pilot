@@ -5,52 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Layout from "@/components/Layout";
 import { motion } from "framer-motion";
-
-const features = [
-  {
-    icon: Target,
-    title: "集客診断",
-    description: "商圏・客層・競合を分析し、店舗の強み・弱みを可視化します。",
-  },
-  {
-    icon: MapPin,
-    title: "商圏分析",
-    description: "半径1〜5kmの人口統計・年齢構成・世帯構成をAIが分析。",
-  },
-  {
-    icon: Store,
-    title: "出店候補地管理",
-    description: "出店候補地を登録・管理し、商圏スコアで比較評価できます。",
-    isNew: true,
-  },
-  {
-    icon: Zap,
-    title: "媒体プラン",
-    description: "Meta・Google・チラシの最適な予算配分とターゲットをAIが提案。",
-    isNew: true,
-  },
-  {
-    icon: Users,
-    title: "案件管理ダッシュボード",
-    description: "クライアント・店舗の分析案件を一覧で管理。ステータスも一目瞭然。",
-    isNew: true,
-  },
-  {
-    icon: FileText,
-    title: "統合レポート",
-    description: "商圏分析・施策・広告・チラシを1ページに集約。PDF出力も対応。",
-    isNew: true,
-  },
-];
-
-const steps = [
-  { step: "01", title: "店舗情報を入力", description: "業種・住所・強み・悩みなどを入力", icon: FileText },
-  { step: "02", title: "AIが分析・提案", description: "数秒で診断結果と施策を表示", icon: Sparkles },
-  { step: "03", title: "販促文を生成", description: "各媒体向けの文面をワンクリック作成", icon: MessageSquare },
-  { step: "04", title: "実行 & 改善", description: "KPIを見ながら施策を実行・改善", icon: TrendingUp },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 function HeroIllustration() {
+  const { t } = useLanguage();
+
   return (
     <div className="relative w-full max-w-md mx-auto h-64 md:h-80">
       <motion.div
@@ -148,7 +107,7 @@ function HeroIllustration() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 1.5, duration: 0.5 }}
       >
-        <span className="text-muted-foreground block text-[10px]">来店率</span>
+        <span className="text-muted-foreground block text-[10px]">{t("hero.visitRate")}</span>
         <span className="text-primary font-bold text-sm">+32%</span>
       </motion.div>
 
@@ -158,7 +117,7 @@ function HeroIllustration() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 1.7, duration: 0.5 }}
       >
-        <span className="text-muted-foreground block text-[10px]">認知度</span>
+        <span className="text-muted-foreground block text-[10px]">{t("hero.awareness")}</span>
         <span className="text-accent font-bold text-sm">+58%</span>
       </motion.div>
 
@@ -172,6 +131,24 @@ function HeroIllustration() {
 }
 
 export default function Index() {
+  const { t } = useLanguage();
+
+  const features = [
+    { icon: Target, titleKey: "feature.diagnosis.title", descKey: "feature.diagnosis.desc" },
+    { icon: MapPin, titleKey: "feature.area.title", descKey: "feature.area.desc" },
+    { icon: Store, titleKey: "feature.candidates.title", descKey: "feature.candidates.desc", isNew: true },
+    { icon: Zap, titleKey: "feature.media.title", descKey: "feature.media.desc", isNew: true },
+    { icon: Users, titleKey: "feature.agency.title", descKey: "feature.agency.desc", isNew: true },
+    { icon: FileText, titleKey: "feature.report.title", descKey: "feature.report.desc", isNew: true },
+  ];
+
+  const steps = [
+    { step: "01", titleKey: "step1.title", descKey: "step1.desc", icon: FileText },
+    { step: "02", titleKey: "step2.title", descKey: "step2.desc", icon: Sparkles },
+    { step: "03", titleKey: "step3.title", descKey: "step3.desc", icon: MessageSquare },
+    { step: "04", titleKey: "step4.title", descKey: "step4.desc", icon: TrendingUp },
+  ];
+
   return (
     <Layout>
       {/* Hero */}
@@ -186,28 +163,28 @@ export default function Index() {
             >
               <div className="inline-flex items-center gap-2 rounded-full bg-primary/8 border border-primary/15 px-4 py-1.5 text-xs font-medium text-primary mb-6">
                 <Map className="w-3.5 h-3.5" />
-                マップ連動型 店舗集客AI
+                {t("hero.badge")}
                 <ChevronRight className="w-3 h-3" />
               </div>
               <h1 className="text-3xl md:text-4xl lg:text-[2.75rem] font-bold text-foreground leading-[1.3] mb-6 tracking-tight">
-                あなたのお店に合う
+                {t("hero.title1")}
                 <br />
-                集客施策を、
-                <span className="text-gradient">数分で提案</span>
+                {t("hero.title2")}
+                <span className="text-gradient">{t("hero.title3")}</span>
               </h1>
               <p className="text-base text-muted-foreground mb-8 leading-relaxed max-w-md">
-                店舗情報を入力するだけで、商圏・客層・競合をふまえた集客プランをAIが作成します。
+                {t("hero.description")}
               </p>
               <div className="flex items-center gap-3">
                 <Link to="/input">
                   <Button size="lg" className="text-sm px-7 gap-2 shadow-md hover:shadow-lg transition-shadow">
-                    無料で診断する
+                    {t("hero.cta")}
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
                 <Link to="/auth">
                   <Button size="lg" variant="outline" className="text-sm px-6">
-                    ログイン
+                    {t("hero.loginBtn")}
                   </Button>
                 </Link>
               </div>
@@ -236,19 +213,19 @@ export default function Index() {
           >
             <div className="inline-flex items-center gap-2 rounded-full bg-primary/8 border border-primary/15 px-3 py-1 text-xs font-medium text-primary mb-4">
               <Sparkles className="w-3 h-3" />
-              主な機能
+              {t("features.badge")}
             </div>
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3 tracking-tight">
-              MapBoost AI でできること
+              {t("features.title")}
             </h2>
             <p className="text-muted-foreground max-w-lg mx-auto text-sm">
-              店舗情報を入力するだけで、6つの分析・提案を自動で行います。
+              {t("features.description")}
             </p>
           </motion.div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
             {features.map((f, i) => (
               <motion.div
-                key={f.title}
+                key={f.titleKey}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -260,12 +237,12 @@ export default function Index() {
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center text-primary-foreground shadow-sm group-hover:scale-105 transition-transform" style={{ background: "var(--gradient-primary)" }}>
                         <f.icon className="w-5 h-5" />
                       </div>
-                      {(f as any).isNew && (
+                      {f.isNew && (
                         <Badge variant="secondary" className="text-[10px] bg-accent/10 text-accent border-accent/20">NEW</Badge>
                       )}
                     </div>
-                    <CardTitle className="text-base">{f.title}</CardTitle>
-                    <CardDescription className="text-sm leading-relaxed">{f.description}</CardDescription>
+                    <CardTitle className="text-base">{t(f.titleKey)}</CardTitle>
+                    <CardDescription className="text-sm leading-relaxed">{t(f.descKey)}</CardDescription>
                   </CardHeader>
                 </Card>
               </motion.div>
@@ -284,9 +261,9 @@ export default function Index() {
             className="text-center mb-14"
           >
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3 tracking-tight">
-              かんたん4ステップ
+              {t("steps.title")}
             </h2>
-            <p className="text-muted-foreground text-sm">入力から施策実行まで、わずか数分で完了します。</p>
+            <p className="text-muted-foreground text-sm">{t("steps.description")}</p>
           </motion.div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-4xl mx-auto">
             {steps.map((s, i) => (
@@ -302,8 +279,8 @@ export default function Index() {
                   <s.icon className="w-6 h-6 text-primary" />
                 </div>
                 <div className="text-[10px] font-bold text-primary/40 tracking-widest uppercase mb-1">STEP {s.step}</div>
-                <h3 className="text-base font-semibold text-foreground mb-1">{s.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{s.description}</p>
+                <h3 className="text-base font-semibold text-foreground mb-1">{t(s.titleKey)}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{t(s.descKey)}</p>
               </motion.div>
             ))}
           </div>
@@ -320,12 +297,12 @@ export default function Index() {
             className="max-w-lg mx-auto"
           >
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3 tracking-tight">
-              まずは無料で診断してみましょう
+              {t("cta.title")}
             </h2>
-            <p className="text-muted-foreground mb-8 text-sm">所要時間は約3分。登録後すぐに始められます。</p>
+            <p className="text-muted-foreground mb-8 text-sm">{t("cta.description")}</p>
             <Link to="/input">
               <Button size="lg" className="text-sm px-8 gap-2 shadow-md hover:shadow-lg transition-shadow">
-                無料で診断する
+                {t("hero.cta")}
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
