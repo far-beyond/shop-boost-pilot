@@ -629,6 +629,23 @@ const translations: Record<Language, Record<string, string>> = {
     "terms.s7.body": "当社は、ユーザーの個人情報を適切に管理し、本サービスの提供・改善目的以外に利用しません。",
     "terms.s8.title": "（準拠法・管轄）",
     "terms.s8.body": "本規約は日本法に準拠し、本規約に関する紛争は東京地方裁判所を第一審の専属的合意管轄裁判所とします。",
+
+    // Contact
+    "footer.contact": "お問い合わせ",
+    "contact.title": "お問い合わせ",
+    "contact.subtitle": "ご質問・ご要望がありましたら、以下のフォームからお気軽にお問い合わせください。",
+    "contact.name": "お名前",
+    "contact.namePh": "山田 太郎",
+    "contact.email": "メールアドレス",
+    "contact.emailPh": "taro@example.com",
+    "contact.message": "お問い合わせ内容",
+    "contact.messagePh": "お問い合わせ内容をご記入ください...",
+    "contact.send": "送信する",
+    "contact.required": "すべての項目を入力してください",
+    "contact.success": "お問い合わせを送信しました。ありがとうございます。",
+    "contact.error": "送信に失敗しました。もう一度お試しください。",
+    "contact.thankYou": "送信完了",
+    "contact.thankYouDesc": "お問い合わせありがとうございます。内容を確認の上、ご連絡いたします。",
   },
   en: {
     // Nav & Layout
