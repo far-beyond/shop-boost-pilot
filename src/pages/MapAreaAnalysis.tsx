@@ -253,10 +253,20 @@ export default function MapAreaAnalysis() {
   const mapZoom = radius === "1km" ? 15 : radius === "3km" ? 13 : 12;
   const radiusKm = parseFloat(radius.replace("km", ""));
 
-  const townPolygons = useMemo<TownFeatureCollection>(
-    () => generateDummyTownPolygons(mapCenter, radiusKm),
-    [mapCenter[0], mapCenter[1], radiusKm]
-  );
+  // Only generate polygons after search, using real census data when available
+  const townPolygons = useMemo<TownFeatureCollection>(() => {
+    if (!result) return { type: "FeatureCollection", features: [] };
+    const censusData = result.censusData
+      ? {
+          totalPopulation: result.summary.totalPopulation,
+          totalHouseholds: result.summary.totalHouseholds,
+          avgAge: result.censusData.ageDistribution?.length
+            ? Math.round(result.censusData.ageDistribution.reduce((s, a) => s + a.population, 0) / result.censusData.ageDistribution.length)
+            : undefined,
+        }
+      : undefined;
+    return generateTownPolygons(mapCenter, radiusKm, censusData);
+  }, [result, mapCenter[0], mapCenter[1], radiusKm]);
 
   const flyerSelection = useMemo(
     () => calculateFlyerSelection(selectedTownIds, townPolygons),
