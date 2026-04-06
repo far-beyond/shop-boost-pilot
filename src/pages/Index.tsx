@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, BarChart3, FileText, Map, MapPin, MessageSquare, Target, Zap, Store, TrendingUp, Users, Search, ChevronRight, Sparkles } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Layout from "@/components/Layout";
