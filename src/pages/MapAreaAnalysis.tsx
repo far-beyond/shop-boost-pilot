@@ -26,6 +26,7 @@ import {
   type TownFeatureCollection,
   type TownPolygonProperties,
 } from "@/lib/mapGeoData";
+import { Database } from "lucide-react";
 import MapControls from "@/components/map/MapControls";
 import FlyerSelectionPanel from "@/components/map/FlyerSelectionPanel";
 import CandidateComparison from "@/components/map/CandidateComparison";
