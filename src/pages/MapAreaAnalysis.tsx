@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { MapPin, Users, Home, TrendingUp, Loader2, Search, Building2, AlertTriangle, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,11 +78,32 @@ function MapUpdater({ center, zoom }: { center: [number, number]; zoom: number }
 }
 
 function MapClickHandler({ onClick }: { onClick: (lat: number, lng: number) => void }) {
-  useMapEvents({
-    click(e) {
-      onClick(e.latlng.lat, e.latlng.lng);
-    },
-  });
+  const map = useMap();
+  useEffect(() => {
+    const handler = (e: L.LeafletMouseEvent) => onClick(e.latlng.lat, e.latlng.lng);
+    map.on("click", handler);
+    return () => { map.off("click", handler); };
+  }, [map, onClick]);
+  return null;
+}
+
+function NativeGeoJSON({
+  data,
+  style,
+  onEachFeature,
+  geoKey,
+}: {
+  data: any;
+  style: (feature: any) => L.PathOptions;
+  onEachFeature: (feature: any, layer: L.Layer) => void;
+  geoKey: string;
+}) {
+  const map = useMap();
+  useEffect(() => {
+    const layer = L.geoJSON(data, { style, onEachFeature });
+    layer.addTo(map);
+    return () => { map.removeLayer(layer); };
+  }, [map, geoKey]);
   return null;
 }
 
@@ -347,8 +368,8 @@ export default function MapAreaAnalysis() {
 
             {/* Town polygons */}
             {(activeLayer === "density" || activeLayer === "recommended") && (
-              <GeoJSON
-                key={computedGeoJsonKey}
+              <NativeGeoJSON
+                geoKey={computedGeoJsonKey}
                 data={townPolygons}
                 style={geoJsonStyle}
                 onEachFeature={onEachFeature}
