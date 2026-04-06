@@ -150,6 +150,12 @@ const translations: Record<Language, Record<string, string>> = {
     "promo.adjustedStrong": "力強く調整しました",
     "promo.adjustedAlt": "別案調整しました",
     "promo.adjustFailed": "調整に失敗しました",
+    "promo.tabGBP": "Googleビジネスプロフィール",
+    "promo.tabIG": "Instagram",
+    "promo.tabX": "X",
+    "promo.tabFlyer": "チラシ",
+    "promo.tabLINE": "LINE",
+    "promo.tabAdHeadline": "広告見出し",
 
     // KPI
     "kpi.badge": "KPI設計",

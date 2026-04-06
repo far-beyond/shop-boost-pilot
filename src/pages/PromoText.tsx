@@ -11,7 +11,8 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const tabs = ["Googleビジネスプロフィール", "Instagram", "X", "チラシ", "LINE", "広告見出し"];
+const tabKeys = ["Googleビジネスプロフィール", "Instagram", "X", "チラシ", "LINE", "広告見出し"];
+const tabLabelKeys = ["promo.tabGBP", "promo.tabIG", "promo.tabX", "promo.tabFlyer", "promo.tabLINE", "promo.tabAdHeadline"];
 
 async function adjustPromoText(text: string, tone: "soft" | "strong" | "alternative"): Promise<string> {
   const { data, error } = await supabase.functions.invoke("adjust-promo", { body: { text, tone } });
