@@ -5,6 +5,190 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+async function fetchCensusData(address: string): Promise<any | null> {
+  try {
+    const ESTAT_API_KEY = Deno.env.get("ESTAT_API_KEY");
+    if (!ESTAT_API_KEY) return null;
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseKey) return null;
+
+    const res = await fetch(`${supabaseUrl}/functions/v1/estat-census`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${supabaseKey}`,
+      },
+      body: JSON.stringify({ address }),
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.result?.dataAvailable ? data.result : null;
+  } catch (e) {
+    console.error("Census fetch failed:", e);
+    return null;
+  }
+}
+
+function buildAreaPrompt(address: string, radius: string, industry: string, census: any | null): { system: string; user: string } {
+  let censusContext = "";
+  if (census) {
+    censusContext = `\n\n【実際の国勢調査データ（令和2年・e-Stat）】
+エリア: ${census.areaName}
+総人口: ${census.totalPopulation.toLocaleString()}人
+男性: ${census.malePopulation.toLocaleString()}人 / 女性: ${census.femalePopulation.toLocaleString()}人
+世帯数: ${census.totalHouseholds.toLocaleString()}世帯`;
+
+    if (census.ageDistribution?.length > 0) {
+      censusContext += `\n年齢構成:`;
+      for (const ag of census.ageDistribution) {
+        censusContext += `\n  ${ag.ageGroup}: ${ag.population.toLocaleString()}人 (${ag.percentage}%)`;
+      }
+    }
+
+    censusContext += `\n\n上記は市区町村全体のデータです。商圏半径${radius}に応じて適切に按分・推定してください。
+実データに基づいているため、人口と年齢構成の数値はこのデータを基準にしてください。`;
+  }
+
+  const system = `あなたは日本の地域マーケティング分析の専門家AIです。日本の国勢調査データ、商業統計、住民基本台帳データに精通しています。
+${census ? "今回は実際のe-Stat国勢調査データが提供されています。このデータを基準として分析してください。商圏半径に応じた按分推定を行い、より正確な分析を提供してください。" : "指定された住所と商圏半径に基づいて、できるだけ実際の統計データに近い推定値を用いて分析してください。"}
+人口や世帯数は、日本の市区町村の公開データに基づいた現実的な数値を使用してください。必ず日本語で回答してください。`;
+
+  const user = `以下の条件で商圏分析を行ってください。
+
+住所: ${address}
+商圏半径: ${radius || "3km"}
+業種: ${industry || "指定なし"}
+${censusContext}
+
+この地域の人口統計、年齢構成、世帯構成、来店動機の傾向を分析し、向いている業種と不利な業種を判定してください。
+${census ? "国勢調査の実データを基に、商圏半径に合わせた推定値を算出してください。" : "人口数値は日本の実際の統計に基づいた現実的な推定値を使ってください。"}`;
+
+  return { system, user };
+}
+
+function buildOpeningPrompt(address: string, industry: string, census: any | null): { system: string; user: string } {
+  let censusContext = "";
+  if (census) {
+    censusContext = `\n\n【実際の国勢調査データ（令和2年・e-Stat）】
+エリア: ${census.areaName}
+総人口: ${census.totalPopulation.toLocaleString()}人
+世帯数: ${census.totalHouseholds.toLocaleString()}世帯`;
+    if (census.ageDistribution?.length > 0) {
+      censusContext += `\n年齢構成:`;
+      for (const ag of census.ageDistribution) {
+        censusContext += ` ${ag.ageGroup}: ${ag.percentage}%`;
+      }
+    }
+  }
+
+  const system = `あなたは日本の出店戦略コンサルタントAIです。地域の人口動態、競合環境、商圏特性を踏まえて、出店の成功可能性を100点満点でスコアリングします。
+${census ? "実際の国勢調査データが提供されています。このデータに基づいて、より精度の高い分析を行ってください。" : ""}
+必ず日本語で回答してください。根拠のある現実的な分析をしてください。`;
+
+  const user = `以下の条件で出店分析を行ってください。
+
+業種: ${industry}
+出店候補エリア: ${address}
+${censusContext}
+
+このエリアでの出店成功率を100点満点で評価し、想定ターゲット、客単価、来店頻度、リスク要因、改善アドバイスを提示してください。`;
+
+  return { system, user };
+}
+
+const areaToolDef = {
+  type: "function",
+  function: {
+    name: "provide_area_analysis",
+    description: "商圏分析結果を構造化データで返す",
+    parameters: {
+      type: "object",
+      properties: {
+        areaName: { type: "string", description: "分析対象エリア名" },
+        population: { type: "number", description: "商圏内推定人口" },
+        households: { type: "number", description: "商圏内推定世帯数" },
+        ageDistribution: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: { ageGroup: { type: "string" }, percentage: { type: "number" }, count: { type: "number" } },
+            required: ["ageGroup", "percentage", "count"],
+          },
+        },
+        householdTypes: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: { type: { type: "string" }, percentage: { type: "number" }, count: { type: "number" } },
+            required: ["type", "percentage", "count"],
+          },
+        },
+        primaryTarget: { type: "string" },
+        suitableIndustries: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: { industry: { type: "string" }, reason: { type: "string" }, score: { type: "number" } },
+            required: ["industry", "reason", "score"],
+          },
+        },
+        unsuitableIndustries: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: { industry: { type: "string" }, reason: { type: "string" } },
+            required: ["industry", "reason"],
+          },
+        },
+        visitMotivations: { type: "array", items: { type: "string" } },
+        areaCharacteristics: { type: "string" },
+        competitiveEnvironment: { type: "string" },
+      },
+      required: ["areaName", "population", "households", "ageDistribution", "householdTypes", "primaryTarget", "suitableIndustries", "unsuitableIndustries", "visitMotivations", "areaCharacteristics", "competitiveEnvironment"],
+    },
+  },
+};
+
+const openingToolDef = {
+  type: "function",
+  function: {
+    name: "provide_opening_analysis",
+    description: "出店分析結果を構造化データで返す",
+    parameters: {
+      type: "object",
+      properties: {
+        overallScore: { type: "number" },
+        scoreBreakdown: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: { category: { type: "string" }, score: { type: "number" }, maxScore: { type: "number" }, comment: { type: "string" } },
+            required: ["category", "score", "maxScore", "comment"],
+          },
+        },
+        successProbability: { type: "string" },
+        targetCustomer: { type: "string" },
+        estimatedUnitPrice: { type: "string" },
+        estimatedVisitFrequency: { type: "string" },
+        riskFactors: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: { risk: { type: "string" }, severity: { type: "string" }, mitigation: { type: "string" } },
+            required: ["risk", "severity", "mitigation"],
+          },
+        },
+        improvements: { type: "array", items: { type: "string" } },
+        overallComment: { type: "string" },
+      },
+      required: ["overallScore", "scoreBreakdown", "successProbability", "targetCustomer", "estimatedUnitPrice", "estimatedVisitFrequency", "riskFactors", "improvements", "overallComment"],
+    },
+  },
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -24,161 +208,30 @@ serve(async (req) => {
       });
     }
 
+    // Fetch real census data first
+    console.log("Fetching census data for:", address);
+    const census = await fetchCensusData(address);
+    console.log("Census data available:", !!census, census ? `pop=${census.totalPopulation}` : "");
+
     let systemPrompt = "";
     let userPrompt = "";
     let toolDef: any = null;
 
     if (analysisType === "area") {
-      systemPrompt = `あなたは日本の地域マーケティング分析の専門家AIです。日本の国勢調査データ、商業統計、住民基本台帳データに精通しています。
-指定された住所と商圏半径に基づいて、できるだけ実際の統計データに近い推定値を用いて分析してください。
-人口や世帯数は、日本の市区町村の公開データに基づいた現実的な数値を使用してください。必ず日本語で回答してください。`;
-
-      userPrompt = `以下の条件で商圏分析を行ってください。
-
-住所: ${address}
-商圏半径: ${radius || "3km"}
-業種: ${industry || "指定なし"}
-
-この地域の人口統計、年齢構成、世帯構成、来店動機の傾向を分析し、向いている業種と不利な業種を判定してください。
-人口数値は日本の実際の統計に基づいた現実的な推定値を使ってください。`;
-
-      toolDef = {
-        type: "function",
-        function: {
-          name: "provide_area_analysis",
-          description: "商圏分析結果を構造化データで返す",
-          parameters: {
-            type: "object",
-            properties: {
-              areaName: { type: "string", description: "分析対象エリア名" },
-              population: { type: "number", description: "商圏内推定人口" },
-              households: { type: "number", description: "商圏内推定世帯数" },
-              ageDistribution: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    ageGroup: { type: "string" },
-                    percentage: { type: "number" },
-                    count: { type: "number" },
-                  },
-                  required: ["ageGroup", "percentage", "count"],
-                },
-                description: "年齢構成（10代、20代、30代、40代、50代、60代以上）",
-              },
-              householdTypes: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    type: { type: "string" },
-                    percentage: { type: "number" },
-                    count: { type: "number" },
-                  },
-                  required: ["type", "percentage", "count"],
-                },
-                description: "世帯構成（単身、夫婦のみ、ファミリー、高齢者世帯）",
-              },
-              primaryTarget: { type: "string", description: "このエリアの主要ターゲット層の詳細説明" },
-              suitableIndustries: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    industry: { type: "string" },
-                    reason: { type: "string" },
-                    score: { type: "number", description: "適性スコア(100点満点)" },
-                  },
-                  required: ["industry", "reason", "score"],
-                },
-                description: "向いている業種（5つ）",
-              },
-              unsuitableIndustries: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    industry: { type: "string" },
-                    reason: { type: "string" },
-                  },
-                  required: ["industry", "reason"],
-                },
-                description: "不利な業種（3つ）",
-              },
-              visitMotivations: {
-                type: "array",
-                items: { type: "string" },
-                description: "来店動機の傾向（5つ）",
-              },
-              areaCharacteristics: { type: "string", description: "エリアの特徴をまとめた自然な日本語の説明文（200文字程度）" },
-              competitiveEnvironment: { type: "string", description: "競合環境の分析" },
-            },
-            required: ["areaName", "population", "households", "ageDistribution", "householdTypes", "primaryTarget", "suitableIndustries", "unsuitableIndustries", "visitMotivations", "areaCharacteristics", "competitiveEnvironment"],
-          },
-        },
-      };
+      const prompts = buildAreaPrompt(address, radius, industry, census);
+      systemPrompt = prompts.system;
+      userPrompt = prompts.user;
+      toolDef = areaToolDef;
     } else if (analysisType === "opening") {
-      systemPrompt = `あなたは日本の出店戦略コンサルタントAIです。地域の人口動態、競合環境、商圏特性を踏まえて、出店の成功可能性を100点満点でスコアリングします。
-必ず日本語で回答してください。根拠のある現実的な分析をしてください。`;
-
-      userPrompt = `以下の条件で出店分析を行ってください。
-
-業種: ${industry}
-出店候補エリア: ${address}
-
-このエリアでの出店成功率を100点満点で評価し、想定ターゲット、客単価、来店頻度、リスク要因、改善アドバイスを提示してください。`;
-
-      toolDef = {
-        type: "function",
-        function: {
-          name: "provide_opening_analysis",
-          description: "出店分析結果を構造化データで返す",
-          parameters: {
-            type: "object",
-            properties: {
-              overallScore: { type: "number", description: "総合スコア（100点満点）" },
-              scoreBreakdown: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    category: { type: "string" },
-                    score: { type: "number" },
-                    maxScore: { type: "number" },
-                    comment: { type: "string" },
-                  },
-                  required: ["category", "score", "maxScore", "comment"],
-                },
-                description: "スコア内訳（立地、人口、競合、ターゲット適合度、成長性の5カテゴリ）",
-              },
-              successProbability: { type: "string", description: "成功しやすいかの判定（高い/中程度/低い）" },
-              targetCustomer: { type: "string", description: "想定ターゲット層の詳細" },
-              estimatedUnitPrice: { type: "string", description: "想定客単価" },
-              estimatedVisitFrequency: { type: "string", description: "想定来店頻度" },
-              riskFactors: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    risk: { type: "string" },
-                    severity: { type: "string", description: "高/中/低" },
-                    mitigation: { type: "string" },
-                  },
-                  required: ["risk", "severity", "mitigation"],
-                },
-                description: "リスク要因（3〜5個）",
-              },
-              improvements: {
-                type: "array",
-                items: { type: "string" },
-                description: "改善アドバイス（3〜5個）",
-              },
-              overallComment: { type: "string", description: "総合コメント（200文字程度の自然な日本語）" },
-            },
-            required: ["overallScore", "scoreBreakdown", "successProbability", "targetCustomer", "estimatedUnitPrice", "estimatedVisitFrequency", "riskFactors", "improvements", "overallComment"],
-          },
-        },
-      };
+      if (!industry) {
+        return new Response(JSON.stringify({ error: "業種を入力してください" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const prompts = buildOpeningPrompt(address, industry, census);
+      systemPrompt = prompts.system;
+      userPrompt = prompts.user;
+      toolDef = openingToolDef;
     } else {
       return new Response(JSON.stringify({ error: "Invalid analysisType. Use: area or opening" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -231,7 +284,18 @@ serve(async (req) => {
 
     const result = JSON.parse(toolCall.function.arguments);
 
-    return new Response(JSON.stringify({ result }), {
+    return new Response(JSON.stringify({
+      result,
+      censusData: census ? {
+        source: census.source,
+        areaName: census.areaName,
+        areaCode: census.areaCode,
+        totalPopulation: census.totalPopulation,
+        totalHouseholds: census.totalHouseholds,
+        ageDistribution: census.ageDistribution,
+      } : null,
+      dataSource: census ? "e-Stat国勢調査 + AI分析" : "AI推定分析",
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
