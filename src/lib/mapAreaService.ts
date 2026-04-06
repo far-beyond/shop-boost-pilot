@@ -236,7 +236,8 @@ async function fetchCompetitorsFromOverpass(
 export async function fetchMapAreaAnalysis(
   address: string,
   radius: string,
-  industry?: string
+  industry?: string,
+  language: string = "ja"
 ): Promise<MapAreaAnalysisResult> {
   const radiusMeters = parseRadiusToMeters(radius);
 
@@ -248,7 +249,7 @@ export async function fetchMapAreaAnalysis(
   // Step 2: Fetch AI analysis + country-specific census in parallel
   const [aiAnalysis, censusResult] = await Promise.all([
     supabase.functions.invoke("area-analysis", {
-      body: { address, radius, industry, analysisType: "area" },
+      body: { address, radius, industry, analysisType: "area", language },
     }).then(({ data, error }) => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
