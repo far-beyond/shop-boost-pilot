@@ -241,7 +241,7 @@ export default function AreaAnalysis() {
                             <Database className="w-4 h-4 text-emerald-600" />
                             {t("area.censusTitle")} ({censusData.areaName})
                           </CardTitle>
-                          <p className="text-xs text-muted-foreground">{t("area.source")}: {censusData.source} ｜ {t("area.areaCode")}: {censusData.areaCode}</p>
+                          <p className="text-xs text-muted-foreground">{t("area.source")}: {censusData.source} | {t("area.areaCode")}: {censusData.areaCode}</p>
                         </CardHeader>
                         <CardContent>
                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
