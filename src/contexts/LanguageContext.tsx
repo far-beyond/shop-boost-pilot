@@ -365,6 +365,12 @@ const translations: Record<Language, Record<string, string>> = {
     "ad.recommended": "推奨",
     "ad.proposalComplete": "広告提案が完成しました",
     "ad.proposalFailed": "提案の生成に失敗しました",
+    "ad.addressPh": "例: 東京都渋谷区神南1丁目",
+    "ad.industryPh": "例: 美容院、学習塾、居酒屋",
+    "ad.storeNamePh": "例: ヘアサロン BLOOM",
+    "ad.budgetPh": "例: 5万円、10万円",
+    "ad.targetPh": "例: 30〜40代の子育て世帯、近隣のオフィスワーカー",
+    "ad.pdfDownload": "PDFダウンロード",
 
     // Location Match
     "loc.badge": "エリアマッチング",
