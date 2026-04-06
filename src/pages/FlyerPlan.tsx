@@ -1,0 +1,408 @@
+import { useState } from "react";
+import {
+  Newspaper, MapPin, Loader2, Search, Copy, Check, Lightbulb,
+  CalendarDays, DollarSign, Target, TrendingUp, FileText, Megaphone,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import Layout from "@/components/Layout";
+import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
+import { toast } from "sonner";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from "recharts";
+
+const fadeUp = { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 } };
+const stagger = { animate: { transition: { staggerChildren: 0.08 } } };
+
+type DistributionArea = {
+  areaName: string;
+  reason: string;
+  estimatedHouseholds: number;
+  recommendedQuantity: number;
+  priority: "高" | "中" | "低";
+  targetDescription: string;
+};
+
+type Catchcopy = {
+  headline: string;
+  subCopy: string;
+  tone: string;
+  targetAudience: string;
+  callToAction: string;
+};
+
+type FlyerPlan = {
+  summary: string;
+  distributionAreas: DistributionArea[];
+  totalQuantity: number;
+  estimatedCost: {
+    printingCostPerUnit: number;
+    distributionCostPerUnit: number;
+    totalPrintingCost: number;
+    totalDistributionCost: number;
+    totalCost: number;
+  };
+  timing: {
+    bestDays: string[];
+    bestTimeSlots: string[];
+    seasonalTips: string;
+    frequency: string;
+  };
+  catchcopies: Catchcopy[];
+  designTips: string[];
+  expectedResponseRate: string;
+  expectedROI: string;
+};
+
+const priorityColor = (p: string) => {
+  if (p === "高") return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+  if (p === "中") return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
+  return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
+};
+
+export default function FlyerPlan() {
+  const [address, setAddress] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [storeName, setStoreName] = useState("");
+  const [budget, setBudget] = useState("");
+  const [target, setTarget] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<FlyerPlan | null>(null);
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+
+  const runPlan = async () => {
+    if (!address) { toast.error("住所を入力してください"); return; }
+    if (!industry) { toast.error("業種を入力してください"); return; }
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("flyer-plan", {
+        body: { address, industry, budget, target, storeName },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setResult(data.result);
+      toast.success("チラシ配布計画が完成しました");
+    } catch (e: any) {
+      toast.error(e.message || "計画の生成に失敗しました");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyText = (text: string, idx: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIdx(idx);
+    toast.success("コピーしました");
+    setTimeout(() => setCopiedIdx(null), 2000);
+  };
+
+  const areaChartData = result?.distributionAreas.map((a) => ({
+    name: a.areaName,
+    部数: a.recommendedQuantity,
+    世帯数: a.estimatedHouseholds,
+  })) || [];
+
+  return (
+    <Layout>
+      <div className="min-h-[80vh]" style={{ background: "var(--gradient-hero)" }}>
+        <div className="container mx-auto px-4 py-8 sm:py-10 max-w-5xl">
+          {/* Header */}
+          <motion.div className="mb-8" {...fadeUp}>
+            <div className="inline-flex items-center gap-2 rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent mb-2">
+              <Newspaper className="w-3.5 h-3.5" />
+              チラシ配布設計
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">チラシ配布プランナー</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              AIが最適な配布エリア・部数・キャッチコピーを自動設計します。
+            </p>
+          </motion.div>
+
+          {/* Input Form */}
+          <motion.div {...fadeUp}>
+            <Card className="border border-border/60 shadow-sm mb-8">
+              <CardContent className="pt-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">店舗所在地 *</label>
+                    <Input
+                      placeholder="例: 東京都渋谷区神南1丁目"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">業種 *</label>
+                    <Input
+                      placeholder="例: 美容院、学習塾、居酒屋"
+                      value={industry}
+                      onChange={(e) => setIndustry(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">店舗名（任意）</label>
+                    <Input
+                      placeholder="例: ヘアサロン BLOOM"
+                      value={storeName}
+                      onChange={(e) => setStoreName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">予算目安（任意）</label>
+                    <Input
+                      placeholder="例: 5万円、10万円"
+                      value={budget}
+                      onChange={(e) => setBudget(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">ターゲット層（任意）</label>
+                  <Textarea
+                    placeholder="例: 30〜40代の子育て世帯、近隣のオフィスワーカー"
+                    value={target}
+                    onChange={(e) => setTarget(e.target.value)}
+                    rows={2}
+                  />
+                </div>
+                <Button onClick={runPlan} disabled={loading} className="w-full sm:w-auto gap-2">
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                  {loading ? "計画生成中..." : "AIで配布計画を作成"}
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Results */}
+          {result && (
+            <motion.div variants={stagger} initial="initial" animate="animate" className="space-y-6">
+              {/* Summary */}
+              <motion.div variants={fadeUp}>
+                <Card className="border border-border/60">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-primary" />
+                      配布計画の概要
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{result.summary}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Stats Row */}
+              <motion.div variants={fadeUp} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[
+                  { label: "合計部数", value: result.totalQuantity.toLocaleString() + "部", icon: Newspaper },
+                  { label: "合計費用", value: "¥" + result.estimatedCost.totalCost.toLocaleString(), icon: DollarSign },
+                  { label: "期待反応率", value: result.expectedResponseRate, icon: TrendingUp },
+                  { label: "期待ROI", value: result.expectedROI, icon: Target },
+                ].map((s) => (
+                  <Card key={s.label} className="border border-border/60">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
+                        <s.icon className="w-3.5 h-3.5" />
+                        {s.label}
+                      </div>
+                      <p className="text-lg font-bold text-foreground">{s.value}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </motion.div>
+
+              {/* Distribution Areas */}
+              <motion.div variants={fadeUp}>
+                <Card className="border border-border/60">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-primary" />
+                      配布エリア計画
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {result.distributionAreas.map((area, i) => (
+                      <div key={i} className="p-4 rounded-lg border border-border/60 bg-card">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-foreground">{area.areaName}</span>
+                            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${priorityColor(area.priority)}`}>
+                              優先度: {area.priority}
+                            </span>
+                          </div>
+                          <Badge variant="outline" className="text-xs">
+                            {area.recommendedQuantity.toLocaleString()}部
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-2">{area.reason}</p>
+                        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                          <span>推定世帯: {area.estimatedHouseholds.toLocaleString()}</span>
+                          <span>ターゲット: {area.targetDescription}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Area Chart */}
+              <motion.div variants={fadeUp}>
+                <Card className="border border-border/60">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">エリア別配布部数</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[250px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={areaChartData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(220,16%,92%)" />
+                          <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                          <YAxis tick={{ fontSize: 11 }} />
+                          <Tooltip formatter={(v: number) => [v.toLocaleString(), ""]} />
+                          <Bar dataKey="部数" fill="hsl(217,91%,55%)" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Cost Breakdown & Timing */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <motion.div variants={fadeUp}>
+                  <Card className="border border-border/60 h-full">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-primary" />
+                        費用内訳
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-2">
+                        {[
+                          { label: "印刷単価", value: `¥${result.estimatedCost.printingCostPerUnit}/枚` },
+                          { label: "配布単価", value: `¥${result.estimatedCost.distributionCostPerUnit}/枚` },
+                          { label: "印刷費合計", value: `¥${result.estimatedCost.totalPrintingCost.toLocaleString()}` },
+                          { label: "配布費合計", value: `¥${result.estimatedCost.totalDistributionCost.toLocaleString()}` },
+                        ].map((item) => (
+                          <div key={item.label} className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">{item.label}</span>
+                            <span className="font-medium text-foreground">{item.value}</span>
+                          </div>
+                        ))}
+                        <div className="border-t pt-2 flex justify-between text-sm font-bold">
+                          <span className="text-foreground">合計</span>
+                          <span className="text-primary">¥{result.estimatedCost.totalCost.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                <motion.div variants={fadeUp}>
+                  <Card className="border border-border/60 h-full">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <CalendarDays className="w-4 h-4 text-primary" />
+                        配布タイミング
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">最適な曜日</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {result.timing.bestDays.map((d) => (
+                            <Badge key={d} variant="secondary" className="text-xs">{d}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">最適な時間帯</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {result.timing.bestTimeSlots.map((t) => (
+                            <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">推奨頻度</p>
+                        <p className="text-sm text-foreground">{result.timing.frequency}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">季節アドバイス</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{result.timing.seasonalTips}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </div>
+
+              {/* Catchcopies */}
+              <motion.div variants={fadeUp}>
+                <Card className="border border-border/60">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Megaphone className="w-4 h-4 text-primary" />
+                      キャッチコピー案
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {result.catchcopies.map((cc, i) => (
+                        <div key={i} className="p-4 rounded-lg border border-border/60 bg-card relative group">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0"
+                            onClick={() => copyText(`${cc.headline}\n${cc.subCopy}\n${cc.callToAction}`, i)}
+                          >
+                            {copiedIdx === i ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                          </Button>
+                          <p className="text-base font-bold text-foreground mb-1 pr-8">「{cc.headline}」</p>
+                          <p className="text-sm text-muted-foreground mb-2">{cc.subCopy}</p>
+                          <div className="flex flex-wrap gap-1.5 mb-2">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">{cc.tone}</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent">{cc.targetAudience}</span>
+                          </div>
+                          <p className="text-xs text-primary font-medium">CTA: {cc.callToAction}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Design Tips */}
+              <motion.div variants={fadeUp}>
+                <Card className="border border-border/60">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Lightbulb className="w-4 h-4 text-amber-500" />
+                      デザインアドバイス
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {result.designTips.map((tip, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <span className="text-primary font-bold mt-0.5 shrink-0">{i + 1}.</span>
+                          <span>{tip}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </motion.div>
+          )}
+        </div>
+      </div>
+    </Layout>
+  );
+}
