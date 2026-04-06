@@ -76,7 +76,7 @@ function resolveAreaCode(address: string): { code: string; name: string } | null
   return { code: prefCode + "000", name: prefName };
 }
 
-async function fetchEstatData(appId: string, statsDataId: string, cdArea: string, extraParams = ""): Promise<any> {
+async function fetchEstatData(appId: string, statsDataId: string, cdArea: string): Promise<any> {
   const url = `${ESTAT_BASE}/getStatsData?appId=${appId}&statsDataId=${statsDataId}&cdArea=${cdArea}&metaGetFlg=Y&cntGetFlg=N&sectionHeaderFlg=1${extraParams}`;
   console.log(`Fetching e-Stat: table=${statsDataId}, area=${cdArea}`);
   
