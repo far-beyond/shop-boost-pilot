@@ -78,11 +78,11 @@ async function geocodeAddress(address: string): Promise<GeocodingResult> {
   };
 }
 
-// Fetch census data directly from estat-census edge function
-async function fetchCensusData(address: string): Promise<CensusData | null> {
+// Fetch US Census data via us-census edge function
+async function fetchUsCensusData(lat: number, lng: number): Promise<CensusData | null> {
   try {
-    const { data, error } = await supabase.functions.invoke("estat-census", {
-      body: { address },
+    const { data, error } = await supabase.functions.invoke("us-census", {
+      body: { lat, lng },
     });
     if (error || !data?.result?.dataAvailable) return null;
     return data.result as CensusData;
@@ -90,35 +90,45 @@ async function fetchCensusData(address: string): Promise<CensusData | null> {
     return null;
   }
 }
-// Estimate population for overseas areas using Overpass facility density
-async function estimateOverseasPopulation(
+
+// Fetch WorldPop data via worldpop-census edge function
+async function fetchWorldPopData(
+  lat: number,
+  lng: number,
+  countryCode: string,
+  radiusMeters: number
+): Promise<CensusData | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("worldpop-census", {
+      body: { lat, lng, countryCode, radiusMeters },
+    });
+    if (error || !data?.result?.dataAvailable) return null;
+    return data.result as CensusData;
+  } catch {
+    return null;
+  }
+}
+
+// Fetch census data based on country code
+async function fetchCensusForCountry(
+  countryCode: string,
+  address: string,
   center: [number, number],
   radiusMeters: number
-): Promise<{ population: number; households: number; facilityCount: number }> {
-  try {
-    const query = `[out:json][timeout:10];
-(
-  node["building"](around:${radiusMeters},${center[0]},${center[1]});
-  node["amenity"](around:${radiusMeters},${center[0]},${center[1]});
-  node["shop"](around:${radiusMeters},${center[0]},${center[1]});
-);
-out count;`;
-    const res = await fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: `data=${encodeURIComponent(query)}`,
-    });
-    if (!res.ok) throw new Error("Overpass count failed");
-    const data = await res.json();
-    const count = data.elements?.[0]?.tags?.total
-      ? parseInt(data.elements[0].tags.total, 10)
-      : data.elements?.length || 0;
-    // Rough heuristic: each OSM facility node ≈ 50-80 people in the area
-    const population = Math.max(1000, count * 65);
-    const households = Math.round(population / 2.5);
-    return { population, households, facilityCount: count };
-  } catch {
-    return { population: 0, households: 0, facilityCount: 0 };
+): Promise<{ data: CensusData | null; dataSource: string }> {
+  switch (countryCode) {
+    case "jp": {
+      const data = await fetchCensusData(address);
+      return { data, dataSource: data?.dataAvailable ? "e-Stat 国勢調査" : "AI推定分析" };
+    }
+    case "us": {
+      const data = await fetchUsCensusData(center[0], center[1]);
+      return { data, dataSource: data?.dataAvailable ? "US Census (2020)" : "推定データ（海外）" };
+    }
+    default: {
+      const data = await fetchWorldPopData(center[0], center[1], countryCode, radiusMeters);
+      return { data, dataSource: data?.dataAvailable ? "WorldPop推計" : "推定データ（海外）" };
+    }
   }
 }
 
