@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { MapPin, Users, Home, TrendingUp, Loader2, Search, Building2, AlertTriangle, Layers, Download } from "lucide-react";
+import { MapPin, Users, Home, TrendingUp, Loader2, Search, Building2, AlertTriangle, Layers, Download, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -505,7 +505,7 @@ export default function MapAreaAnalysis() {
             </div>
           )}
 
-          {/* Legend */}
+          {/* Legend with gradient scale */}
           {result && !flyerMode && !multiPinMode && (
             <div className="absolute bottom-4 left-4 z-[1000]">
               <Card className="shadow-md bg-card/95 backdrop-blur-sm border-border/60">
@@ -513,6 +513,22 @@ export default function MapAreaAnalysis() {
                   <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                     <Layers className="w-3.5 h-3.5" /> {t("map.legend")}
                   </p>
+                  {/* Gradient color scale */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                      <span>{t("map.densityLow")}</span>
+                      <div className="flex-1 h-3 rounded-sm overflow-hidden flex">
+                        {[0, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000].map((val) => (
+                          <span
+                            key={val}
+                            className="flex-1 h-full"
+                            style={{ background: getHeatmapColor(val, heatmapMode) }}
+                          />
+                        ))}
+                      </div>
+                      <span>{t("map.densityHigh")}</span>
+                    </div>
+                  </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span className="w-3 h-3 rounded-sm" style={{ background: getHeatmapColor(5000, heatmapMode) }} /> {t("map.high")}
                     <span className="w-3 h-3 rounded-sm" style={{ background: getHeatmapColor(2500, heatmapMode) }} /> {t("map.medium")}
@@ -755,6 +771,34 @@ function AnalysisPanel({ result, radius, address, industry }: { result: MapAreaA
           {t("map.competitorReport")}
         </Button>
       )}
+
+      {/* Copy analysis summary to clipboard */}
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-full gap-2 text-xs"
+        onClick={() => {
+          const lines: string[] = [
+            `--- ${t("map.resultTitle")} ---`,
+            `${t("map.searchPh")}: ${address}`,
+            `${t("map.radius")}: ${radius}`,
+            `${t("map.totalPop")}: ${summary.totalPopulation.toLocaleString()}${t("map.popUnit")}`,
+            `${t("map.households")}: ${summary.totalHouseholds.toLocaleString()}${t("map.householdUnit")}`,
+            `${t("map.competitors")}: ${summary.competitorCount}${t("map.storeUnit")}`,
+            `${t("map.tradeAreaScore")}: ${summary.tradeAreaScore} / 100`,
+          ];
+          if (summary.recommendations.length > 0) {
+            lines.push(`\n--- ${t("map.recommendations")} ---`);
+            summary.recommendations.forEach((rec, i) => lines.push(`${i + 1}. ${rec}`));
+          }
+          navigator.clipboard.writeText(lines.join("\n")).then(() => {
+            toast.success(t("map.copiedToClipboard"));
+          });
+        }}
+      >
+        <Copy className="w-3.5 h-3.5" />
+        {t("map.copyAnalysis")}
+      </Button>
 
       {summary.recommendations.length > 0 && (
         <section>

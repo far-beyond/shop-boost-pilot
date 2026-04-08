@@ -1,8 +1,9 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
-  Upload, MapPin, Filter, BarChart3, Loader2, X, FileUp,
+  Upload, MapPin, Filter, BarChart3, Loader2, X, FileUp, Flame, Download,
 } from "lucide-react";
+import { exportResponseReportPDF } from "@/lib/responseReportPdfExport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -110,14 +111,17 @@ function ResponseMap({
   rows,
   center,
   zoom,
+  heatmapView,
 }: {
   rows: ResponseRow[];
   center: [number, number];
   zoom: number;
+  heatmapView: boolean;
 }) {
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<L.Marker[]>([]);
+  const heatLayersRef = useRef<L.CircleMarker[]>([]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -144,34 +148,81 @@ function ResponseMap({
     const map = mapRef.current;
     if (!map) return;
 
+    // Clear previous layers
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
+    heatLayersRef.current.forEach((c) => c.remove());
+    heatLayersRef.current = [];
 
     const geocoded = rows.filter((r) => r.lat != null && r.lng != null);
-    for (const row of geocoded) {
-      const color = getSourceColor(row.source);
-      const icon = new L.DivIcon({
-        html: `<div style="background:${color};width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>`,
-        className: "",
-        iconSize: [12, 12],
-        iconAnchor: [6, 6],
-      });
-      const marker = L.marker([row.lat!, row.lng!], { icon })
-        .bindPopup(
-          `<strong>${row.name || "-"}</strong><br/>${row.address}<br/>` +
-          `${row.source ? `<span style="color:${color}; font-weight:600;">${row.source}</span><br/>` : ""}` +
-          `${row.date ? row.date + "<br/>" : ""}` +
-          `${row.notes || ""}`
-        )
-        .addTo(map);
-      markersRef.current.push(marker);
+
+    if (heatmapView) {
+      // Group nearby points into clusters for density-based circles
+      const gridSize = 0.005; // ~500m grid cells
+      const clusters: Record<string, { lat: number; lng: number; count: number; color: string }> = {};
+      for (const row of geocoded) {
+        const gx = Math.round(row.lat! / gridSize);
+        const gy = Math.round(row.lng! / gridSize);
+        const key = `${gx}_${gy}`;
+        if (!clusters[key]) {
+          clusters[key] = { lat: row.lat!, lng: row.lng!, count: 0, color: getSourceColor(row.source) };
+        }
+        clusters[key].count++;
+        // Average position
+        clusters[key].lat = (clusters[key].lat * (clusters[key].count - 1) + row.lat!) / clusters[key].count;
+        clusters[key].lng = (clusters[key].lng * (clusters[key].count - 1) + row.lng!) / clusters[key].count;
+      }
+
+      const maxCount = Math.max(...Object.values(clusters).map((c) => c.count), 1);
+      for (const cluster of Object.values(clusters)) {
+        const intensity = cluster.count / maxCount;
+        const radius = 20 + intensity * 60;
+        const opacity = 0.2 + intensity * 0.5;
+        // Color gradient: blue (low) -> yellow -> red (high)
+        const r = Math.round(255 * Math.min(1, intensity * 2));
+        const g = Math.round(255 * Math.max(0, 1 - intensity));
+        const b = Math.round(100 * (1 - intensity));
+        const fillColor = `rgb(${r},${g},${b})`;
+
+        const circle = L.circleMarker([cluster.lat, cluster.lng], {
+          radius,
+          fillColor,
+          fillOpacity: opacity,
+          color: fillColor,
+          weight: 1,
+          opacity: opacity * 0.6,
+        })
+          .bindPopup(`<strong>${cluster.count}件</strong>`)
+          .addTo(map);
+        heatLayersRef.current.push(circle);
+      }
+    } else {
+      // Pin view
+      for (const row of geocoded) {
+        const color = getSourceColor(row.source);
+        const icon = new L.DivIcon({
+          html: `<div style="background:${color};width:12px;height:12px;border-radius:50%;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>`,
+          className: "",
+          iconSize: [12, 12],
+          iconAnchor: [6, 6],
+        });
+        const marker = L.marker([row.lat!, row.lng!], { icon })
+          .bindPopup(
+            `<strong>${row.name || "-"}</strong><br/>${row.address}<br/>` +
+            `${row.source ? `<span style="color:${color}; font-weight:600;">${row.source}</span><br/>` : ""}` +
+            `${row.date ? row.date + "<br/>" : ""}` +
+            `${row.notes || ""}`
+          )
+          .addTo(map);
+        markersRef.current.push(marker);
+      }
     }
 
     if (geocoded.length > 0) {
       const bounds = L.latLngBounds(geocoded.map((r) => [r.lat!, r.lng!] as [number, number]));
       map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
     }
-  }, [rows]);
+  }, [rows, heatmapView]);
 
   return <div ref={containerRef} className="h-full w-full" />;
 }
@@ -184,6 +235,7 @@ export default function ResponseAnalysis() {
   const [filterSource, setFilterSource] = useState<string>("all");
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
+  const [heatmapView, setHeatmapView] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -333,6 +385,28 @@ export default function ResponseAnalysis() {
                       )}
                     </Button>
 
+                    {/* Heatmap toggle + PDF */}
+                    <div className="flex gap-1.5">
+                      <Button
+                        size="sm"
+                        variant={heatmapView ? "default" : "outline"}
+                        className="flex-1 gap-1.5 text-xs"
+                        onClick={() => setHeatmapView((v) => !v)}
+                      >
+                        <Flame className="w-3.5 h-3.5" />
+                        {t("resp.heatmapToggle")}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 gap-1.5 text-xs"
+                        onClick={() => exportResponseReportPDF(filteredRows, stats, filterDateFrom, filterDateTo)}
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        {t("resp.reportPdf")}
+                      </Button>
+                    </div>
+
                     {/* Filters */}
                     <div className="space-y-1.5 pt-1 border-t border-border/40">
                       <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
@@ -397,6 +471,7 @@ export default function ResponseAnalysis() {
             rows={filteredRows}
             center={mapCenter}
             zoom={12}
+            heatmapView={heatmapView}
           />
         </div>
 
