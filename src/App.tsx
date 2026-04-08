@@ -21,6 +21,7 @@ import MediaPlan from "./pages/MediaPlan";
 import MapAreaAnalysis from "./pages/MapAreaAnalysis";
 import AgencyDashboard from "./pages/AgencyDashboard";
 import Report from "./pages/Report";
+import ResponseAnalysis from "./pages/ResponseAnalysis";
 import Pricing from "./pages/Pricing";
 import AdminDashboard from "./pages/AdminDashboard";
 import Tokushoho from "./pages/Tokushoho";
@@ -57,6 +58,7 @@ const AppRoutes = () => (
     <Route path="/map-analysis" element={<ProtectedRoute><MapAreaAnalysis /></ProtectedRoute>} />
     <Route path="/agency" element={<ProtectedRoute><AgencyDashboard /></ProtectedRoute>} />
     <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
+    <Route path="/response-analysis" element={<ProtectedRoute><ResponseAnalysis /></ProtectedRoute>} />
     <Route path="/pricing" element={<Pricing />} />
     <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
     <Route path="/tokushoho" element={<Tokushoho />} />
