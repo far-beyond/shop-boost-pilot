@@ -1,27 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-
-let fontLoaded = false;
-let fontBase64 = "";
-
-async function loadJapaneseFont(doc: jsPDF) {
-  if (!fontLoaded) {
-    const res = await fetch(
-      "https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.18/files/noto-sans-jp-japanese-400-normal.woff"
-    );
-    const buf = await res.arrayBuffer();
-    const bytes = new Uint8Array(buf);
-    let binary = "";
-    for (let i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    fontBase64 = btoa(binary);
-    fontLoaded = true;
-  }
-  doc.addFileToVFS("NotoSansJP-Regular.woff", fontBase64);
-  doc.addFont("NotoSansJP-Regular.woff", "NotoSansJP", "normal");
-  doc.setFont("NotoSansJP");
-}
+import { loadJapaneseFont, savePdf } from "./pdfFontLoader";
 
 const BLUE: [number, number, number] = [41, 121, 255];
 const LIGHT_BG: [number, number, number] = [245, 248, 255];
@@ -84,6 +63,7 @@ export async function exportFlyerPlanPDF(
   plan: FlyerPlanData,
   meta: { storeName?: string; address: string; industry: string }
 ) {
+  try {
   const doc = new jsPDF({ putOnlyUsedFonts: true });
   await loadJapaneseFont(doc);
   const pageW = doc.internal.pageSize.getWidth();
@@ -221,5 +201,9 @@ export async function exportFlyerPlanPDF(
   }
 
   const fileName = meta.storeName ? `${meta.storeName}_チラシ配布計画.pdf` : "チラシ配布計画.pdf";
-  doc.save(fileName);
+  savePdf(doc, fileName);
+  } catch (e) {
+    console.error("PDF export error:", e);
+    throw e;
+  }
 }

@@ -1,28 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { MapAreaAnalysisResult, CompetitorStore } from "./mapAreaService";
-
-let fontLoaded = false;
-let fontBase64 = "";
-
-async function loadJapaneseFont(doc: jsPDF) {
-  if (!fontLoaded) {
-    const res = await fetch(
-      "https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.18/files/noto-sans-jp-japanese-400-normal.woff"
-    );
-    const buf = await res.arrayBuffer();
-    const bytes = new Uint8Array(buf);
-    let binary = "";
-    for (let i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    fontBase64 = btoa(binary);
-    fontLoaded = true;
-  }
-  doc.addFileToVFS("NotoSansJP-Regular.woff", fontBase64);
-  doc.addFont("NotoSansJP-Regular.woff", "NotoSansJP", "normal");
-  doc.setFont("NotoSansJP");
-}
+import { loadJapaneseFont, savePdf } from "./pdfFontLoader";
 
 const BLUE: [number, number, number] = [41, 121, 255];
 const RED: [number, number, number] = [239, 68, 68];
@@ -61,6 +40,7 @@ export async function exportCompetitorReportPDF(
   result: MapAreaAnalysisResult,
   meta: { address: string; radius: string; industry: string }
 ) {
+  try {
   const doc = new jsPDF({ putOnlyUsedFonts: true });
   await loadJapaneseFont(doc);
   const pageW = doc.internal.pageSize.getWidth();
@@ -232,5 +212,9 @@ export async function exportCompetitorReportPDF(
     doc.text(`MapBoost AI 競合環境分析  |  ページ ${i} / ${totalPages}`, pageW / 2, 290, { align: "center" });
   }
 
-  doc.save(`${meta.address}_競合環境分析レポート.pdf`);
+  savePdf(doc, `${meta.address}_競合環境分析レポート.pdf`);
+  } catch (e) {
+    console.error("PDF export error:", e);
+    throw e;
+  }
 }

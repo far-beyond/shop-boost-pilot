@@ -1,28 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { DiagnosisRow, DiagnosisResult, KPIPlan } from "./diagnosisService";
-
-let fontLoaded = false;
-let fontBase64 = "";
-
-async function loadJapaneseFont(doc: jsPDF) {
-  if (!fontLoaded) {
-    const res = await fetch(
-      "https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.18/files/noto-sans-jp-japanese-400-normal.woff"
-    );
-    const buf = await res.arrayBuffer();
-    const bytes = new Uint8Array(buf);
-    let binary = "";
-    for (let i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    fontBase64 = btoa(binary);
-    fontLoaded = true;
-  }
-  doc.addFileToVFS("NotoSansJP-Regular.woff", fontBase64);
-  doc.addFont("NotoSansJP-Regular.woff", "NotoSansJP", "normal");
-  doc.setFont("NotoSansJP");
-}
+import { loadJapaneseFont, savePdf } from "./pdfFontLoader";
 
 const BLUE: [number, number, number] = [41, 121, 255];
 const LIGHT_BG: [number, number, number] = [245, 248, 255];
@@ -46,6 +25,7 @@ function checkPageBreak(doc: jsPDF, y: number, needed: number): number {
 }
 
 export async function exportDiagnosisPDF(diagnosis: DiagnosisRow) {
+  try {
   const doc = new jsPDF({ putOnlyUsedFonts: true });
   await loadJapaneseFont(doc);
 
@@ -174,5 +154,9 @@ export async function exportDiagnosisPDF(diagnosis: DiagnosisRow) {
     doc.text(`MapBoost AI  |  ページ ${i} / ${totalPages}`, pageW / 2, 290, { align: "center" });
   }
 
-  doc.save(`${diagnosis.store_name}_診断レポート.pdf`);
+  savePdf(doc, `${diagnosis.store_name}_診断レポート.pdf`);
+  } catch (e) {
+    console.error("PDF export error:", e);
+    throw e;
+  }
 }
