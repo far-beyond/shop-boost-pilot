@@ -127,15 +127,15 @@ serve(async (req) => {
       // Get subscription data
       const { data: subscriptions } = await supabase
         .from("user_subscriptions")
-        .select("user_id, plan, status, current_period_end, stripe_customer_id");
+        .select("user_id, plan, current_period_end, stripe_customer_id, stripe_subscription_id");
 
       // Get usage counts for current month
       const now = new Date();
       const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
       const { data: usageCounts } = await supabase
         .from("usage_counts")
-        .select("user_id, count")
-        .eq("month", monthKey);
+        .select("user_id, usage_count")
+        .eq("year_month", monthKey);
 
       // Get whitelist
       const { data: whitelistData } = await supabase
@@ -150,7 +150,7 @@ serve(async (req) => {
 
         let plan = "Free";
         if (isWhitelisted) plan = "Whitelist";
-        if (sub?.status === "active") plan = "Pro";
+        if (sub?.plan === "pro") plan = "Pro";
 
         return {
           id: u.id,
