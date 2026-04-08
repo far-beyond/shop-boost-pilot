@@ -1,6 +1,6 @@
 import {
-  Home, MapPin, Megaphone, Compass, LayoutDashboard,
-  Building2, FileText, Target as TargetIcon, Newspaper, BarChart3,
+  Home, MapPin, Megaphone, LayoutDashboard,
+  FileText, BarChart3,
   LogOut, LogIn, Globe, CreditCard, Shield, Download,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
@@ -26,32 +26,17 @@ export function AppSidebar() {
   const { user, signOut } = useAuth();
   const { t, language, setLanguage } = useLanguage();
 
-  const analysisItems = [
-    { title: t("nav.areaAnalysis"), url: "/area-analysis", icon: MapPin },
+  const mainItems = [
     { title: t("nav.mapAnalysis"), url: "/map-analysis", icon: MapPin },
-    { title: t("nav.locationMatch"), url: "/location-match", icon: Compass },
-    { title: t("nav.storeCandidates"), url: "/store-candidates", icon: Building2 },
-  ];
-
-  const promotionItems = [
-    { title: t("nav.mediaPlan"), url: "/media-plan", icon: Megaphone },
-    { title: t("nav.adProposal"), url: "/ad-proposal", icon: TargetIcon },
-    { title: t("nav.flyerPlan"), url: "/flyer-plan", icon: Newspaper },
-  ];
-
-  const managementItems = [
-    { title: t("nav.agencyDashboard"), url: "/agency", icon: LayoutDashboard },
-    { title: t("nav.report"), url: "/report", icon: BarChart3 },
-    { title: t("nav.diagnosisList"), url: "/dashboard", icon: FileText },
-  ];
-
-  const diagnosisItems = [
     { title: t("nav.storeInput"), url: "/input", icon: FileText },
+    { title: t("nav.mediaPlan"), url: "/media-plan", icon: Megaphone },
+    { title: t("nav.report"), url: "/report", icon: BarChart3 },
+    { title: t("nav.diagnosisList"), url: "/dashboard", icon: LayoutDashboard },
   ];
 
-  const renderGroup = (label: string, items: typeof analysisItems) => (
+  const renderGroup = (label: string, items: typeof mainItems) => (
     <SidebarGroup>
-      {!collapsed && <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">{label}</SidebarGroupLabel>}
+      {!collapsed && label && <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">{label}</SidebarGroupLabel>}
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => (
@@ -97,14 +82,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {user && (
-          <>
-            {renderGroup(t("nav.analysis"), analysisItems)}
-            {renderGroup(t("nav.promotion"), promotionItems)}
-            {renderGroup(t("nav.management"), managementItems)}
-            {renderGroup(t("nav.diagnosis"), diagnosisItems)}
-          </>
-        )}
+        {user && renderGroup("", mainItems)}
       </SidebarContent>
 
       <SidebarFooter className="p-2 space-y-1">
