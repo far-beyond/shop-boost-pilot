@@ -1,7 +1,7 @@
 import {
   Home, MapPin, Megaphone, Compass, LayoutDashboard,
   Building2, FileText, Target as TargetIcon, Newspaper, BarChart3,
-  LogOut, LogIn, Globe, CreditCard, Shield,
+  LogOut, LogIn, Globe, CreditCard, Shield, Download,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -117,6 +117,18 @@ export function AppSidebar() {
           >
             <CreditCard className="w-4 h-4 shrink-0" />
             {!collapsed && <span>{t("nav.pricing")}</span>}
+          </NavLink>
+        </SidebarMenuButton>
+
+        <SidebarMenuButton asChild>
+          <NavLink
+            to="/install"
+            end
+            className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-sm text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+            activeClassName="bg-primary/8 text-primary font-medium"
+          >
+            <Download className="w-4 h-4 shrink-0" />
+            {!collapsed && <span>{language === "ja" ? "アプリをインストール" : "Install App"}</span>}
           </NavLink>
         </SidebarMenuButton>
 
