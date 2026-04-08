@@ -3,6 +3,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Megaphone, Loader2, Search, Newspaper, Monitor, Target,
   TrendingUp, DollarSign, Users, Copy, Check, MapPin, FileDown,
+  ClipboardList, Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,11 +11,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { exportMediaPlanPDF } from "@/lib/mediaPlanPdfExport";
+import { exportMediaOrderPDF, type MediaOrderData } from "@/lib/mediaOrderPdfExport";
 
 const fadeUp = { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 } };
 
@@ -30,6 +35,66 @@ export default function MediaPlan() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<MediaPlanResult | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [orderOpen, setOrderOpen] = useState(false);
+  const [orderSending, setOrderSending] = useState(false);
+  const [orderForm, setOrderForm] = useState({
+    clientCompany: "", clientName: "", clientEmail: "", clientPhone: "",
+    customerCompany: "", customerName: "", customerEmail: "",
+    managementFeeRate: "20", startDate: "", contractMonths: "3",
+    includeGoogle: true, includeMeta: true, includeFlyer: true, notes: "",
+  });
+  const updateOF = (k: string, v: string | boolean) => setOrderForm((p) => ({ ...p, [k]: v }));
+
+  const buildMediaOrder = (): MediaOrderData => {
+    const r = result!;
+    const g = r.google; const m = r.meta; const f = r.flyer;
+    return {
+      ...orderForm,
+      managementFeeRate: parseInt(orderForm.managementFeeRate),
+      contractMonths: parseInt(orderForm.contractMonths),
+      storeName: storeName || address, storeAddress: address, industry,
+      includeGoogle: orderForm.includeGoogle && !!g,
+      includeMeta: orderForm.includeMeta && !!m,
+      includeFlyer: orderForm.includeFlyer && !!f,
+      googleBudget: g?.monthlyBudget || 0,
+      googleCampaignType: g?.campaignType || "",
+      googleKeywords: g?.keywords?.map((k: any) => k.keyword) || [],
+      googleAdCopies: g?.adCopies?.map((a: any) => ({ headline: `${a.headline1} | ${a.headline2}`, description: a.description1 })) || [],
+      metaBudget: m?.monthlyBudget || 0,
+      metaObjective: m?.campaignObjective || "",
+      metaAudiences: m?.targetAudiences?.map((a: any) => ({ name: a.name, ageRange: a.ageRange, interests: a.interests || [] })) || [],
+      metaCreatives: m?.adCreatives?.map((c: any) => ({ headline: c.headline, description: c.primaryText })) || [],
+      flyerTotalQuantity: f?.totalQuantity || 0,
+      flyerTotalCost: f?.estimatedCost?.totalCost || 0,
+      flyerAreas: f?.distributionAreas?.map((a: any) => ({ areaName: a.areaName, quantity: a.recommendedQuantity, priority: a.priority })) || [],
+      flyerTiming: f?.timing?.bestDays?.join("、") || "",
+    };
+  };
+
+  const handleGenMediaOrder = async () => {
+    if (!orderForm.clientCompany) { toast.error("会社名は必須です"); return; }
+    await exportMediaOrderPDF(buildMediaOrder());
+    toast.success(t("media.orderComplete"));
+  };
+
+  const handleSendMediaOrder = async () => {
+    if (!orderForm.customerEmail) { toast.error("送信先メールを入力してください"); return; }
+    setOrderSending(true);
+    try {
+      const od = buildMediaOrder();
+      const blob = await exportMediaOrderPDF(od);
+      const reader = new FileReader();
+      const b64 = await new Promise<string>((res) => { reader.onloadend = () => res((reader.result as string).split(",")[1]); reader.readAsDataURL(blob); });
+      const { error } = await supabase.functions.invoke("send-flyer-order", {
+        body: { to: orderForm.customerEmail, subject: `【ご提案】${od.storeName} 統合販促プランのご案内`, storeName: od.storeName, clientCompany: od.clientCompany, clientName: od.clientName, totalQuantity: 0, totalCost: 0, deliveryDate: od.startDate, pdfBase64: b64 },
+      });
+      if (error) throw error;
+      toast.success(t("media.orderSent"));
+      setOrderOpen(false);
+    } catch (e: any) {
+      toast.error(t("media.orderFailed") + ": " + (e.message || ""));
+    } finally { setOrderSending(false); }
+  };
 
   const copyText = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -107,10 +172,16 @@ export default function MediaPlan() {
                     {loading ? t("media.generating") : t("media.generate")}
                   </Button>
                   {result && (
-                    <Button variant="outline" className="gap-2" onClick={() => exportMediaPlanPDF(result, { storeName, address, industry })}>
-                      <FileDown className="w-4 h-4" />
-                      {t("media.pdfDownload")}
-                    </Button>
+                    <>
+                      <Button variant="outline" className="gap-2" onClick={() => exportMediaPlanPDF(result, { storeName, address, industry })}>
+                        <FileDown className="w-4 h-4" />
+                        {t("media.pdfDownload")}
+                      </Button>
+                      <Button className="gap-2" onClick={() => setOrderOpen(true)}>
+                        <ClipboardList className="w-4 h-4" />
+                        {t("media.createOrder")}
+                      </Button>
+                    </>
                   )}
                 </div>
               </CardContent>
@@ -269,6 +340,96 @@ export default function MediaPlan() {
           )}
         </div>
       </div>
+
+      <Dialog open={orderOpen} onOpenChange={setOrderOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><ClipboardList className="w-5 h-5" />{t("media.orderTitle")}</DialogTitle>
+            <DialogDescription>{t("media.orderDesc")}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-3 p-3 rounded-lg bg-muted/50">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("media.agencyInfo")}</p>
+              <Input placeholder={t("media.companyName")} value={orderForm.clientCompany} onChange={(e) => updateOF("clientCompany", e.target.value)} />
+              <div className="grid grid-cols-2 gap-2">
+                <Input placeholder={t("media.contactPerson")} value={orderForm.clientName} onChange={(e) => updateOF("clientName", e.target.value)} />
+                <Input placeholder={t("media.phone")} value={orderForm.clientPhone} onChange={(e) => updateOF("clientPhone", e.target.value)} />
+              </div>
+              <Input placeholder={t("media.email")} type="email" value={orderForm.clientEmail} onChange={(e) => updateOF("clientEmail", e.target.value)} />
+            </div>
+
+            <div className="space-y-3 p-3 rounded-lg bg-muted/50">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("media.customerInfo")}</p>
+              <Input placeholder={t("media.customerCompany")} value={orderForm.customerCompany} onChange={(e) => updateOF("customerCompany", e.target.value)} />
+              <div className="grid grid-cols-2 gap-2">
+                <Input placeholder={t("media.customerName")} value={orderForm.customerName} onChange={(e) => updateOF("customerName", e.target.value)} />
+                <Input placeholder={t("media.customerEmail")} type="email" value={orderForm.customerEmail} onChange={(e) => updateOF("customerEmail", e.target.value)} />
+              </div>
+            </div>
+
+            <div className="space-y-3 p-3 rounded-lg bg-muted/50">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("media.mediaSelection")}</p>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 text-sm"><Checkbox checked={orderForm.includeGoogle} onCheckedChange={(c) => updateOF("includeGoogle", !!c)} />Google Ads</label>
+                <label className="flex items-center gap-2 text-sm"><Checkbox checked={orderForm.includeMeta} onCheckedChange={(c) => updateOF("includeMeta", !!c)} />Meta Ads</label>
+                <label className="flex items-center gap-2 text-sm"><Checkbox checked={orderForm.includeFlyer} onCheckedChange={(c) => updateOF("includeFlyer", !!c)} />{t("media.tabFlyer")}</label>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="text-xs text-muted-foreground">{t("media.startDate")}</label>
+                  <Input type="date" value={orderForm.startDate} onChange={(e) => updateOF("startDate", e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">{t("media.contractPeriod")}</label>
+                  <Select value={orderForm.contractMonths} onValueChange={(v) => updateOF("contractMonths", v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1ヶ月</SelectItem>
+                      <SelectItem value="3">3ヶ月</SelectItem>
+                      <SelectItem value="6">6ヶ月</SelectItem>
+                      <SelectItem value="12">12ヶ月</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">{t("media.feeRate")}</label>
+                  <Select value={orderForm.managementFeeRate} onValueChange={(v) => updateOF("managementFeeRate", v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10%</SelectItem>
+                      <SelectItem value="15">15%</SelectItem>
+                      <SelectItem value="20">20%</SelectItem>
+                      <SelectItem value="25">25%</SelectItem>
+                      <SelectItem value="30">30%</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            <Textarea placeholder={t("media.orderNotes")} value={orderForm.notes} onChange={(e) => updateOF("notes", e.target.value)} rows={2} />
+
+            {result && (
+              <div className="text-xs text-muted-foreground bg-primary/5 rounded-lg p-3 space-y-1">
+                {result.google && orderForm.includeGoogle && <p>Google広告: ¥{result.google.monthlyBudget?.toLocaleString()}/月</p>}
+                {result.meta && orderForm.includeMeta && <p>Meta広告: ¥{result.meta.monthlyBudget?.toLocaleString()}/月</p>}
+                {result.flyer && orderForm.includeFlyer && <p>チラシ: ¥{result.flyer.estimatedCost?.totalCost?.toLocaleString()} / {result.flyer.totalQuantity?.toLocaleString()}部</p>}
+                <p>管理費: {orderForm.managementFeeRate}%</p>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button className="flex-1 gap-2" variant="outline" onClick={handleGenMediaOrder}>
+                <FileDown className="w-4 h-4" />{t("media.generateOrder")}
+              </Button>
+              <Button className="flex-1 gap-2" onClick={handleSendMediaOrder} disabled={orderSending || !orderForm.customerEmail}>
+                {orderSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                {t("media.sendOrder")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }
