@@ -119,6 +119,56 @@ serve(async (req) => {
       });
     }
 
+    if (action === "list-users") {
+      // Get all users from auth.users via admin API
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers({ perPage: 500 });
+      if (authError) throw authError;
+
+      // Get subscription data
+      const { data: subscriptions } = await supabase
+        .from("user_subscriptions")
+        .select("user_id, plan, status, current_period_end, stripe_customer_id");
+
+      // Get usage counts for current month
+      const now = new Date();
+      const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      const { data: usageCounts } = await supabase
+        .from("usage_counts")
+        .select("user_id, count")
+        .eq("month", monthKey);
+
+      // Get whitelist
+      const { data: whitelistData } = await supabase
+        .from("free_whitelist")
+        .select("email");
+      const whitelistEmails = new Set((whitelistData || []).map((w: any) => w.email));
+
+      const users = (authUsers?.users || []).map((u: any) => {
+        const sub = (subscriptions || []).find((s: any) => s.user_id === u.id);
+        const usage = (usageCounts || []).find((uc: any) => uc.user_id === u.id);
+        const isWhitelisted = whitelistEmails.has(u.email);
+
+        let plan = "Free";
+        if (isWhitelisted) plan = "Whitelist";
+        if (sub?.status === "active") plan = "Pro";
+
+        return {
+          id: u.id,
+          email: u.email || "—",
+          created_at: u.created_at,
+          last_sign_in_at: u.last_sign_in_at,
+          plan,
+          subscription_status: sub?.status || null,
+          subscription_end: sub?.current_period_end || null,
+          usage_this_month: usage?.count || 0,
+        };
+      });
+
+      return new Response(JSON.stringify({ users }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (action === "get-plan-settings") {
       const { data, error } = await supabase
         .from("plan_settings")
