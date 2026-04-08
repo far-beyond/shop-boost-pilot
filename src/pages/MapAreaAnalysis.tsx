@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { MapPin, Users, Home, TrendingUp, Loader2, Search, Building2, AlertTriangle, Layers } from "lucide-react";
+import { MapPin, Users, Home, TrendingUp, Loader2, Search, Building2, AlertTriangle, Layers, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import {
   fetchMapAreaAnalysis,
   type MapAreaAnalysisResult,
 } from "@/lib/mapAreaService";
+import { exportCompetitorReportPDF } from "@/lib/competitorReportPdfExport";
 import {
   generateTownPolygons,
   resolvePolygonNames,
@@ -523,7 +524,7 @@ export default function MapAreaAnalysis() {
           ) : error ? (
             <ErrorState message={error} onRetry={handleAnalyze} />
           ) : result ? (
-            <AnalysisPanel result={result} radius={radius} />
+            <AnalysisPanel result={result} radius={radius} address={address} industry={industry} />
           ) : (
             <EmptyState />
           )}
@@ -579,7 +580,7 @@ function SidePanelSkeleton() {
   );
 }
 
-function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radius: string }) {
+function AnalysisPanel({ result, radius, address, industry }: { result: MapAreaAnalysisResult; radius: string; address: string; industry: string }) {
   const { t } = useLanguage();
   const { summary, competitors, censusData, isOverseas, countryCode } = result;
   const isRealData = !!censusData?.dataAvailable;
@@ -681,6 +682,19 @@ function AnalysisPanel({ result, radius }: { result: MapAreaAnalysisResult; radi
             ))}
           </div>
         </section>
+      )}
+
+      {/* Competitor Report PDF */}
+      {competitors.length > 0 && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full gap-2 text-xs"
+          onClick={() => exportCompetitorReportPDF(result, { address, radius, industry })}
+        >
+          <Download className="w-3.5 h-3.5" />
+          {t("map.competitorReport")}
+        </Button>
       )}
 
       {summary.recommendations.length > 0 && (
