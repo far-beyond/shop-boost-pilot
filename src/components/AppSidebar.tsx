@@ -1,6 +1,6 @@
 import {
   Home, MapPin, Megaphone, LayoutDashboard,
-  FileText, BarChart3, TrendingUp,
+  FileText, BarChart3, TrendingUp, ClipboardList,
   LogOut, LogIn, Globe, CreditCard, Shield, Download,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
@@ -32,6 +32,7 @@ export function AppSidebar() {
     { title: t("nav.mediaPlan"), url: "/media-plan", icon: Megaphone },
     { title: t("nav.report"), url: "/report", icon: BarChart3 },
     { title: t("nav.responseAnalysis"), url: "/response-analysis", icon: TrendingUp },
+    { title: t("nav.orderHistory"), url: "/order-history", icon: ClipboardList },
     { title: t("nav.diagnosisList"), url: "/dashboard", icon: LayoutDashboard },
   ];
 

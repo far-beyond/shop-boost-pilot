@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { loadJapaneseFont, savePdf } from "./pdfFontLoader";
+import { saveOrder, type OrderRecord } from "./orderHistoryService";
 
 const BLUE: [number, number, number] = [41, 121, 255];
 const DARK: [number, number, number] = [30, 30, 50];
@@ -283,6 +284,23 @@ export async function exportAdOrderPDF(order: AdOrderData): Promise<Blob> {
 
   const fileName = `${order.storeName}_広告運用発注書.pdf`;
   savePdf(doc, fileName);
+
+  // Save to order history
+  const historyMediaNames = order.platforms.map((p) => p === "google" ? "Google広告" : "Meta広告");
+  const historyOrder: OrderRecord = {
+    id: `ad-${Date.now()}`,
+    orderNumber: orderNo,
+    date: new Date().toLocaleDateString("ja-JP"),
+    type: "ad",
+    storeName: order.storeName,
+    totalCost: order.totalMonthlyCharge,
+    status: "completed",
+    mediaIncluded: historyMediaNames,
+    costs: { adBudget: order.monthlyAdBudget, managementFee: order.managementFee, total: order.totalMonthlyCharge },
+    clientCompany: order.clientCompany,
+    notes: order.notes,
+  };
+  saveOrder(historyOrder);
 
   return doc.output("blob");
   } catch (e) {

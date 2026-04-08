@@ -14,7 +14,9 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import {
   fetchMapAreaAnalysis,
+  fetchSchoolsFromOverpass,
   type MapAreaAnalysisResult,
+  type SchoolMarker,
 } from "@/lib/mapAreaService";
 import { exportCompetitorReportPDF } from "@/lib/competitorReportPdfExport";
 import {
@@ -66,6 +68,20 @@ const candidateIcon = new L.DivIcon({
   iconAnchor: [7, 7],
 });
 
+function createSchoolIcon(type: "elementary" | "middle" | "high"): L.DivIcon {
+  const config = {
+    elementary: { bg: "#3b82f6", label: "小" },
+    middle: { bg: "#22c55e", label: "中" },
+    high: { bg: "#f97316", label: "高" },
+  }[type];
+  return new L.DivIcon({
+    html: `<div style="background:${config.bg};width:22px;height:22px;border-radius:50%;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700;line-height:1;">${config.label}</div>`,
+    className: "",
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+  });
+}
+
 const RADIUS_OPTIONS = [
   { label: "1km", value: "1km", meters: 1000 },
   { label: "3km", value: "3km", meters: 3000 },
@@ -97,6 +113,8 @@ function LeafletMap({
   onMapClick,
   heatmapMode,
   selectedTownIds,
+  schools,
+  showSchools,
   labels,
 }: {
   center: [number, number];
@@ -112,6 +130,8 @@ function LeafletMap({
   onMapClick: (lat: number, lng: number) => void;
   heatmapMode: HeatmapMode;
   selectedTownIds: string[];
+  schools: SchoolMarker[];
+  showSchools: boolean;
   labels: { candidate: string; population: string; popUnit: string; households: string; avgAge: string; ageUnit: string; industry: string; distance: string; score: string; points: string };
 }) {
   const mapRef = useRef<L.Map | null>(null);
@@ -122,7 +142,8 @@ function LeafletMap({
     geoJsonLayer?: L.GeoJSON;
     competitorMarkers: L.Marker[];
     candidateMarkers: L.Marker[];
-  }>({ competitorMarkers: [], candidateMarkers: [] });
+    schoolMarkers: L.Marker[];
+  }>({ competitorMarkers: [], candidateMarkers: [], schoolMarkers: [] });
 
   // Initialize map
   useEffect(() => {
@@ -235,6 +256,23 @@ function LeafletMap({
     }
   }, [candidates]);
 
+  // School markers
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    layersRef.current.schoolMarkers.forEach((m) => m.remove());
+    layersRef.current.schoolMarkers = [];
+    if (!showSchools) return;
+    for (const s of schools) {
+      const icon = createSchoolIcon(s.type);
+      const typeLabel = s.type === "elementary" ? "小学校" : s.type === "middle" ? "中学校" : "高校";
+      const m = L.marker([s.lat, s.lng], { icon })
+        .bindPopup(`<strong>${s.name}</strong><br/>${typeLabel}`)
+        .addTo(map);
+      layersRef.current.schoolMarkers.push(m);
+    }
+  }, [schools, showSchools]);
+
   return <div ref={containerRef} className="h-full w-full" />;
 }
 
@@ -253,6 +291,8 @@ export default function MapAreaAnalysis() {
   const [multiPinMode, setMultiPinMode] = useState(false);
   const [selectedTownIds, setSelectedTownIds] = useState<string[]>([]);
   const [candidates, setCandidates] = useState<CandidatePin[]>([]);
+  const [showSchools, setShowSchools] = useState(false);
+  const [schools, setSchools] = useState<SchoolMarker[]>([]);
 
   const radiusMeta = RADIUS_OPTIONS.find((r) => r.value === radius)!;
   const mapCenter: [number, number] = result?.center || [35.6812, 139.7671];
@@ -281,6 +321,19 @@ export default function MapAreaAnalysis() {
     // Resolve real place names in background
     resolvePolygonNames(base).then((resolved) => setTownPolygons(resolved));
   }, [result, mapCenter[0], mapCenter[1], radiusKm]);
+
+  // Fetch schools when toggle is turned on and we have a result
+  useEffect(() => {
+    if (!showSchools || !result) {
+      setSchools([]);
+      return;
+    }
+    let cancelled = false;
+    fetchSchoolsFromOverpass(result.center, radiusMeta.meters)
+      .then((data) => { if (!cancelled) setSchools(data); })
+      .catch(() => { if (!cancelled) setSchools([]); });
+    return () => { cancelled = true; };
+  }, [showSchools, result, radiusMeta.meters]);
 
   const flyerSelection = useMemo(
     () => calculateFlyerSelection(selectedTownIds, townPolygons),
@@ -424,6 +477,8 @@ export default function MapAreaAnalysis() {
               onFlyerModeToggle={() => setFlyerMode((f) => !f)}
               multiPinMode={multiPinMode}
               onMultiPinModeToggle={() => setMultiPinMode((m) => !m)}
+              showSchools={showSchools}
+              onShowSchoolsToggle={() => setShowSchools((s) => !s)}
             />
           </div>
 
@@ -488,6 +543,8 @@ export default function MapAreaAnalysis() {
             onMapClick={handleMapClick}
             heatmapMode={heatmapMode}
             selectedTownIds={selectedTownIds}
+            schools={schools}
+            showSchools={showSchools}
             labels={{
               candidate: t("map.candidateLabel"),
               population: t("map.popLabel"),
@@ -516,6 +573,8 @@ export default function MapAreaAnalysis() {
               onFlyerModeToggle={() => setFlyerMode((f) => !f)}
               multiPinMode={multiPinMode}
               onMultiPinModeToggle={() => setMultiPinMode((m) => !m)}
+              showSchools={showSchools}
+              onShowSchoolsToggle={() => setShowSchools((s) => !s)}
             />
           </div>
 

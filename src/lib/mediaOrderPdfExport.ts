@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { loadJapaneseFont, savePdf } from "./pdfFontLoader";
+import { saveOrder, type OrderRecord } from "./orderHistoryService";
 
 const BLUE: [number, number, number] = [41, 121, 255];
 const DARK: [number, number, number] = [30, 30, 50];
@@ -327,6 +328,34 @@ export async function exportMediaOrderPDF(order: MediaOrderData): Promise<Blob> 
   }
 
   savePdf(doc, `${order.storeName}_統合媒体プラン発注書.pdf`);
+
+  // Save to order history
+  const historyMedia: string[] = [];
+  if (order.includeGoogle) historyMedia.push("Google広告");
+  if (order.includeMeta) historyMedia.push("Meta広告");
+  if (order.includeFlyer) historyMedia.push("チラシ配布");
+  const historyOrder: OrderRecord = {
+    id: `media-${Date.now()}`,
+    orderNumber: orderNo,
+    date: new Date().toLocaleDateString("ja-JP"),
+    type: "media",
+    storeName: order.storeName,
+    totalCost: totalMonthly,
+    status: "completed",
+    areas: order.includeFlyer ? order.flyerAreas.map((a) => ({ areaName: a.areaName, quantity: a.quantity, priority: a.priority })) : undefined,
+    mediaIncluded: historyMedia,
+    costs: {
+      ...(order.includeGoogle ? { google: order.googleBudget } : {}),
+      ...(order.includeMeta ? { meta: order.metaBudget } : {}),
+      ...(order.includeFlyer ? { flyer: order.flyerTotalCost } : {}),
+      management: mgmtFee,
+      total: totalMonthly,
+    },
+    clientCompany: order.clientCompany,
+    notes: order.notes,
+  };
+  saveOrder(historyOrder);
+
   return doc.output("blob");
   } catch (e) {
     console.error("PDF export error:", e);

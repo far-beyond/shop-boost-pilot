@@ -1,4 +1,4 @@
-import { Layers, Map, MousePointer, BarChart3, Users, Home, Calendar } from "lucide-react";
+import { Layers, Map, MousePointer, BarChart3, Users, Home, Calendar, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,8 @@ interface MapControlsProps {
   onFlyerModeToggle: () => void;
   multiPinMode: boolean;
   onMultiPinModeToggle: () => void;
+  showSchools?: boolean;
+  onShowSchoolsToggle?: () => void;
 }
 
 export default function MapControls({
@@ -25,6 +27,8 @@ export default function MapControls({
   onFlyerModeToggle,
   multiPinMode,
   onMultiPinModeToggle,
+  showSchools,
+  onShowSchoolsToggle,
 }: MapControlsProps) {
   const { t } = useLanguage();
 
@@ -88,7 +92,7 @@ export default function MapControls({
         </div>
 
         {/* Mode toggles */}
-        <div className="flex gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           <Button
             size="sm"
             variant={flyerMode ? "default" : "outline"}
@@ -107,6 +111,17 @@ export default function MapControls({
             <MousePointer className="w-3 h-3" />
             {t("map.candidateCompare")}
           </Button>
+          {onShowSchoolsToggle && (
+            <Button
+              size="sm"
+              variant={showSchools ? "default" : "outline"}
+              onClick={onShowSchoolsToggle}
+              className="h-7 text-[11px] gap-1"
+            >
+              <GraduationCap className="w-3 h-3" />
+              {t("map.showSchools")}
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

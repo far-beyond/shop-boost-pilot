@@ -1006,6 +1006,36 @@ const translations: Record<Language, Record<string, string>> = {
     "resp.failed": "失敗",
     "resp.emptyTitle": "反響データを分析",
     "resp.emptyDesc": "CSVファイルをアップロードして、反響データを地図上に可視化します。列: 名前, 住所, 電話, 日付, 経路, 備考",
+
+    // Order History
+    "nav.orderHistory": "発注履歴",
+    "oh.badge": "発注履歴",
+    "oh.title": "発注履歴",
+    "oh.subtitle": "過去のチラシ・広告・媒体プランの発注履歴を確認できます。",
+    "oh.totalOrders": "総発注数",
+    "oh.totalSpend": "累計支出",
+    "oh.monthSpend": "今月の支出",
+    "oh.emptyTitle": "発注履歴がありません",
+    "oh.emptyDesc": "チラシ・広告・媒体プランの発注書を作成すると、ここに履歴が表示されます。",
+    "oh.backToList": "一覧に戻る",
+    "oh.date": "発注日",
+    "oh.storeName": "店舗名",
+    "oh.totalCost": "合計金額",
+    "oh.status": "ステータス",
+    "oh.status.completed": "完了",
+    "oh.status.pending": "処理中",
+    "oh.status.cancelled": "キャンセル",
+    "oh.type.flyer": "チラシ",
+    "oh.type.ad": "広告",
+    "oh.type.media": "統合媒体",
+    "oh.mediaIncluded": "含まれる媒体",
+    "oh.areas": "配布エリア",
+    "oh.copies": "部",
+    "oh.costBreakdown": "費用内訳",
+    "oh.notes": "備考",
+
+    // School District
+    "map.showSchools": "学区表示",
   },
   en: {
     // Nav & Layout
@@ -2004,6 +2034,36 @@ const translations: Record<Language, Record<string, string>> = {
     "resp.failed": "Failed",
     "resp.emptyTitle": "Analyze Response Data",
     "resp.emptyDesc": "Upload a CSV file to visualize response data on a map. Columns: name, address, phone, date, source, notes",
+
+    // Order History
+    "nav.orderHistory": "Order History",
+    "oh.badge": "Order History",
+    "oh.title": "Order History",
+    "oh.subtitle": "View past flyer, ad, and media plan orders.",
+    "oh.totalOrders": "Total Orders",
+    "oh.totalSpend": "Total Spend",
+    "oh.monthSpend": "This Month",
+    "oh.emptyTitle": "No orders yet",
+    "oh.emptyDesc": "When you create flyer, ad, or media plan orders, they will appear here.",
+    "oh.backToList": "Back to list",
+    "oh.date": "Order Date",
+    "oh.storeName": "Store Name",
+    "oh.totalCost": "Total Cost",
+    "oh.status": "Status",
+    "oh.status.completed": "Completed",
+    "oh.status.pending": "Pending",
+    "oh.status.cancelled": "Cancelled",
+    "oh.type.flyer": "Flyer",
+    "oh.type.ad": "Ad",
+    "oh.type.media": "Media Plan",
+    "oh.mediaIncluded": "Media Included",
+    "oh.areas": "Distribution Areas",
+    "oh.copies": " copies",
+    "oh.costBreakdown": "Cost Breakdown",
+    "oh.notes": "Notes",
+
+    // School District
+    "map.showSchools": "Schools",
   },
 };
 

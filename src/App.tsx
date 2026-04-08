@@ -22,6 +22,7 @@ import MapAreaAnalysis from "./pages/MapAreaAnalysis";
 import AgencyDashboard from "./pages/AgencyDashboard";
 import Report from "./pages/Report";
 import ResponseAnalysis from "./pages/ResponseAnalysis";
+import OrderHistory from "./pages/OrderHistory";
 import Pricing from "./pages/Pricing";
 import AdminDashboard from "./pages/AdminDashboard";
 import Tokushoho from "./pages/Tokushoho";
@@ -59,6 +60,7 @@ const AppRoutes = () => (
     <Route path="/agency" element={<ProtectedRoute><AgencyDashboard /></ProtectedRoute>} />
     <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
     <Route path="/response-analysis" element={<ProtectedRoute><ResponseAnalysis /></ProtectedRoute>} />
+    <Route path="/order-history" element={<ProtectedRoute><OrderHistory /></ProtectedRoute>} />
     <Route path="/pricing" element={<Pricing />} />
     <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
     <Route path="/tokushoho" element={<Tokushoho />} />

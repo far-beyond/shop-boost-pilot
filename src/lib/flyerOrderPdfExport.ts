@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { loadJapaneseFont, savePdf } from "./pdfFontLoader";
+import { saveOrder, type OrderRecord } from "./orderHistoryService";
 
 const BLUE: [number, number, number] = [41, 121, 255];
 const DARK: [number, number, number] = [30, 30, 50];
@@ -222,6 +223,25 @@ export async function exportFlyerOrderPDF(order: FlyerOrderData): Promise<Blob> 
 
   const fileName = `${order.storeName}_発注書_${order.orderDate}.pdf`;
   savePdf(doc, fileName);
+
+  // Save to order history
+  const historyOrder: OrderRecord = {
+    id: `flyer-${Date.now()}`,
+    orderNumber: orderNo,
+    date: order.orderDate,
+    type: "flyer",
+    storeName: order.storeName,
+    totalCost: order.totalCost,
+    status: "completed",
+    areas: order.areas.map((a) => ({ areaName: a.areaName, quantity: a.quantity, priority: a.priority })),
+    mediaIncluded: ["チラシ配布"],
+    quantities: { total: order.totalQuantity },
+    costs: { printing: order.printingCostPerUnit * order.totalQuantity, distribution: order.distributionCostPerUnit * order.totalQuantity, total: order.totalCost },
+    clientCompany: order.clientCompany,
+    vendorCompany: order.vendorCompany,
+    notes: order.notes,
+  };
+  saveOrder(historyOrder);
 
   // Also return as Blob for email attachment
   return doc.output("blob");

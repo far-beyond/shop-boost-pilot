@@ -234,6 +234,66 @@ async function fetchCompetitorsFromOverpass(
     .slice(0, 50); // cap at 50
 }
 
+// School marker types
+export type SchoolType = "elementary" | "middle" | "high";
+
+export type SchoolMarker = {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  type: SchoolType;
+};
+
+function classifySchoolType(name: string): SchoolType {
+  if (name.includes("小学校") || name.toLowerCase().includes("elementary")) return "elementary";
+  if (name.includes("中学校") || name.toLowerCase().includes("middle") || name.toLowerCase().includes("junior high")) return "middle";
+  if (name.includes("高校") || name.includes("高等学校") || name.toLowerCase().includes("high school") || name.toLowerCase().includes("senior")) return "high";
+  // Default: try to infer from other patterns
+  if (name.includes("小")) return "elementary";
+  if (name.includes("中")) return "middle";
+  return "elementary"; // fallback
+}
+
+export async function fetchSchoolsFromOverpass(
+  center: [number, number],
+  radiusMeters: number
+): Promise<SchoolMarker[]> {
+  const query = `[out:json][timeout:10];
+(
+  node["amenity"="school"](around:${radiusMeters},${center[0]},${center[1]});
+  way["amenity"="school"](around:${radiusMeters},${center[0]},${center[1]});
+);
+out center body;`;
+
+  const res = await fetch("https://overpass-api.de/api/interpreter", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `data=${encodeURIComponent(query)}`,
+  });
+
+  if (!res.ok) throw new Error("Overpass API request failed (schools)");
+  const data = await res.json();
+  const elements: any[] = data.elements || [];
+
+  return elements
+    .filter((el: any) => (el.lat && el.lon) || (el.center?.lat && el.center?.lon))
+    .map((el: any, i: number) => {
+      const tags = el.tags || {};
+      const name = tags.name || tags["name:ja"] || tags["name:en"] || `School ${i + 1}`;
+      const lat = el.lat || el.center?.lat;
+      const lng = el.lon || el.center?.lon;
+      return {
+        id: `school-${el.id || i}`,
+        name,
+        lat,
+        lng,
+        type: classifySchoolType(name),
+      };
+    })
+    .slice(0, 80);
+}
+
 // Fetch map-based area analysis from API
 export async function fetchMapAreaAnalysis(
   address: string,
