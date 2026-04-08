@@ -3,17 +3,21 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Newspaper, MapPin, Loader2, Search, Copy, Check, Lightbulb,
   CalendarDays, DollarSign, Target, TrendingUp, FileText, Megaphone, Download,
+  Send, ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { exportFlyerPlanPDF } from "@/lib/flyerPdfExport";
+import { exportFlyerOrderPDF, type FlyerOrderData } from "@/lib/flyerOrderPdfExport";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -78,6 +82,88 @@ export default function FlyerPlan() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<FlyerPlan | null>(null);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [orderOpen, setOrderOpen] = useState(false);
+  const [orderSending, setOrderSending] = useState(false);
+  const [orderForm, setOrderForm] = useState({
+    vendorCompany: "",
+    vendorEmail: "",
+    clientCompany: "",
+    clientName: "",
+    clientPhone: "",
+    clientEmail: "",
+    deliveryDate: "",
+    paperSize: "A4",
+    paperType: "コート紙90kg",
+    colorMode: "両面カラー",
+    notes: "",
+  });
+
+  const updateOrder = (field: string, value: string) =>
+    setOrderForm((prev) => ({ ...prev, [field]: value }));
+
+  const buildOrderData = (): FlyerOrderData => ({
+    ...orderForm,
+    orderDate: new Date().toLocaleDateString("ja-JP"),
+    areas: result!.distributionAreas.map((a) => ({
+      areaName: a.areaName,
+      households: a.estimatedHouseholds,
+      quantity: a.recommendedQuantity,
+      priority: a.priority,
+    })),
+    totalQuantity: result!.totalQuantity,
+    printingCostPerUnit: result!.estimatedCost.printingCostPerUnit,
+    distributionCostPerUnit: result!.estimatedCost.distributionCostPerUnit,
+    totalCost: result!.estimatedCost.totalCost,
+    storeName: storeName || address,
+    storeAddress: address,
+    industry,
+  });
+
+  const handleGenerateOrder = async () => {
+    if (!orderForm.vendorCompany || !orderForm.clientCompany) {
+      toast.error("発注先と発注元の会社名は必須です");
+      return;
+    }
+    await exportFlyerOrderPDF(buildOrderData());
+    toast.success(t("flyer.orderComplete"));
+  };
+
+  const handleSendOrder = async () => {
+    if (!orderForm.vendorEmail) {
+      toast.error("発注先メールアドレスを入力してください");
+      return;
+    }
+    setOrderSending(true);
+    try {
+      const orderData = buildOrderData();
+      const pdfBlob = await exportFlyerOrderPDF(orderData);
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve) => {
+        reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
+        reader.readAsDataURL(pdfBlob);
+      });
+      const { error } = await supabase.functions.invoke("send-flyer-order", {
+        body: {
+          to: orderForm.vendorEmail,
+          subject: `【発注書】${orderData.storeName} チラシ配布業務のご依頼`,
+          storeName: orderData.storeName,
+          clientCompany: orderData.clientCompany,
+          clientName: orderData.clientName,
+          totalQuantity: orderData.totalQuantity,
+          totalCost: orderData.totalCost,
+          deliveryDate: orderData.deliveryDate,
+          pdfBase64: base64,
+        },
+      });
+      if (error) throw error;
+      toast.success(t("flyer.orderSent"));
+      setOrderOpen(false);
+    } catch (e: any) {
+      toast.error(t("flyer.orderSendFailed") + ": " + (e.message || ""));
+    } finally {
+      setOrderSending(false);
+    }
+  };
 
   const runPlan = async () => {
     if (!address) { toast.error(t("common.enterAddress")); return; }
@@ -186,8 +272,8 @@ export default function FlyerPlan() {
           {/* Results */}
           {result && (
             <motion.div variants={stagger} initial="initial" animate="animate" className="space-y-6">
-              {/* PDF Export + Summary */}
-              <motion.div variants={fadeUp} className="flex justify-end">
+              {/* PDF Export + Order + Summary */}
+              <motion.div variants={fadeUp} className="flex justify-end gap-2">
                 <Button
                   variant="outline"
                   className="gap-2"
@@ -195,6 +281,13 @@ export default function FlyerPlan() {
                 >
                   <Download className="w-4 h-4" />
                   {t("flyer.pdfDownload")}
+                </Button>
+                <Button
+                  className="gap-2"
+                  onClick={() => setOrderOpen(true)}
+                >
+                  <ClipboardList className="w-4 h-4" />
+                  {t("flyer.createOrder")}
                 </Button>
               </motion.div>
 
@@ -418,6 +511,136 @@ export default function FlyerPlan() {
           )}
         </div>
       </div>
+
+      {/* Order Form Dialog */}
+      <Dialog open={orderOpen} onOpenChange={setOrderOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ClipboardList className="w-5 h-5" />
+              {t("flyer.orderTitle")}
+            </DialogTitle>
+            <DialogDescription>{t("flyer.orderDesc")}</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2">
+            {/* Vendor */}
+            <div className="space-y-3 p-3 rounded-lg bg-muted/50">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("flyer.vendorCompany")}</p>
+              <Input
+                placeholder="例: 株式会社○○ポスティング"
+                value={orderForm.vendorCompany}
+                onChange={(e) => updateOrder("vendorCompany", e.target.value)}
+              />
+              <Input
+                placeholder={t("flyer.vendorEmail")}
+                type="email"
+                value={orderForm.vendorEmail}
+                onChange={(e) => updateOrder("vendorEmail", e.target.value)}
+              />
+            </div>
+
+            {/* Client */}
+            <div className="space-y-3 p-3 rounded-lg bg-muted/50">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("flyer.clientCompany")}</p>
+              <Input
+                placeholder="例: 株式会社ファービヨンド"
+                value={orderForm.clientCompany}
+                onChange={(e) => updateOrder("clientCompany", e.target.value)}
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  placeholder={t("flyer.clientName")}
+                  value={orderForm.clientName}
+                  onChange={(e) => updateOrder("clientName", e.target.value)}
+                />
+                <Input
+                  placeholder={t("flyer.clientPhone")}
+                  value={orderForm.clientPhone}
+                  onChange={(e) => updateOrder("clientPhone", e.target.value)}
+                />
+              </div>
+              <Input
+                placeholder={t("flyer.clientEmail")}
+                type="email"
+                value={orderForm.clientEmail}
+                onChange={(e) => updateOrder("clientEmail", e.target.value)}
+              />
+            </div>
+
+            {/* Specs */}
+            <div className="space-y-3 p-3 rounded-lg bg-muted/50">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">仕様</p>
+              <Input
+                type="date"
+                value={orderForm.deliveryDate}
+                onChange={(e) => updateOrder("deliveryDate", e.target.value)}
+              />
+              <div className="grid grid-cols-3 gap-2">
+                <Select value={orderForm.paperSize} onValueChange={(v) => updateOrder("paperSize", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="A4">A4</SelectItem>
+                    <SelectItem value="A5">A5</SelectItem>
+                    <SelectItem value="B4">B4</SelectItem>
+                    <SelectItem value="B5">B5</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={orderForm.paperType} onValueChange={(v) => updateOrder("paperType", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="コート紙90kg">コート紙90kg</SelectItem>
+                    <SelectItem value="コート紙110kg">コート紙110kg</SelectItem>
+                    <SelectItem value="マット紙90kg">マット紙90kg</SelectItem>
+                    <SelectItem value="上質紙70kg">上質紙70kg</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={orderForm.colorMode} onValueChange={(v) => updateOrder("colorMode", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="両面カラー">両面カラー</SelectItem>
+                    <SelectItem value="片面カラー">片面カラー</SelectItem>
+                    <SelectItem value="両面モノクロ">両面モノクロ</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <Textarea
+              placeholder={t("flyer.orderNotes")}
+              value={orderForm.notes}
+              onChange={(e) => updateOrder("notes", e.target.value)}
+              rows={2}
+            />
+
+            {/* Summary */}
+            {result && (
+              <div className="text-xs text-muted-foreground bg-primary/5 rounded-lg p-3 space-y-1">
+                <p>配布エリア: {result.distributionAreas.length}件</p>
+                <p>合計部数: {result.totalQuantity.toLocaleString()}部</p>
+                <p className="font-semibold text-primary text-sm">合計金額: ¥{result.estimatedCost.totalCost.toLocaleString()}</p>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-2">
+              <Button className="flex-1 gap-2" variant="outline" onClick={handleGenerateOrder}>
+                <Download className="w-4 h-4" />
+                {t("flyer.generateOrder")}
+              </Button>
+              <Button
+                className="flex-1 gap-2"
+                onClick={handleSendOrder}
+                disabled={orderSending || !orderForm.vendorEmail}
+              >
+                {orderSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                {t("flyer.sendOrder")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }
