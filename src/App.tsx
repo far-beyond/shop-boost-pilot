@@ -27,6 +27,7 @@ import Tokushoho from "./pages/Tokushoho";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import Install from "./pages/Install";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,7 @@ const AppRoutes = () => (
     <Route path="/tokushoho" element={<Tokushoho />} />
     <Route path="/terms" element={<Terms />} />
     <Route path="/contact" element={<Contact />} />
+    <Route path="/install" element={<Install />} />
     {/* Legacy routes redirect */}
     <Route path="/diagnosis" element={<Navigate to="/dashboard" replace />} />
     <Route path="/promo" element={<Navigate to="/dashboard" replace />} />
