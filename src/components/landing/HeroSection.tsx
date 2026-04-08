@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, Play, MapPin, BarChart3, Target, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -8,8 +8,15 @@ export default function HeroSection() {
   const { t, language } = useLanguage();
   const isEn = language === "en";
 
+  const highlights = [
+    { icon: MapPin, text: isEn ? "Trade Area Analysis" : "商圏分析" },
+    { icon: BarChart3, text: isEn ? "Census Data" : "国勢調査データ" },
+    { icon: Target, text: isEn ? "Competitor Mapping" : "競合マッピング" },
+    { icon: Zap, text: isEn ? "AI Proposals" : "AI施策提案" },
+  ];
+
   return (
-    <section className="relative py-24 md:py-32 overflow-hidden">
+    <section className="relative py-24 md:py-36 overflow-hidden">
       <div className="absolute inset-0" style={{ background: "var(--gradient-hero)" }} />
       {/* Faint grid background to evoke map analysis */}
       <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
@@ -28,26 +35,51 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-[1.2] tracking-tight mb-6">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-1.5 text-sm font-medium mb-6">
+              <Zap className="w-4 h-4" />
+              {isEn ? "AI-Powered Local Marketing Platform" : "AI搭載ローカルマーケティングプラットフォーム"}
+            </div>
+
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-[1.15] tracking-tight mb-6">
               {isEn ? (
                 <>
-                  <span className="text-gradient">Map × AI</span>
+                  <span className="text-gradient">Map × AI</span> —
                   <br />
-                  Transform Your Customer Acquisition
+                  Smarter Local
+                  <br />
+                  Marketing
                 </>
               ) : (
                 <>
                   <span className="text-gradient">地図 × AI</span> で、
                   <br />
-                  集客を変える
+                  集客を、もっと
+                  <br />
+                  <span className="text-gradient">賢く。</span>
                 </>
               )}
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed max-w-2xl mx-auto">
               {isEn
-                ? "Trade area analysis, competitor research, ad proposals, flyer distribution — all in one platform."
-                : "商圏分析、競合調査、広告提案、チラシ配布まで。すべてをひとつのプラットフォームで。"}
+                ? "Enter your address. Get instant trade area analysis, competitor insights, ad proposals, and flyer distribution plans — powered by real census data and AI."
+                : "住所を入力するだけ。国勢調査の実データとAIが、商圏分析・競合調査・広告提案・チラシ配布プランを瞬時に作成します。"}
             </p>
+          </motion.div>
+
+          {/* Highlight chips */}
+          <motion.div
+            className="flex flex-wrap items-center justify-center gap-3 mb-10"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            {highlights.map((h, i) => (
+              <div key={i} className="flex items-center gap-1.5 bg-background/80 border border-border/60 rounded-full px-3 py-1.5 text-sm text-muted-foreground shadow-sm">
+                <h.icon className="w-3.5 h-3.5 text-primary" />
+                {h.text}
+              </div>
+            ))}
           </motion.div>
 
           <motion.div
@@ -56,28 +88,44 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <Link to="/input">
-              <Button size="lg" className="text-base px-8 py-6 gap-2 shadow-lg hover:shadow-xl transition-shadow">
-                {isEn ? "Analyze Your Area for Free" : "無料で商圏分析する"}
+            <Link to="/map-analysis">
+              <Button size="lg" className="text-base px-10 py-7 gap-2 shadow-lg hover:shadow-xl transition-shadow text-lg">
+                {isEn ? "Try Free Analysis" : "無料で商圏分析する"}
                 <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
-            <Link to="/map-analysis">
-              <Button size="lg" variant="outline" className="text-base px-8 py-6 gap-2">
+            <a href="#demo-video">
+              <Button size="lg" variant="outline" className="text-base px-8 py-7 gap-2 text-lg">
                 <Play className="w-4 h-4" />
-                {isEn ? "See Demo" : "デモを見る"}
+                {isEn ? "Watch Demo" : "デモを見る"}
               </Button>
-            </Link>
+            </a>
           </motion.div>
+
+          {/* Trust indicators */}
+          <motion.p
+            className="mt-6 text-sm text-muted-foreground/70"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
+            {isEn
+              ? "No credit card required. 10 free analyses per month."
+              : "クレジットカード不要。月10回まで無料で分析できます。"}
+          </motion.p>
         </div>
 
         {/* YouTube demo video */}
         <motion.div
-          className="mt-16 mx-auto max-w-[800px]"
+          id="demo-video"
+          className="mt-20 mx-auto max-w-[800px]"
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.5 }}
         >
+          <p className="text-center text-sm text-muted-foreground mb-4">
+            {isEn ? "See MapBoost AI in action — 1 minute overview" : "1分でわかるMapBoost AI"}
+          </p>
           <div className="relative w-full rounded-2xl border border-border/60 shadow-2xl overflow-hidden" style={{ paddingBottom: "56.25%" }}>
             <iframe
               className="absolute inset-0 w-full h-full"

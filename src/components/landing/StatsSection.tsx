@@ -8,19 +8,23 @@ export default function StatsSection() {
   const stats = [
     {
       value: isEn ? "3 min" : "3分",
-      label: isEn ? "Trade area analysis completed" : "で商圏分析完了",
+      label: isEn ? "Instant trade area analysis" : "で商圏分析が完了",
+      sub: isEn ? "From address input to full report" : "住所入力からレポートまで",
     },
     {
       value: isEn ? "47" : "47",
-      label: isEn ? "All prefectures covered" : "都道府県対応",
+      label: isEn ? "All prefectures covered" : "都道府県 完全対応",
+      sub: isEn ? "Japan nationwide support" : "日本全国をカバー",
     },
     {
-      value: isEn ? "Census" : "国勢調査",
-      label: isEn ? "Official data integrated" : "データ連携済み",
+      value: isEn ? "Real Data" : "実データ",
+      label: isEn ? "Census data integrated" : "国勢調査データ連携",
+      sub: isEn ? "e-Stat, US Census, WorldPop" : "e-Stat・US Census・WorldPop",
     },
     {
       value: isEn ? "Global" : "世界対応",
-      label: isEn ? "US Census / WorldPop" : "US Census / WorldPop",
+      label: isEn ? "Worldwide coverage" : "海外エリアも分析可能",
+      sub: isEn ? "Analyze any location worldwide" : "アメリカ・ヨーロッパ・アジア",
     },
   ];
 
@@ -38,7 +42,8 @@ export default function StatsSection() {
               transition={{ duration: 0.4, delay: i * 0.1 }}
             >
               <div className="text-4xl md:text-5xl font-bold text-gradient mb-2">{s.value}</div>
-              <div className="text-sm text-muted-foreground">{s.label}</div>
+              <div className="text-sm font-medium text-foreground mb-1">{s.label}</div>
+              <div className="text-xs text-muted-foreground">{s.sub}</div>
             </motion.div>
           ))}
         </div>
