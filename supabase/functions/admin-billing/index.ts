@@ -158,9 +158,9 @@ serve(async (req) => {
           created_at: u.created_at,
           last_sign_in_at: u.last_sign_in_at,
           plan,
-          subscription_status: sub?.status || null,
+          subscription_status: sub?.plan === "pro" ? "active" : (sub ? "inactive" : null),
           subscription_end: sub?.current_period_end || null,
-          usage_this_month: usage?.count || 0,
+          usage_this_month: usage?.usage_count || 0,
         };
       });
 
