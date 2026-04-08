@@ -20,7 +20,7 @@ const fadeUp = { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 } }
 type ReportData = { area: any | null; ad: any | null; flyer: any | null; loading: boolean; error: string | null; };
 
 export default function Report() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [address, setAddress] = useState("");
   const [industry, setIndustry] = useState("");
   const [storeName, setStoreName] = useState("");
@@ -33,9 +33,9 @@ export default function Report() {
     if (!industry) { toast.error(t("rpt.errIndustry")); return; }
     setReport({ area: null, ad: null, flyer: null, loading: true, error: null });
     try {
-      const body = { address, industry, budget, target, storeName };
+      const body = { address, industry, budget, target, storeName, language };
       const [areaRes, adRes, flyerRes] = await Promise.all([
-        supabase.functions.invoke("area-analysis", { body: { address, radius: "3km", industry, analysisType: "area" } }),
+        supabase.functions.invoke("area-analysis", { body: { address, radius: "3km", industry, analysisType: "area", language } }),
         supabase.functions.invoke("ad-proposal", { body }),
         supabase.functions.invoke("flyer-plan", { body }),
       ]);
