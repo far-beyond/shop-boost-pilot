@@ -3,6 +3,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Megaphone, Loader2, Search, Copy, Check, Target, TrendingUp,
   DollarSign, Users, Lightbulb, MousePointerClick, FileDown,
+  ClipboardList, Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,9 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { exportAdProposalPDF } from "@/lib/adPdfExport";
+import { exportAdOrderPDF, type AdOrderData } from "@/lib/adOrderPdfExport";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
@@ -70,6 +75,126 @@ export default function AdProposal() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AdProposalResult | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [orderOpen, setOrderOpen] = useState(false);
+  const [orderSending, setOrderSending] = useState(false);
+  const [orderForm, setOrderForm] = useState({
+    clientCompany: "",
+    clientName: "",
+    clientEmail: "",
+    clientPhone: "",
+    customerCompany: "",
+    customerName: "",
+    customerEmail: "",
+    managementFeeRate: "20",
+    startDate: "",
+    contractMonths: "3",
+    targetRadius: "5km",
+    notes: "",
+    platformGoogle: true,
+    platformMeta: true,
+  });
+
+  const updateOrderField = (field: string, value: string | boolean) =>
+    setOrderForm((prev) => ({ ...prev, [field]: value }));
+
+  const buildAdOrderData = (): AdOrderData => {
+    const r = result!;
+    const feeRate = parseInt(orderForm.managementFeeRate) / 100;
+    const monthlyAdBudget = r.overallStrategy.monthlyTotalBudget;
+    const managementFee = Math.round(monthlyAdBudget * feeRate);
+    const platforms: ("google" | "meta")[] = [];
+    if (orderForm.platformGoogle) platforms.push("google");
+    if (orderForm.platformMeta) platforms.push("meta");
+
+    const adCopies: { platform: string; headline: string; description: string }[] = [];
+    if (orderForm.platformGoogle) {
+      r.googleAds.adCopies.forEach((ad) => {
+        adCopies.push({ platform: "google", headline: `${ad.headline1} | ${ad.headline2}`, description: ad.description1 });
+      });
+    }
+    if (orderForm.platformMeta) {
+      r.metaAds.adCreatives.forEach((cr) => {
+        adCopies.push({ platform: "meta", headline: cr.headline, description: cr.primaryText });
+      });
+    }
+
+    return {
+      clientCompany: orderForm.clientCompany,
+      clientName: orderForm.clientName,
+      clientEmail: orderForm.clientEmail,
+      clientPhone: orderForm.clientPhone,
+      customerCompany: orderForm.customerCompany,
+      customerName: orderForm.customerName,
+      customerEmail: orderForm.customerEmail,
+      storeName: storeName || address,
+      storeAddress: address,
+      industry,
+      platforms,
+      monthlyAdBudget,
+      managementFee,
+      totalMonthlyCharge: monthlyAdBudget + managementFee,
+      startDate: orderForm.startDate,
+      contractMonths: parseInt(orderForm.contractMonths),
+      targetArea: address,
+      targetRadius: orderForm.targetRadius,
+      targetAudience: target || r.metaAds.targetAudiences?.[0]?.name || "",
+      googleCampaignType: r.googleAds.campaignType,
+      googleKeywords: r.googleAds.keywords.map((k) => k.keyword),
+      googleDailyBudget: r.googleAds.dailyBudget,
+      metaObjective: r.metaAds.campaignObjective,
+      metaAgeRange: r.metaAds.targetAudiences?.[0]?.ageRange || "",
+      metaInterests: r.metaAds.targetAudiences?.[0]?.interests || [],
+      metaDailyBudget: r.metaAds.dailyBudget,
+      adCopies,
+      notes: orderForm.notes,
+    };
+  };
+
+  const handleGenerateAdOrder = async () => {
+    if (!orderForm.clientCompany) {
+      toast.error("発注元の会社名は必須です");
+      return;
+    }
+    await exportAdOrderPDF(buildAdOrderData());
+    toast.success(t("ad.orderComplete"));
+  };
+
+  const handleSendAdOrder = async () => {
+    if (!orderForm.customerEmail) {
+      toast.error("送信先メールアドレスを入力してください");
+      return;
+    }
+    setOrderSending(true);
+    try {
+      const orderData = buildAdOrderData();
+      const pdfBlob = await exportAdOrderPDF(orderData);
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve) => {
+        reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
+        reader.readAsDataURL(pdfBlob);
+      });
+      const { error } = await supabase.functions.invoke("send-flyer-order", {
+        body: {
+          to: orderForm.customerEmail,
+          subject: `【お見積書】${orderData.storeName} 広告運用代行のご提案`,
+          storeName: orderData.storeName,
+          clientCompany: orderData.clientCompany,
+          clientName: orderData.clientName,
+          totalQuantity: 0,
+          totalCost: orderData.totalMonthlyCharge,
+          deliveryDate: orderData.startDate,
+          pdfBase64: base64,
+        },
+      });
+      if (error) throw error;
+      toast.success(t("ad.orderSent"));
+      setOrderOpen(false);
+    } catch (e: any) {
+      toast.error(t("ad.orderSendFailed") + ": " + (e.message || ""));
+    } finally {
+      setOrderSending(false);
+    }
+  };
 
   const runProposal = async () => {
     if (!address) { toast.error(t("common.enterAddress")); return; }
@@ -146,14 +271,23 @@ export default function AdProposal() {
                     {loading ? t("ad.generating") : t("ad.generate")}
                   </Button>
                   {result && (
-                    <Button
-                      variant="outline"
-                      className="gap-2"
-                      onClick={() => exportAdProposalPDF(result, { storeName, address, industry })}
-                    >
-                      <FileDown className="w-4 h-4" />
-                      {t("ad.pdfDownload")}
-                    </Button>
+                    <>
+                      <Button
+                        variant="outline"
+                        className="gap-2"
+                        onClick={() => exportAdProposalPDF(result, { storeName, address, industry })}
+                      >
+                        <FileDown className="w-4 h-4" />
+                        {t("ad.pdfDownload")}
+                      </Button>
+                      <Button
+                        className="gap-2"
+                        onClick={() => setOrderOpen(true)}
+                      >
+                        <ClipboardList className="w-4 h-4" />
+                        {t("ad.createOrder")}
+                      </Button>
+                    </>
                   )}
                 </div>
               </CardContent>
@@ -395,6 +529,112 @@ export default function AdProposal() {
           )}
         </div>
       </div>
+
+      {/* Ad Order Dialog */}
+      <Dialog open={orderOpen} onOpenChange={setOrderOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ClipboardList className="w-5 h-5" />
+              {t("ad.orderTitle")}
+            </DialogTitle>
+            <DialogDescription>{t("ad.orderDesc")}</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2">
+            {/* Your company (agency) */}
+            <div className="space-y-3 p-3 rounded-lg bg-muted/50">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("ad.agencyInfo")}</p>
+              <Input placeholder={t("ad.companyName")} value={orderForm.clientCompany} onChange={(e) => updateOrderField("clientCompany", e.target.value)} />
+              <div className="grid grid-cols-2 gap-2">
+                <Input placeholder={t("ad.contactPerson")} value={orderForm.clientName} onChange={(e) => updateOrderField("clientName", e.target.value)} />
+                <Input placeholder={t("ad.phone")} value={orderForm.clientPhone} onChange={(e) => updateOrderField("clientPhone", e.target.value)} />
+              </div>
+              <Input placeholder={t("ad.email")} type="email" value={orderForm.clientEmail} onChange={(e) => updateOrderField("clientEmail", e.target.value)} />
+            </div>
+
+            {/* Customer (advertiser) */}
+            <div className="space-y-3 p-3 rounded-lg bg-muted/50">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("ad.customerInfo")}</p>
+              <Input placeholder={t("ad.customerCompany")} value={orderForm.customerCompany} onChange={(e) => updateOrderField("customerCompany", e.target.value)} />
+              <div className="grid grid-cols-2 gap-2">
+                <Input placeholder={t("ad.customerName")} value={orderForm.customerName} onChange={(e) => updateOrderField("customerName", e.target.value)} />
+                <Input placeholder={t("ad.customerEmail")} type="email" value={orderForm.customerEmail} onChange={(e) => updateOrderField("customerEmail", e.target.value)} />
+              </div>
+            </div>
+
+            {/* Platforms & Contract */}
+            <div className="space-y-3 p-3 rounded-lg bg-muted/50">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("ad.campaignSettings")}</p>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox checked={orderForm.platformGoogle} onCheckedChange={(c) => updateOrderField("platformGoogle", !!c)} />
+                  Google Ads
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox checked={orderForm.platformMeta} onCheckedChange={(c) => updateOrderField("platformMeta", !!c)} />
+                  Meta Ads
+                </label>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="text-xs text-muted-foreground">{t("ad.startDate")}</label>
+                  <Input type="date" value={orderForm.startDate} onChange={(e) => updateOrderField("startDate", e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">{t("ad.contractPeriod")}</label>
+                  <Select value={orderForm.contractMonths} onValueChange={(v) => updateOrderField("contractMonths", v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1ヶ月</SelectItem>
+                      <SelectItem value="3">3ヶ月</SelectItem>
+                      <SelectItem value="6">6ヶ月</SelectItem>
+                      <SelectItem value="12">12ヶ月</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">{t("ad.feeRate")}</label>
+                  <Select value={orderForm.managementFeeRate} onValueChange={(v) => updateOrderField("managementFeeRate", v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10%</SelectItem>
+                      <SelectItem value="15">15%</SelectItem>
+                      <SelectItem value="20">20%</SelectItem>
+                      <SelectItem value="25">25%</SelectItem>
+                      <SelectItem value="30">30%</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            <Textarea placeholder={t("ad.orderNotes")} value={orderForm.notes} onChange={(e) => updateOrderField("notes", e.target.value)} rows={2} />
+
+            {/* Cost Summary */}
+            {result && (
+              <div className="text-xs text-muted-foreground bg-primary/5 rounded-lg p-3 space-y-1">
+                <p>{t("ad.adBudget")}: ¥{result.overallStrategy.monthlyTotalBudget.toLocaleString()}/月</p>
+                <p>{t("ad.mgmtFee")}: ¥{Math.round(result.overallStrategy.monthlyTotalBudget * parseInt(orderForm.managementFeeRate) / 100).toLocaleString()}/月</p>
+                <p className="font-semibold text-primary text-sm">
+                  {t("ad.monthlyTotal")}: ¥{(result.overallStrategy.monthlyTotalBudget + Math.round(result.overallStrategy.monthlyTotalBudget * parseInt(orderForm.managementFeeRate) / 100)).toLocaleString()}/月
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button className="flex-1 gap-2" variant="outline" onClick={handleGenerateAdOrder}>
+                <FileDown className="w-4 h-4" />
+                {t("ad.generateOrder")}
+              </Button>
+              <Button className="flex-1 gap-2" onClick={handleSendAdOrder} disabled={orderSending || !orderForm.customerEmail}>
+                {orderSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                {t("ad.sendOrder")}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }
