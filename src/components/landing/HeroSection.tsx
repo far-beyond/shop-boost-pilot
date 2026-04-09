@@ -88,7 +88,7 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <Link to="/map-analysis">
+            <Link to="/free-analysis">
               <Button size="lg" className="text-base px-10 py-7 gap-2 shadow-lg hover:shadow-xl transition-shadow text-lg">
                 {isEn ? "Try Free Analysis" : "無料で商圏分析する"}
                 <ArrowRight className="w-5 h-5" />

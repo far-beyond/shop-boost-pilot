@@ -34,6 +34,7 @@ import StoreComparison from "./pages/StoreComparison";
 import MonthlyReport from "./pages/MonthlyReport";
 import ReportSchedule from "./pages/ReportSchedule";
 import MeoAnalysis from "./pages/MeoAnalysis";
+import FreeAnalysis from "./pages/FreeAnalysis";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,7 @@ const AppRoutes = () => (
     <Route path="/monthly-report" element={<ProtectedRoute><MonthlyReport /></ProtectedRoute>} />
     <Route path="/report-schedule" element={<ProtectedRoute><ReportSchedule /></ProtectedRoute>} />
     <Route path="/meo-analysis" element={<ProtectedRoute><MeoAnalysis /></ProtectedRoute>} />
+    <Route path="/free-analysis" element={<FreeAnalysis />} />
     <Route path="/pricing" element={<Pricing />} />
     <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
     <Route path="/tokushoho" element={<Tokushoho />} />
