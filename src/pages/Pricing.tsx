@@ -13,7 +13,7 @@ import { motion } from "framer-motion";
 
 // TODO: Replace these with actual Stripe Price IDs after creating products in Stripe Dashboard
 const STANDARD_PRICE_ID = "price_1TK8M1JOWCMLKlVhcVSM5w7Q";
-const PRO_PRICE_ID = "price_1TJ6aNJOWCMLKlVheBJP8r39"; // existing
+const PRO_PRICE_ID = "price_1TK8QiJOWCMLKlVhh3GQg3Ad";
 const PRO_PRODUCT_ID = "prod_UHfwoH9hAZlxt8"; // existing
 
 export default function Pricing() {
