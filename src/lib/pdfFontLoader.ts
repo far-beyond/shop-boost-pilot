@@ -19,13 +19,15 @@ export async function loadJapaneseFont(doc: jsPDF): Promise<boolean> {
         return false;
       }
       const buf = await res.arrayBuffer();
-      // Convert ArrayBuffer to base64 safely (no stack overflow)
-      const bytes = new Uint8Array(buf);
-      let binary = "";
-      for (let i = 0; i < bytes.length; i++) {
-        binary += String.fromCharCode(bytes[i]);
-      }
-      fontBase64 = btoa(binary);
+      // Use FileReader for native, reliable base64 conversion (works in all browsers)
+      const blob = new Blob([buf]);
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("FileReader failed"));
+        reader.readAsDataURL(blob);
+      });
+      fontBase64 = dataUrl.split(",")[1];
       fontLoaded = true;
     }
     doc.addFileToVFS("NotoSansJP-Regular.woff", fontBase64);
