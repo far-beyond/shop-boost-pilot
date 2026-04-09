@@ -8,7 +8,8 @@ const corsHeaders = {
 };
 
 // Hardcoded admin emails - only these users can access admin functions
-const ADMIN_EMAILS = ["admin@mapboost.ai", "pekepon6666@gmail.com"];
+const ADMIN_EMAILS_ENV = Deno.env.get("ADMIN_EMAILS") || "admin@mapboost.ai";
+const ADMIN_EMAILS = ADMIN_EMAILS_ENV.split(",").map((e: string) => e.trim().toLowerCase());
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
