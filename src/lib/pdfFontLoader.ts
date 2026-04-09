@@ -33,6 +33,13 @@ export async function loadJapaneseFont(doc: jsPDF): Promise<boolean> {
     doc.addFileToVFS("NotoSansJP-Regular.ttf", fontBase64);
     doc.addFont("NotoSansJP-Regular.ttf", "NotoSansJP", "normal");
     doc.setFont("NotoSansJP");
+    // Set as default font for autoTable globally
+    (doc as any).autoTableSetDefaults?.({
+      styles: { font: "NotoSansJP" },
+      headStyles: { font: "NotoSansJP" },
+      bodyStyles: { font: "NotoSansJP" },
+      footStyles: { font: "NotoSansJP" },
+    });
     return true;
   } catch (e) {
     console.error("Failed to load Japanese font:", e);
