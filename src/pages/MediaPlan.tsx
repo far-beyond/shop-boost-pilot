@@ -68,6 +68,7 @@ export default function MediaPlan() {
       flyerTotalCost: f?.estimatedCost?.totalCost || 0,
       flyerAreas: f?.distributionAreas?.map((a: any) => ({ areaName: a.areaName, quantity: a.recommendedQuantity, priority: a.priority })) || [],
       flyerTiming: f?.timing?.bestDays?.join("、") || "",
+      targetAudience: r.meta?.targetAudiences?.map((a: any) => a.name).join(", ") || "",
     };
   };
 
