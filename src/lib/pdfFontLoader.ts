@@ -19,15 +19,13 @@ export async function loadJapaneseFont(doc: jsPDF): Promise<boolean> {
         return false;
       }
       const buf = await res.arrayBuffer();
-      // Use chunked base64 conversion to avoid call stack overflow on large files
+      // Convert ArrayBuffer to base64 safely (no stack overflow)
       const bytes = new Uint8Array(buf);
-      const chunks: string[] = [];
-      const chunkSize = 8192;
-      for (let i = 0; i < bytes.length; i += chunkSize) {
-        const chunk = bytes.subarray(i, i + chunkSize);
-        chunks.push(String.fromCharCode(...chunk));
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
       }
-      fontBase64 = btoa(chunks.join(""));
+      fontBase64 = btoa(binary);
       fontLoaded = true;
     }
     doc.addFileToVFS("NotoSansJP-Regular.woff", fontBase64);
@@ -46,25 +44,25 @@ export async function loadJapaneseFont(doc: jsPDF): Promise<boolean> {
  */
 export function savePdf(doc: jsPDF, fileName: string): void {
   try {
-    // Try standard save first
-    doc.save(fileName);
+    // Use blob + link click for maximum browser compatibility (Firefox, Safari, Chrome)
+    const blob = doc.output("blob");
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 200);
   } catch {
-    // Fallback: open in new tab
     try {
-      const blob = doc.output("blob");
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      a.style.display = "none";
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 100);
+      // Fallback: standard jsPDF save
+      doc.save(fileName);
     } catch {
-      // Last resort: open blob URL in new window
+      // Last resort: open in new tab
       const dataUri = doc.output("datauristring");
       window.open(dataUri, "_blank");
     }
