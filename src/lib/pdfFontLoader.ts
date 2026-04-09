@@ -11,9 +11,9 @@ let fontBase64 = "";
 export async function loadJapaneseFont(doc: jsPDF): Promise<boolean> {
   try {
     if (!fontLoaded) {
-      // Use TTF format - most reliable with jsPDF (woff causes Unicode metadata errors)
+      // Static TTF from Google Fonts - 3MB, full Japanese coverage, jsPDF compatible
       const res = await fetch(
-        "https://cdn.jsdelivr.net/gh/googlefonts/noto-cjk@main/Sans/SubsetOTF/JP/NotoSansJP-Regular.otf"
+        "https://fonts.gstatic.com/s/notosansjp/v56/-F6jfjtqLzI2JPCgQBnw7HFyzSD-AsregP8VFBEj75s.ttf"
       );
       if (!res.ok) {
         console.error("Font fetch failed:", res.status);
@@ -30,8 +30,8 @@ export async function loadJapaneseFont(doc: jsPDF): Promise<boolean> {
       fontBase64 = dataUrl.split(",")[1];
       fontLoaded = true;
     }
-    doc.addFileToVFS("NotoSansJP-Regular.otf", fontBase64);
-    doc.addFont("NotoSansJP-Regular.otf", "NotoSansJP", "normal");
+    doc.addFileToVFS("NotoSansJP-Regular.ttf", fontBase64);
+    doc.addFont("NotoSansJP-Regular.ttf", "NotoSansJP", "normal");
     doc.setFont("NotoSansJP");
     return true;
   } catch (e) {
