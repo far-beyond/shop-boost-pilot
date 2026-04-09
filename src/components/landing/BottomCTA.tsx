@@ -44,7 +44,7 @@ export default function BottomCTA() {
               <span className="w-1 h-1 rounded-full bg-white/40" />
               <span>{isEn ? "No credit card" : "クレジットカード不要"}</span>
               <span className="w-1 h-1 rounded-full bg-white/40" />
-              <span>{isEn ? "3 free/month" : "月3回無料"}</span>
+              <span>{isEn ? "7-day free trial" : "7日間無料トライアル"}</span>
             </div>
             <Link to="/free-analysis">
               <Button

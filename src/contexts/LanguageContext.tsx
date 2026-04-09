@@ -1180,7 +1180,7 @@ const translations: Record<Language, Record<string, string>> = {
     "free.bottomCtaText": "もっと詳しい分析が必要ですか？",
     "free.bottomCtaButton": "無料アカウントを作成",
     "free.limitReached": "無料枠を使い切りました",
-    "free.limitMessage": "アカウント登録で月10回まで分析できます。",
+    "free.limitMessage": "アカウント登録で7日間無料トライアルを開始できます。",
     "free.signupCta": "無料で登録する",
     "free.remainingUses": "残り無料回数: ",
     "free.remainingUsesSuffix": "回",

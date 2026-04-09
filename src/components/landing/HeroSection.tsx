@@ -110,8 +110,8 @@ export default function HeroSection() {
             transition={{ duration: 0.5, delay: 0.5 }}
           >
             {isEn
-              ? "No credit card required. 10 free analyses per month."
-              : "クレジットカード不要。月10回まで無料で分析できます。"}
+              ? "No credit card required. 7-day free trial with full features."
+              : "クレジットカード不要。7日間の無料トライアルで全機能をお試しいただけます。"}
           </motion.p>
         </div>
 
