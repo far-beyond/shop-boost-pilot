@@ -129,7 +129,7 @@ export default function HeroSection() {
           <div className="relative w-full rounded-2xl border border-border/60 shadow-2xl overflow-hidden" style={{ paddingBottom: "56.25%" }}>
             <iframe
               className="absolute inset-0 w-full h-full"
-              src="https://www.youtube.com/embed/JGuL8-pJTtQ"
+              src="https://www.youtube.com/embed/NundjGcXmmY"
               title="MapBoost AI Demo"
               allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
