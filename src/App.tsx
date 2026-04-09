@@ -33,6 +33,7 @@ import Install from "./pages/Install";
 import StoreComparison from "./pages/StoreComparison";
 import MonthlyReport from "./pages/MonthlyReport";
 import ReportSchedule from "./pages/ReportSchedule";
+import MeoAnalysis from "./pages/MeoAnalysis";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,7 @@ const AppRoutes = () => (
     <Route path="/store-comparison" element={<ProtectedRoute><StoreComparison /></ProtectedRoute>} />
     <Route path="/monthly-report" element={<ProtectedRoute><MonthlyReport /></ProtectedRoute>} />
     <Route path="/report-schedule" element={<ProtectedRoute><ReportSchedule /></ProtectedRoute>} />
+    <Route path="/meo-analysis" element={<ProtectedRoute><MeoAnalysis /></ProtectedRoute>} />
     <Route path="/pricing" element={<Pricing />} />
     <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
     <Route path="/tokushoho" element={<Tokushoho />} />

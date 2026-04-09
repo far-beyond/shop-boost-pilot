@@ -1,7 +1,7 @@
 import {
   Home, MapPin, Megaphone, LayoutDashboard, ArrowLeftRight,
   FileText, BarChart3, TrendingUp, ClipboardList, Calendar,
-  LogOut, LogIn, Globe, CreditCard, Shield, Download,
+  LogOut, LogIn, Globe, CreditCard, Shield, Download, Star,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,6 +28,7 @@ export function AppSidebar() {
 
   const mainItems = [
     { title: t("nav.mapAnalysis"), url: "/map-analysis", icon: MapPin },
+    { title: t("nav.meoAnalysis"), url: "/meo-analysis", icon: Star },
     { title: t("nav.storeComparison"), url: "/store-comparison", icon: ArrowLeftRight },
     { title: t("nav.storeInput"), url: "/input", icon: FileText },
     { title: t("nav.mediaPlan"), url: "/media-plan", icon: Megaphone },
