@@ -11,15 +11,15 @@ let fontBase64 = "";
 export async function loadJapaneseFont(doc: jsPDF): Promise<boolean> {
   try {
     if (!fontLoaded) {
+      // Use TTF format - most reliable with jsPDF (woff causes Unicode metadata errors)
       const res = await fetch(
-        "https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.18/files/noto-sans-jp-japanese-400-normal.woff"
+        "https://cdn.jsdelivr.net/gh/googlefonts/noto-cjk@main/Sans/SubsetOTF/JP/NotoSansJP-Regular.otf"
       );
       if (!res.ok) {
         console.error("Font fetch failed:", res.status);
         return false;
       }
       const buf = await res.arrayBuffer();
-      // Use FileReader for native, reliable base64 conversion (works in all browsers)
       const blob = new Blob([buf]);
       const dataUrl = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
@@ -30,8 +30,8 @@ export async function loadJapaneseFont(doc: jsPDF): Promise<boolean> {
       fontBase64 = dataUrl.split(",")[1];
       fontLoaded = true;
     }
-    doc.addFileToVFS("NotoSansJP-Regular.woff", fontBase64);
-    doc.addFont("NotoSansJP-Regular.woff", "NotoSansJP", "normal");
+    doc.addFileToVFS("NotoSansJP-Regular.otf", fontBase64);
+    doc.addFont("NotoSansJP-Regular.otf", "NotoSansJP", "normal");
     doc.setFont("NotoSansJP");
     return true;
   } catch (e) {
