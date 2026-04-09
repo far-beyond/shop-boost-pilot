@@ -104,7 +104,7 @@ export async function exportCompetitorReportPDF(
       styles: { font: "NotoSansJP", fontSize: 8, cellPadding: 3 },
       headStyles: { fillColor: RED, font: "NotoSansJP", textColor: [255, 255, 255] },
       alternateRowStyles: { fillColor: LIGHT_BG },
-      columnStyles: { 1: { cellWidth: 55 }, 2: { cellWidth: 35 } },
+      columnStyles: { 1: { cellWidth: 55, font: "NotoSansJP" }, 2: { cellWidth: 35, font: "NotoSansJP" } },
       margin: { left: 14, right: 14 },
     });
     y = (doc as any).lastAutoTable.finalY + 12;

@@ -121,7 +121,7 @@ export async function exportDiagnosisPDF(diagnosis: DiagnosisRow) {
         styles: { font: "NotoSansJP", fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: BLUE, font: "NotoSansJP" },
         alternateRowStyles: { fillColor: LIGHT_BG },
-        columnStyles: { 1: { cellWidth: 65 } },
+        columnStyles: { 1: { cellWidth: 65, font: "NotoSansJP" } },
         margin: { left: 14, right: 14 },
       });
 

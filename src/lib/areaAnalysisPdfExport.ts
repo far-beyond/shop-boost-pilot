@@ -133,7 +133,7 @@ export async function exportAreaAnalysisPDF(
       styles: { font: "NotoSansJP", fontSize: 8, cellPadding: 3 },
       headStyles: { fillColor: BLUE, font: "NotoSansJP" },
       alternateRowStyles: { fillColor: LIGHT_BG },
-      columnStyles: { 2: { cellWidth: 80 } },
+      columnStyles: { 2: { cellWidth: 80, font: "NotoSansJP" } },
       margin: { left: 14, right: 14 },
     });
     y = (doc as any).lastAutoTable.finalY + 12;
@@ -179,7 +179,7 @@ export async function exportAreaAnalysisPDF(
       styles: { font: "NotoSansJP", fontSize: 8, cellPadding: 3 },
       headStyles: { fillColor: BLUE, font: "NotoSansJP" },
       alternateRowStyles: { fillColor: LIGHT_BG },
-      columnStyles: { 3: { cellWidth: 70 } },
+      columnStyles: { 3: { cellWidth: 70, font: "NotoSansJP" } },
       margin: { left: 14, right: 14 },
     });
     y = (doc as any).lastAutoTable.finalY + 12;
@@ -201,7 +201,7 @@ export async function exportAreaAnalysisPDF(
       styles: { font: "NotoSansJP", fontSize: 8, cellPadding: 3 },
       headStyles: { fillColor: BLUE, font: "NotoSansJP" },
       alternateRowStyles: { fillColor: LIGHT_BG },
-      columnStyles: { 2: { cellWidth: 70 } },
+      columnStyles: { 2: { cellWidth: 70, font: "NotoSansJP" } },
       margin: { left: 14, right: 14 },
     });
     y = (doc as any).lastAutoTable.finalY + 12;

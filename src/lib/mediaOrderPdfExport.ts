@@ -152,7 +152,7 @@ export async function exportMediaOrderPDF(order: MediaOrderData): Promise<Blob> 
     styles: { font: "NotoSansJP", fontSize: 9, cellPadding: 4 },
     headStyles: { fillColor: PURPLE, font: "NotoSansJP", textColor: [255, 255, 255] },
     footStyles: { fillColor: [240, 235, 255], font: "NotoSansJP", fontStyle: "bold", textColor: DARK },
-    columnStyles: { 1: { halign: "right", cellWidth: 40 } },
+    columnStyles: { 1: { halign: "right", cellWidth: 40, font: "NotoSansJP" } },
     margin: { left: 14, right: 14 },
   });
   y = (doc as any).lastAutoTable.finalY + 6;
@@ -184,7 +184,7 @@ export async function exportMediaOrderPDF(order: MediaOrderData): Promise<Blob> 
       startY: y,
       body: gRows,
       styles: { font: "NotoSansJP", fontSize: 9, cellPadding: 4 },
-      columnStyles: { 0: { cellWidth: 45, fillColor: LIGHT_BG, fontStyle: "bold" } },
+      columnStyles: { 0: { cellWidth: 45, fillColor: LIGHT_BG, fontStyle: "bold", font: "NotoSansJP" } },
       margin: { left: 14, right: 14 },
     });
     y = (doc as any).lastAutoTable.finalY + 6;
@@ -197,7 +197,7 @@ export async function exportMediaOrderPDF(order: MediaOrderData): Promise<Blob> 
         styles: { font: "NotoSansJP", fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: BLUE, font: "NotoSansJP", textColor: [255, 255, 255] },
         alternateRowStyles: { fillColor: LIGHT_BG },
-        columnStyles: { 1: { cellWidth: 55 }, 2: { cellWidth: 70 } },
+        columnStyles: { 1: { cellWidth: 55, font: "NotoSansJP" }, 2: { cellWidth: 70, font: "NotoSansJP" } },
         margin: { left: 14, right: 14 },
       });
       y = (doc as any).lastAutoTable.finalY + 12;
@@ -221,7 +221,7 @@ export async function exportMediaOrderPDF(order: MediaOrderData): Promise<Blob> 
       startY: y,
       body: mRows,
       styles: { font: "NotoSansJP", fontSize: 9, cellPadding: 4 },
-      columnStyles: { 0: { cellWidth: 45, fillColor: LIGHT_BG, fontStyle: "bold" } },
+      columnStyles: { 0: { cellWidth: 45, fillColor: LIGHT_BG, fontStyle: "bold", font: "NotoSansJP" } },
       margin: { left: 14, right: 14 },
     });
     y = (doc as any).lastAutoTable.finalY + 6;
@@ -234,7 +234,7 @@ export async function exportMediaOrderPDF(order: MediaOrderData): Promise<Blob> 
         styles: { font: "NotoSansJP", fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: BLUE, font: "NotoSansJP", textColor: [255, 255, 255] },
         alternateRowStyles: { fillColor: LIGHT_BG },
-        columnStyles: { 1: { cellWidth: 50 }, 2: { cellWidth: 70 } },
+        columnStyles: { 1: { cellWidth: 50, font: "NotoSansJP" }, 2: { cellWidth: 70, font: "NotoSansJP" } },
         margin: { left: 14, right: 14 },
       });
       y = (doc as any).lastAutoTable.finalY + 12;

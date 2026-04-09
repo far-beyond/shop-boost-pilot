@@ -253,7 +253,7 @@ export async function exportReportPDF(
         styles: { font: "NotoSansJP", fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: BLUE, font: "NotoSansJP" },
         alternateRowStyles: { fillColor: LIGHT_BG },
-        columnStyles: { 4: { cellWidth: 50 } },
+        columnStyles: { 4: { cellWidth: 50, font: "NotoSansJP" } },
         margin: { left: 14, right: 14 },
       });
       y = (doc as any).lastAutoTable.finalY + 10;

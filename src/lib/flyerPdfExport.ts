@@ -124,7 +124,7 @@ export async function exportFlyerPlanPDF(
     styles: { font: "NotoSansJP", fontSize: 8, cellPadding: 3 },
     headStyles: { fillColor: BLUE, font: "NotoSansJP" },
     alternateRowStyles: { fillColor: LIGHT_BG },
-    columnStyles: { 4: { cellWidth: 35 }, 5: { cellWidth: 45 } },
+    columnStyles: { 4: { cellWidth: 35, font: "NotoSansJP" }, 5: { cellWidth: 45, font: "NotoSansJP" } },
     margin: { left: 14, right: 14 },
   });
   y = (doc as any).lastAutoTable.finalY + 12;
@@ -175,7 +175,7 @@ export async function exportFlyerPlanPDF(
     styles: { font: "NotoSansJP", fontSize: 8, cellPadding: 3 },
     headStyles: { fillColor: BLUE, font: "NotoSansJP" },
     alternateRowStyles: { fillColor: LIGHT_BG },
-    columnStyles: { 1: { cellWidth: 40 }, 2: { cellWidth: 45 } },
+    columnStyles: { 1: { cellWidth: 40, font: "NotoSansJP" }, 2: { cellWidth: 45, font: "NotoSansJP" } },
     margin: { left: 14, right: 14 },
   });
   y = (doc as any).lastAutoTable.finalY + 12;

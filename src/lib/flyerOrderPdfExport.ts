@@ -156,8 +156,8 @@ export async function exportFlyerOrderPDF(order: FlyerOrderData): Promise<Blob> 
     body: specs,
     styles: { font: "NotoSansJP", fontSize: 9, cellPadding: 4 },
     columnStyles: {
-      0: { cellWidth: 40, fillColor: LIGHT_BG, fontStyle: "bold" },
-      1: { cellWidth: 120 },
+      0: { cellWidth: 40, fillColor: LIGHT_BG, fontStyle: "bold", font: "NotoSansJP" },
+      1: { cellWidth: 120, font: "NotoSansJP" },
     },
     margin: { left: 14, right: 14 },
   });
