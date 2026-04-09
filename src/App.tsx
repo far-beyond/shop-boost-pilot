@@ -31,6 +31,8 @@ import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import Install from "./pages/Install";
 import StoreComparison from "./pages/StoreComparison";
+import MonthlyReport from "./pages/MonthlyReport";
+import ReportSchedule from "./pages/ReportSchedule";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +65,8 @@ const AppRoutes = () => (
     <Route path="/response-analysis" element={<ProtectedRoute><ResponseAnalysis /></ProtectedRoute>} />
     <Route path="/order-history" element={<ProtectedRoute><OrderHistory /></ProtectedRoute>} />
     <Route path="/store-comparison" element={<ProtectedRoute><StoreComparison /></ProtectedRoute>} />
+    <Route path="/monthly-report" element={<ProtectedRoute><MonthlyReport /></ProtectedRoute>} />
+    <Route path="/report-schedule" element={<ProtectedRoute><ReportSchedule /></ProtectedRoute>} />
     <Route path="/pricing" element={<Pricing />} />
     <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
     <Route path="/tokushoho" element={<Tokushoho />} />
