@@ -1,5 +1,5 @@
 import {
-  Home, MapPin, Megaphone, LayoutDashboard,
+  Home, MapPin, Megaphone, LayoutDashboard, ArrowLeftRight,
   FileText, BarChart3, TrendingUp, ClipboardList,
   LogOut, LogIn, Globe, CreditCard, Shield, Download,
 } from "lucide-react";
@@ -28,6 +28,7 @@ export function AppSidebar() {
 
   const mainItems = [
     { title: t("nav.mapAnalysis"), url: "/map-analysis", icon: MapPin },
+    { title: t("nav.storeComparison"), url: "/store-comparison", icon: ArrowLeftRight },
     { title: t("nav.storeInput"), url: "/input", icon: FileText },
     { title: t("nav.mediaPlan"), url: "/media-plan", icon: Megaphone },
     { title: t("nav.report"), url: "/report", icon: BarChart3 },

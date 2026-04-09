@@ -30,6 +30,7 @@ import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import Install from "./pages/Install";
+import StoreComparison from "./pages/StoreComparison";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,7 @@ const AppRoutes = () => (
     <Route path="/report" element={<ProtectedRoute><Report /></ProtectedRoute>} />
     <Route path="/response-analysis" element={<ProtectedRoute><ResponseAnalysis /></ProtectedRoute>} />
     <Route path="/order-history" element={<ProtectedRoute><OrderHistory /></ProtectedRoute>} />
+    <Route path="/store-comparison" element={<ProtectedRoute><StoreComparison /></ProtectedRoute>} />
     <Route path="/pricing" element={<Pricing />} />
     <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
     <Route path="/tokushoho" element={<Tokushoho />} />

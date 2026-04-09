@@ -709,16 +709,20 @@ function AnalysisPanel({ result, radius, address, industry }: { result: MapAreaA
       {summary.ageDistribution.length > 0 && (
         <section>
           <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">{t("map.ageComp")}</h3>
-          <div className="space-y-2">
-            {summary.ageDistribution.map((ag) => (
-              <div key={ag.ageGroup} className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-foreground">{ag.ageGroup}</span>
-                  <span className="text-muted-foreground">{ag.percentage}% ({ag.count.toLocaleString()}{t("map.popUnit")})</span>
+          <div className="space-y-1.5">
+            {summary.ageDistribution.map((ag, i) => {
+              const colors = ["#3b82f6", "#22c55e", "#f59e0b", "#8b5cf6", "#ef4444"];
+              return (
+                <div key={ag.ageGroup} className="flex items-center gap-2 text-xs">
+                  <span className="w-16 text-muted-foreground truncate">{ag.ageGroup}</span>
+                  <div className="flex-1 h-4 bg-muted/50 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(ag.percentage, 100)}%`, backgroundColor: colors[i % colors.length] }} />
+                  </div>
+                  <span className="w-14 text-right font-medium text-foreground">{ag.count.toLocaleString()}</span>
+                  <span className="w-10 text-right text-muted-foreground">{ag.percentage}%</span>
                 </div>
-                <Progress value={ag.percentage} className="h-1.5" />
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}
@@ -726,14 +730,15 @@ function AnalysisPanel({ result, radius, address, industry }: { result: MapAreaA
       {summary.householdTypes.length > 0 && (
         <section>
           <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">{t("map.householdComp")}</h3>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {summary.householdTypes.map((ht) => (
-              <div key={ht.type} className="flex justify-between items-center text-xs bg-muted/40 rounded-md px-3 py-2">
-                <span className="text-foreground">{ht.type}</span>
-                <div className="text-right">
-                  <span className="font-medium text-foreground">{ht.percentage}%</span>
-                  <span className="text-muted-foreground ml-1">({ht.count.toLocaleString()})</span>
+              <div key={ht.type} className="flex items-center gap-2 text-xs">
+                <span className="w-20 text-muted-foreground truncate">{ht.type}</span>
+                <div className="flex-1 h-4 bg-muted/50 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full bg-primary/60 transition-all duration-500" style={{ width: `${Math.min(ht.percentage, 100)}%` }} />
                 </div>
+                <span className="w-14 text-right font-medium text-foreground">{ht.count.toLocaleString()}</span>
+                <span className="w-10 text-right text-muted-foreground">{ht.percentage}%</span>
               </div>
             ))}
           </div>

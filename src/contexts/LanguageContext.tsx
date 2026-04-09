@@ -1009,6 +1009,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Order History
     "nav.orderHistory": "発注履歴",
+    "nav.storeComparison": "立地比較",
     "oh.badge": "発注履歴",
     "oh.title": "発注履歴",
     "oh.subtitle": "過去のチラシ・広告・媒体プランの発注履歴を確認できます。",
@@ -2037,6 +2038,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Order History
     "nav.orderHistory": "Order History",
+    "nav.storeComparison": "Compare Locations",
     "oh.badge": "Order History",
     "oh.title": "Order History",
     "oh.subtitle": "View past flyer, ad, and media plan orders.",
