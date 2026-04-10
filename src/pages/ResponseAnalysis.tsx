@@ -575,21 +575,73 @@ export default function ResponseAnalysis() {
   );
 }
 
+function downloadSampleCSV(isEn: boolean) {
+  const header = "名前,住所,電話番号,日付,経路,備考";
+  const rows = [
+    "田中太郎,東京都新宿区新宿3-1-1,03-1234-5678,2026-04-01,チラシ,春のキャンペーンで来店",
+    "佐藤花子,東京都渋谷区道玄坂2-1-1,090-1111-2222,2026-04-03,Web,ホームページを見て問い合わせ",
+    "鈴木一郎,東京都豊島区池袋1-1-1,03-9876-5432,2026-04-05,紹介,友人の紹介",
+    "山田美咲,東京都中野区中野4-1-1,080-3333-4444,2026-04-07,SNS,Instagram広告から",
+    "高橋健二,東京都杉並区阿佐ヶ谷1-1-1,03-5555-6666,2026-04-08,通りがかり,看板を見て",
+  ];
+  const csv = [header, ...rows].join("\n");
+  const bom = "\uFEFF";
+  const blob = new Blob([bom + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "mapboost_sample.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function EmptyState({ onUpload }: { onUpload: () => void }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isEn = language === "en";
   return (
     <div className="flex flex-col items-center justify-center h-full p-8 text-center">
       <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
         <Upload className="w-7 h-7 text-muted-foreground" />
       </div>
       <h3 className="font-semibold text-foreground mb-1">{t("resp.emptyTitle")}</h3>
-      <p className="text-sm text-muted-foreground max-w-[260px] mb-4">
+      <p className="text-sm text-muted-foreground max-w-[300px] mb-4">
         {t("resp.emptyDesc")}
       </p>
-      <Button size="sm" onClick={onUpload} className="gap-2">
-        <FileUp className="w-4 h-4" />
-        {t("resp.uploadCsv")}
-      </Button>
+
+      {/* CSV format guide */}
+      <div className="w-full max-w-[340px] mb-4 rounded-lg border border-border/60 bg-muted/30 p-3 text-left">
+        <p className="text-xs font-semibold text-foreground mb-2">{isEn ? "CSV Format" : "CSVフォーマット"}</p>
+        <div className="overflow-x-auto">
+          <table className="text-[10px] text-muted-foreground w-full">
+            <thead>
+              <tr className="border-b border-border/40">
+                <th className="pr-2 py-1 text-left font-medium text-foreground">{isEn ? "Column" : "列名"}</th>
+                <th className="pr-2 py-1 text-left font-medium text-foreground">{isEn ? "Required" : "必須"}</th>
+                <th className="py-1 text-left font-medium text-foreground">{isEn ? "Example" : "例"}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td className="pr-2 py-0.5">{isEn ? "name" : "名前"}</td><td className="pr-2">-</td><td>田中太郎</td></tr>
+              <tr><td className="pr-2 py-0.5">{isEn ? "address" : "住所"}</td><td className="pr-2 text-primary font-bold">{isEn ? "Yes" : "必須"}</td><td>東京都新宿区...</td></tr>
+              <tr><td className="pr-2 py-0.5">{isEn ? "phone" : "電話番号"}</td><td className="pr-2">-</td><td>03-1234-5678</td></tr>
+              <tr><td className="pr-2 py-0.5">{isEn ? "date" : "日付"}</td><td className="pr-2">-</td><td>2026-04-01</td></tr>
+              <tr><td className="pr-2 py-0.5">{isEn ? "source" : "経路"}</td><td className="pr-2">-</td><td>チラシ / Web / SNS</td></tr>
+              <tr><td className="pr-2 py-0.5">{isEn ? "notes" : "備考"}</td><td className="pr-2">-</td><td>キャンペーン来店</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <Button size="sm" variant="outline" className="gap-2" onClick={() => downloadSampleCSV(isEn)}>
+          <Download className="w-4 h-4" />
+          {isEn ? "Download Sample" : "サンプルCSV"}
+        </Button>
+        <Button size="sm" onClick={onUpload} className="gap-2">
+          <FileUp className="w-4 h-4" />
+          {t("resp.uploadCsv")}
+        </Button>
+      </div>
     </div>
   );
 }
