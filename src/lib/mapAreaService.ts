@@ -45,12 +45,19 @@ export type TradeAreaSummary = {
   competitiveEnvironment?: string;
 };
 
+export type ExtendedCensusData = {
+  futurePopulation: { year: number; population: number }[];
+  daytimePopulation: { daytime: number; nighttime: number; ratio: number } | null;
+  incomeHouseholds: { bracket: string; count: number; percentage: number }[];
+};
+
 export type MapAreaAnalysisResult = {
   center: [number, number];
   populationZones: PopulationZone[];
   competitors: CompetitorStore[];
   summary: TradeAreaSummary;
   censusData: CensusData | null;
+  extendedData: ExtendedCensusData | null;
   countryCode: string; // ISO 2-letter country code (e.g. "jp", "us")
   isOverseas: boolean;
 };
@@ -117,6 +124,23 @@ async function fetchJpCensusData(address: string): Promise<CensusData | null> {
     });
     if (error || !data?.result?.dataAvailable) return null;
     return data.result as CensusData;
+  } catch {
+    return null;
+  }
+}
+
+// Fetch extended census data (Japan only: future population, daytime, income)
+async function fetchExtendedCensusData(address: string): Promise<ExtendedCensusData | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("estat-extended", {
+      body: { address },
+    });
+    if (error || !data?.result?.dataAvailable) return null;
+    return {
+      futurePopulation: data.result.futurePopulation || [],
+      daytimePopulation: data.result.daytimePopulation || null,
+      incomeHouseholds: data.result.incomeHouseholds || [],
+    };
   } catch {
     return null;
   }
@@ -308,8 +332,8 @@ export async function fetchMapAreaAnalysis(
   const { center, countryCode } = geo;
   const isOverseas = countryCode !== "jp";
 
-  // Step 2: Fetch AI analysis + country-specific census in parallel
-  const [aiAnalysis, censusResult] = await Promise.all([
+  // Step 2: Fetch AI analysis + country-specific census + extended data in parallel
+  const [aiAnalysis, censusResult, extendedData] = await Promise.all([
     supabase.functions.invoke("area-analysis", {
       body: { address, radius, industry, analysisType: "area", language },
     }).then(({ data, error }) => {
@@ -318,6 +342,7 @@ export async function fetchMapAreaAnalysis(
       return data;
     }),
     fetchCensusForCountry(countryCode, address, center, radiusMeters, language),
+    countryCode === "jp" ? fetchExtendedCensusData(address) : Promise.resolve(null),
   ]);
 
   const result = aiAnalysis.result;
@@ -362,6 +387,7 @@ export async function fetchMapAreaAnalysis(
     populationZones,
     competitors,
     censusData: finalCensusData,
+    extendedData,
     countryCode,
     isOverseas,
     summary: {

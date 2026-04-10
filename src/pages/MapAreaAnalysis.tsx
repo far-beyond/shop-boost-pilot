@@ -657,7 +657,7 @@ function SidePanelSkeleton() {
 
 function AnalysisPanel({ result, radius, address, industry }: { result: MapAreaAnalysisResult; radius: string; address: string; industry: string }) {
   const { t } = useLanguage();
-  const { summary, competitors, censusData, isOverseas, countryCode } = result;
+  const { summary, competitors, censusData, extendedData, isOverseas, countryCode } = result;
   const isRealData = !!censusData?.dataAvailable;
 
   const getBadgeInfo = () => {
@@ -741,6 +741,73 @@ function AnalysisPanel({ result, radius, address, industry }: { result: MapAreaA
                 <span className="w-10 text-right text-muted-foreground">{ht.percentage}%</span>
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Extended Data: Future Population */}
+      {extendedData?.futurePopulation && extendedData.futurePopulation.length > 0 && (
+        <section>
+          <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">{t("map.futurePopulation")}</h3>
+          <div className="space-y-1">
+            {extendedData.futurePopulation.map((fp, i) => {
+              const prev = i > 0 ? extendedData.futurePopulation[i - 1].population : fp.population;
+              const change = fp.population - prev;
+              const isGrowth = change >= 0;
+              return (
+                <div key={fp.year} className="flex items-center gap-2 text-xs">
+                  <span className="w-10 text-muted-foreground">{fp.year}</span>
+                  <div className="flex-1 h-3 bg-muted/50 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full ${isGrowth ? "bg-green-400" : "bg-red-400"}`} style={{ width: `${Math.min((fp.population / (extendedData.futurePopulation[0]?.population || 1)) * 100, 100)}%` }} />
+                  </div>
+                  <span className="w-16 text-right font-medium">{fp.population.toLocaleString()}</span>
+                  {i > 0 && <span className={`w-14 text-right text-[10px] ${isGrowth ? "text-green-600" : "text-red-500"}`}>{isGrowth ? "+" : ""}{change.toLocaleString()}</span>}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Extended Data: Daytime Population */}
+      {extendedData?.daytimePopulation && (
+        <section>
+          <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">{t("map.daytimePopulation")}</h3>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-2 text-center">
+              <div className="text-[10px] text-muted-foreground">{t("map.daytime")}</div>
+              <div className="text-sm font-bold text-amber-600">{extendedData.daytimePopulation.daytime.toLocaleString()}</div>
+            </div>
+            <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-2 text-center">
+              <div className="text-[10px] text-muted-foreground">{t("map.nighttime")}</div>
+              <div className="text-sm font-bold text-blue-600">{extendedData.daytimePopulation.nighttime.toLocaleString()}</div>
+            </div>
+            <div className="rounded-lg bg-muted/50 p-2 text-center">
+              <div className="text-[10px] text-muted-foreground">{t("map.ratio")}</div>
+              <div className="text-sm font-bold text-foreground">{extendedData.daytimePopulation.ratio}x</div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Extended Data: Income Distribution */}
+      {extendedData?.incomeHouseholds && extendedData.incomeHouseholds.length > 0 && (
+        <section>
+          <h3 className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">{t("map.incomeDistribution")}</h3>
+          <div className="space-y-1.5">
+            {extendedData.incomeHouseholds.map((ih, i) => {
+              const colors = ["#ef4444", "#f59e0b", "#22c55e", "#3b82f6", "#8b5cf6", "#ec4899", "#06b6d4"];
+              return (
+                <div key={i} className="flex items-center gap-2 text-xs">
+                  <span className="w-20 text-muted-foreground truncate">{ih.bracket}</span>
+                  <div className="flex-1 h-4 bg-muted/50 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(ih.percentage * 2, 100)}%`, backgroundColor: colors[i % colors.length] }} />
+                  </div>
+                  <span className="w-14 text-right font-medium">{ih.count.toLocaleString()}</span>
+                  <span className="w-10 text-right text-muted-foreground">{ih.percentage}%</span>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
