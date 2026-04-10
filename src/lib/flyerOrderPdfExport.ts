@@ -128,7 +128,7 @@ export async function exportFlyerOrderPDF(order: FlyerOrderData): Promise<Blob> 
     foot: [["", "", "", "合計", order.totalQuantity.toLocaleString()]],
     styles: { font: "NotoSansJP", fontSize: 9, cellPadding: 4 },
     headStyles: { fillColor: BLUE, font: "NotoSansJP", textColor: [255, 255, 255] },
-    footStyles: { fillColor: [230, 235, 245], font: "NotoSansJP", fontStyle: "bold", textColor: DARK },
+    footStyles: { fillColor: [230, 235, 245], font: "NotoSansJP", textColor: DARK },
     alternateRowStyles: { fillColor: LIGHT_BG },
     margin: { left: 14, right: 14 },
   });
@@ -156,7 +156,7 @@ export async function exportFlyerOrderPDF(order: FlyerOrderData): Promise<Blob> 
     body: specs,
     styles: { font: "NotoSansJP", fontSize: 9, cellPadding: 4 },
     columnStyles: {
-      0: { cellWidth: 40, fillColor: LIGHT_BG, fontStyle: "bold", font: "NotoSansJP" },
+      0: { cellWidth: 40, fillColor: LIGHT_BG, font: "NotoSansJP" },
       1: { cellWidth: 120, font: "NotoSansJP" },
     },
     margin: { left: 14, right: 14 },

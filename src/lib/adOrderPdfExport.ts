@@ -148,7 +148,7 @@ export async function exportAdOrderPDF(order: AdOrderData): Promise<Blob> {
     foot: [["合計", `¥${order.totalMonthlyCharge.toLocaleString()}`, ""]],
     styles: { font: "NotoSansJP", fontSize: 9, cellPadding: 4 },
     headStyles: { fillColor: BLUE, font: "NotoSansJP", textColor: [255, 255, 255] },
-    footStyles: { fillColor: [230, 235, 245], font: "NotoSansJP", fontStyle: "bold", textColor: DARK },
+    footStyles: { fillColor: [230, 235, 245], font: "NotoSansJP", textColor: DARK },
     columnStyles: { 1: { halign: "right", cellWidth: 40, font: "NotoSansJP" } },
     margin: { left: 14, right: 14 },
   });
@@ -191,7 +191,7 @@ export async function exportAdOrderPDF(order: AdOrderData): Promise<Blob> {
     ],
     styles: { font: "NotoSansJP", fontSize: 9, cellPadding: 4 },
     columnStyles: {
-      0: { cellWidth: 45, fillColor: LIGHT_BG, fontStyle: "bold", font: "NotoSansJP" },
+      0: { cellWidth: 45, fillColor: LIGHT_BG, font: "NotoSansJP" },
     },
     margin: { left: 14, right: 14 },
   });
