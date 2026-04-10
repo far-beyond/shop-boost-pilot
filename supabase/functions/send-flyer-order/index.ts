@@ -12,11 +12,11 @@ serve(async (req) => {
   }
 
   try {
-    const SENDGRID_API_KEY = Deno.env.get("SENDGRID_API_KEY");
-    const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") || "admin@mapboost.ai";
-    if (!SENDGRID_API_KEY) {
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    const ADMIN_EMAIL = Deno.env.get("ADMIN_EMAIL") || "onboarding@resend.dev";
+    if (!RESEND_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "SENDGRID_API_KEY is not configured" }),
+        JSON.stringify({ error: "RESEND_API_KEY is not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -58,24 +58,22 @@ MapBoost AI
 https://boost.share-map.net/
 `.trim();
 
-    // Send via SendGrid API
-    const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
+    // Send via Resend API
+    const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${SENDGRID_API_KEY}`,
+        Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        personalizations: [{ to: [{ email: to }] }],
-        from: { email: ADMIN_EMAIL, name: "MapBoost AI" },
+        from: `MapBoost AI <${ADMIN_EMAIL}>`,
+        to: [to],
         subject: subject || "【発注書】チラシ配布業務のご依頼",
-        content: [{ type: "text/plain", value: emailBody }],
+        text: emailBody,
         attachments: [
           {
-            content: pdfBase64,
             filename: `${storeName || "発注書"}_発注書.pdf`,
-            type: "application/pdf",
-            disposition: "attachment",
+            content: pdfBase64,
           },
         ],
       }),
@@ -83,17 +81,18 @@ https://boost.share-map.net/
 
     if (!res.ok) {
       const errText = await res.text();
-      console.error("SendGrid API error:", res.status, errText);
+      console.error("Resend API error:", res.status, errText);
       return new Response(
         JSON.stringify({ error: `Email send failed: ${res.status}` }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log("Email sent via SendGrid");
+    const result = await res.json();
+    console.log("Email sent via Resend:", result);
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, id: result.id }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
