@@ -77,12 +77,17 @@ export default function LP2() {
       {showVideo && (
         <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4" onClick={() => setShowVideo(false)}>
           <div className="bg-white rounded-2xl overflow-hidden shadow-2xl max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="aspect-video bg-gray-900 flex items-center justify-center">
-              <div className="text-center text-white">
-                <Play className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium">デモ動画準備中</p>
-                <p className="text-sm text-gray-400 mt-2">画面録画でデモ動画を撮影してここに設置します</p>
-              </div>
+            <div className="aspect-video">
+              <iframe
+                width="100%"
+                height="100%"
+                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+                title="MapBoost AI デモ動画"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              />
             </div>
             <div className="p-4 text-center">
               <Button variant="ghost" onClick={() => setShowVideo(false)}>閉じる</Button>
