@@ -2,7 +2,8 @@ import https from 'https';
 import fs from 'fs';
 import path from 'path';
 
-const API_KEY = 'AIzaSyBC3rbDNe8qJBhU4PFZw4r1xW6UqCDiXbM';
+const API_KEY = process.env.GEMINI_API_KEY;
+if (!API_KEY) { console.error('Set GEMINI_API_KEY env var'); process.exit(1); }
 const OUTPUT_DIR = path.resolve('public/images/lp');
 
 const images = [

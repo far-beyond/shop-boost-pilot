@@ -120,7 +120,7 @@ export default function LP() {
               <Button variant="ghost" size="sm">無料で分析</Button>
             </Link>
             <Link to="/auth">
-              <Button size="sm" className="bg-primary text-primary-foreground shadow-md">
+              <Button size="sm" className="bg-blue-600 text-blue-600-foreground shadow-md">
                 ログイン
               </Button>
             </Link>
@@ -146,19 +146,19 @@ export default function LP() {
                   集客を、もっと賢く。
                 </span>
               </h1>
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mb-10 leading-relaxed">
+              <p className="text-lg sm:text-xl text-gray-500 max-w-xl mb-10 leading-relaxed">
                 住所を入力するだけ。国勢調査の実データとAIが、
                 商圏分析・チラシ配布・Web広告・MEO対策まで
                 ワンストップで自動化します。
               </p>
               <div className="flex flex-col sm:flex-row items-center lg:items-start gap-4">
                 <Link to="/free-analysis">
-                  <Button size="lg" className="text-base px-8 py-6 bg-primary text-white shadow-xl hover:shadow-2xl transition-all">
+                  <Button size="lg" className="text-base px-8 py-6 bg-blue-600 text-white shadow-xl hover:shadow-2xl transition-all">
                     無料で商圏分析する
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
-                <p className="text-sm text-muted-foreground mt-2">
+                <p className="text-sm text-gray-500 mt-2">
                   クレカ不要 ・ 登録なしで今すぐ使える
                 </p>
               </div>
@@ -169,7 +169,7 @@ export default function LP() {
               <img
                 src="/images/lp/hero.png"
                 alt="MapBoost AIで商圏分析するオーナー"
-                className="w-full rounded-2xl shadow-2xl border border-border/20"
+                className="w-full rounded-2xl shadow-2xl border border-gray-200/20"
               />
             </div>
           </div>
@@ -200,13 +200,13 @@ export default function LP() {
               <img
                 src="/images/lp/pain-point.png"
                 alt="広告費に困るオーナー"
-                className="w-full max-w-md mx-auto rounded-2xl shadow-lg border border-border/20"
+                className="w-full max-w-md mx-auto rounded-2xl shadow-lg border border-gray-200/20"
               />
             </div>
             {/* Right: Pain points */}
             <div className="order-1 lg:order-2">
               <h2 className="text-3xl font-bold mb-4">こんなお悩みありませんか？</h2>
-              <p className="text-muted-foreground mb-8">一つでも当てはまるなら、MapBoost AIがお役に立てます</p>
+              <p className="text-gray-500 mb-8">一つでも当てはまるなら、MapBoost AIがお役に立てます</p>
               <div className="space-y-3">
                 {LP_PAIN_POINTS.map((pain) => (
                   <div key={pain} className="flex items-start gap-3 p-4 rounded-xl bg-white border border-orange-100 shadow-sm">
@@ -260,20 +260,20 @@ export default function LP() {
       <section className="py-20 bg-gradient-to-b from-yellow-50/50 to-white">
         <div className="max-w-5xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">MapBoost AIで、こう変わる</h2>
-          <p className="text-muted-foreground mb-10">閑散とした店舗が、AIの力で繁盛店に</p>
+          <p className="text-gray-500 mb-10">閑散とした店舗が、AIの力で繁盛店に</p>
           <img
             src="/images/lp/before-after.png"
             alt="ビフォーアフター：閑散 → 繁盛"
-            className="w-full rounded-2xl shadow-2xl border border-border/20"
+            className="w-full rounded-2xl shadow-2xl border border-gray-200/20"
           />
           <div className="flex justify-center gap-16 mt-6">
             <div className="text-center">
-              <span className="text-lg font-bold text-destructive">Before</span>
-              <p className="text-sm text-muted-foreground">集客に悩む毎日...</p>
+              <span className="text-lg font-bold text-red-500">Before</span>
+              <p className="text-sm text-gray-500">集客に悩む毎日...</p>
             </div>
             <div className="text-center">
-              <span className="text-lg font-bold text-accent">After</span>
-              <p className="text-sm text-muted-foreground">AIで賢く集客！</p>
+              <span className="text-lg font-bold text-green-500">After</span>
+              <p className="text-sm text-gray-500">AIで賢く集客！</p>
             </div>
           </div>
         </div>
@@ -283,24 +283,24 @@ export default function LP() {
       <section className="py-20 bg-gradient-to-b from-orange-50/40 to-amber-50/30">
         <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-4">MapBoost AIでできること</h2>
-          <p className="text-center text-muted-foreground mb-16">エリアマーケティングに必要なすべてをAIが自動化</p>
+          <p className="text-center text-gray-500 mb-16">エリアマーケティングに必要なすべてをAIが自動化</p>
           <div className="space-y-20">
             {LP_FEATURES.map((feature, i) => (
               <div key={feature.title} className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${i % 2 === 1 ? "lg:flex-row-reverse" : ""}`}>
                 <div className={i % 2 === 1 ? "lg:order-2" : ""}>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, hsl(217 91% 55% / 0.15), hsl(200 85% 52% / 0.1))" }}>
-                      <feature.icon className="w-6 h-6 text-primary" />
+                      <feature.icon className="w-6 h-6 text-blue-600" />
                     </div>
                     <h3 className="text-xl font-bold">{feature.title}</h3>
                   </div>
-                  <p className="text-muted-foreground leading-relaxed text-base">{feature.description}</p>
+                  <p className="text-gray-500 leading-relaxed text-base">{feature.description}</p>
                 </div>
                 <div className={i % 2 === 1 ? "lg:order-1" : ""}>
                   <img
                     src={feature.image}
                     alt={feature.title}
-                    className="w-full max-w-md mx-auto rounded-2xl shadow-lg border border-border/20 hover:shadow-xl transition-shadow"
+                    className="w-full max-w-md mx-auto rounded-2xl shadow-lg border border-gray-200/20 hover:shadow-xl transition-shadow"
                   />
                 </div>
               </div>
@@ -315,12 +315,12 @@ export default function LP() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl font-bold mb-4">データに基づく集客戦略を、<br />すべてのお店に</h2>
-              <p className="text-muted-foreground leading-relaxed mb-8">
+              <p className="text-gray-500 leading-relaxed mb-8">
                 これまで大手企業や広告代理店しか使えなかった高度な商圏分析を、
                 AIが自動化。月額9,800円から、あなたのお店の集客力を劇的に改善します。
               </p>
               <Link to="/free-analysis">
-                <Button size="lg" className="bg-primary text-white shadow-lg">
+                <Button size="lg" className="bg-blue-600 text-white shadow-lg">
                   まずは無料で試してみる
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
@@ -330,7 +330,7 @@ export default function LP() {
               <img
                 src="/images/lp/solution.png"
                 alt="AIで集客を改善"
-                className="w-full rounded-2xl shadow-xl border border-border/20"
+                className="w-full rounded-2xl shadow-xl border border-gray-200/20"
               />
             </div>
           </div>
@@ -341,15 +341,15 @@ export default function LP() {
       <section className="py-20 bg-gradient-to-b from-orange-50/40 to-amber-50/30">
         <div className="max-w-4xl mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-4">かんたん3ステップ</h2>
-          <p className="text-center text-muted-foreground mb-12">難しい設定は一切不要。今すぐ始められます</p>
+          <p className="text-center text-gray-500 mb-12">難しい設定は一切不要。今すぐ始められます</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {LP_STEPS.map((step, i) => (
-              <div key={step.step} className="relative text-center p-6 rounded-2xl bg-card border border-border/60 shadow-sm">
-                <div className="text-5xl font-black text-primary/15 mb-4">{step.step}</div>
+              <div key={step.step} className="relative text-center p-6 rounded-2xl bg-white border border-gray-200/60 shadow-sm">
+                <div className="text-5xl font-black text-blue-600/15 mb-4">{step.step}</div>
                 <h3 className="text-lg font-bold mb-2">{step.title}</h3>
-                <p className="text-sm text-muted-foreground">{step.description}</p>
+                <p className="text-sm text-gray-500">{step.description}</p>
                 {i < LP_STEPS.length - 1 && (
-                  <ChevronRight className="hidden md:block absolute top-1/2 -right-5 w-6 h-6 text-muted-foreground/30" />
+                  <ChevronRight className="hidden md:block absolute top-1/2 -right-5 w-6 h-6 text-gray-500/30" />
                 )}
               </div>
             ))}
@@ -361,15 +361,15 @@ export default function LP() {
       <section className="py-20">
         <div className="max-w-4xl mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-4">広告代理店との比較</h2>
-          <p className="text-center text-muted-foreground mb-12">同じ分析を、1/10のコストで</p>
-          <div className="overflow-x-auto rounded-2xl border border-border/60 shadow-sm">
+          <p className="text-center text-gray-500 mb-12">同じ分析を、1/10のコストで</p>
+          <div className="overflow-x-auto rounded-2xl border border-gray-200/60 shadow-sm">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted/50">
                   <th className="text-left py-4 px-5"></th>
-                  <th className="text-center py-4 px-5 text-primary font-bold">MapBoost AI</th>
-                  <th className="text-center py-4 px-5 text-muted-foreground">広告代理店</th>
-                  <th className="text-center py-4 px-5 text-muted-foreground">自力（Excel）</th>
+                  <th className="text-center py-4 px-5 text-blue-600 font-bold">MapBoost AI</th>
+                  <th className="text-center py-4 px-5 text-gray-500">広告代理店</th>
+                  <th className="text-center py-4 px-5 text-gray-500">自力（Excel）</th>
                 </tr>
               </thead>
               <tbody>
@@ -382,11 +382,11 @@ export default function LP() {
                   ["MEO対策", "AI診断", "別料金", "自力で勉強"],
                   ["レポート", "自動PDF", "月1回", "手作り"],
                 ].map(([item, mapboost, agency, manual]) => (
-                  <tr key={item} className="border-t border-border/40">
-                    <td className="py-3 px-5 font-medium bg-card">{item}</td>
-                    <td className="py-3 px-5 text-center text-primary font-semibold bg-primary/5">{mapboost}</td>
-                    <td className="py-3 px-5 text-center text-muted-foreground bg-card">{agency}</td>
-                    <td className="py-3 px-5 text-center text-muted-foreground bg-card">{manual}</td>
+                  <tr key={item} className="border-t border-gray-200/40">
+                    <td className="py-3 px-5 font-medium bg-white">{item}</td>
+                    <td className="py-3 px-5 text-center text-blue-600 font-semibold bg-blue-600/5">{mapboost}</td>
+                    <td className="py-3 px-5 text-center text-gray-500 bg-white">{agency}</td>
+                    <td className="py-3 px-5 text-center text-gray-500 bg-white">{manual}</td>
                   </tr>
                 ))}
               </tbody>
@@ -407,19 +407,19 @@ export default function LP() {
         </div>
         <div className="max-w-5xl mx-auto px-4 relative z-10">
           <h2 className="text-3xl font-bold text-center mb-4">導入事例</h2>
-          <p className="text-center text-muted-foreground mb-12">MapBoost AIを導入した店舗オーナーの声</p>
+          <p className="text-center text-gray-500 mb-12">MapBoost AIを導入した店舗オーナーの声</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {LP_TESTIMONIALS.map((t) => (
-              <div key={t.name} className="p-6 rounded-2xl bg-card/90 backdrop-blur border border-border/60 shadow-lg">
+              <div key={t.name} className="p-6 rounded-2xl bg-white/90 backdrop-blur border border-gray-200/60 shadow-lg">
                 <div className="flex gap-1 mb-3">
                   {Array.from({ length: t.rating }).map((_, i) => (
                     <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4">"{t.text}"</p>
+                <p className="text-sm text-gray-500 leading-relaxed mb-4">"{t.text}"</p>
                 <div>
                   <div className="font-semibold text-sm">{t.name}</div>
-                  <div className="text-xs text-muted-foreground">{t.area}</div>
+                  <div className="text-xs text-gray-500">{t.area}</div>
                 </div>
               </div>
             ))}
@@ -431,31 +431,31 @@ export default function LP() {
       <section className="py-20">
         <div className="max-w-5xl mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-4">料金プラン</h2>
-          <p className="text-center text-muted-foreground mb-12">広告代理店の1/10以下のコストで、同等以上の分析を</p>
+          <p className="text-center text-gray-500 mb-12">広告代理店の1/10以下のコストで、同等以上の分析を</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {LP_PRICING.map((plan) => (
               <div
                 key={plan.name}
                 className={`relative p-6 rounded-2xl border shadow-sm transition-all hover:shadow-lg ${
                   plan.highlight
-                    ? "border-primary bg-primary/5 shadow-lg scale-105"
-                    : "border-border/60 bg-card"
+                    ? "border-primary bg-blue-600/5 shadow-lg scale-105"
+                    : "border-gray-200/60 bg-white"
                 }`}
               >
                 {plan.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-primary text-white text-xs font-bold shadow-md">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-blue-600 text-white text-xs font-bold shadow-md">
                     人気No.1
                   </div>
                 )}
                 <h3 className="text-lg font-bold mb-1">{plan.name}</h3>
                 <div className="flex items-baseline gap-1 mb-1">
                   <span className="text-3xl font-black">{plan.price}</span>
-                  <span className="text-sm text-muted-foreground">/ {plan.period}</span>
+                  <span className="text-sm text-gray-500">/ {plan.period}</span>
                 </div>
                 <ul className="space-y-2 my-6">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
                       {f}
                     </li>
                   ))}
@@ -464,8 +464,8 @@ export default function LP() {
                   <Button
                     className={`w-full ${
                       plan.highlight
-                        ? "bg-primary text-white shadow-md"
-                        : "bg-secondary text-secondary-foreground"
+                        ? "bg-blue-600 text-white shadow-md"
+                        : "bg-gray-100 text-gray-700"
                     }`}
                   >
                     {plan.cta}
@@ -483,9 +483,9 @@ export default function LP() {
           <h2 className="text-3xl font-bold text-center mb-12">よくある質問</h2>
           <div className="space-y-4">
             {LP_FAQ.map((faq) => (
-              <div key={faq.q} className="p-5 rounded-xl bg-card border border-border/60 shadow-sm">
+              <div key={faq.q} className="p-5 rounded-xl bg-white border border-gray-200/60 shadow-sm">
                 <h3 className="font-bold text-sm mb-2">Q. {faq.q}</h3>
-                <p className="text-sm text-muted-foreground">A. {faq.a}</p>
+                <p className="text-sm text-gray-500">A. {faq.a}</p>
               </div>
             ))}
           </div>
@@ -534,15 +534,15 @@ export default function LP() {
             >
               <Target className="w-4 h-4" />
             </div>
-            <span className="font-bold text-sm text-foreground">MapBoost AI</span>
+            <span className="font-bold text-sm text-gray-900">MapBoost AI</span>
           </div>
           <p>AI搭載エリアマーケティングプラットフォーム</p>
           <div className="flex items-center justify-center gap-4">
-            <Link to="/tokushoho" className="hover:text-foreground transition-colors">特定商取引法</Link>
+            <Link to="/tokushoho" className="hover:text-gray-900 transition-colors">特定商取引法</Link>
             <span className="text-border">|</span>
-            <Link to="/terms" className="hover:text-foreground transition-colors">利用規約</Link>
+            <Link to="/terms" className="hover:text-gray-900 transition-colors">利用規約</Link>
             <span className="text-border">|</span>
-            <Link to="/contact" className="hover:text-foreground transition-colors">お問い合わせ</Link>
+            <Link to="/contact" className="hover:text-gray-900 transition-colors">お問い合わせ</Link>
           </div>
           <p>&copy; 2026 Far Beyond Inc. All rights reserved.</p>
         </div>
