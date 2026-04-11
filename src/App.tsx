@@ -36,6 +36,7 @@ import MonthlyReport from "./pages/MonthlyReport";
 import ReportSchedule from "./pages/ReportSchedule";
 import MeoAnalysis from "./pages/MeoAnalysis";
 import FreeAnalysis from "./pages/FreeAnalysis";
+import LP from "./pages/LP";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ const AppRoutes = () => (
     <Route path="/report-schedule" element={<ProtectedRoute><ReportSchedule /></ProtectedRoute>} />
     <Route path="/meo-analysis" element={<ProtectedRoute><MeoAnalysis /></ProtectedRoute>} />
     <Route path="/free-analysis" element={<FreeAnalysis />} />
+    <Route path="/lp" element={<LP />} />
     <Route path="/pricing" element={<Pricing />} />
     <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
     <Route path="/tokushoho" element={<Tokushoho />} />
