@@ -1,25 +1,29 @@
 import { Link } from "react-router-dom";
-import { Target, MapPin, BarChart3, FileText, Zap, CheckCircle2, ArrowRight, Star, TrendingUp, Users, Globe, ChevronRight } from "lucide-react";
+import { Target, MapPin, BarChart3, FileText, Zap, CheckCircle2, ArrowRight, Star, TrendingUp, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const LP_FEATURES = [
   {
     icon: MapPin,
+    image: "/images/lp/feature-map.png",
     title: "AIが30秒で商圏を分析",
     description: "住所を入力するだけで、半径1〜5kmの人口・世帯数・競合店舗を自動分析。国勢調査データとAIで精度の高いエリアマーケティングを実現。",
   },
   {
     icon: BarChart3,
+    image: "/images/lp/feature-flyer.png",
     title: "チラシ・広告プランを自動生成",
     description: "配布エリア・部数・費用をAIが最適化。Google広告・Meta広告の提案書もワンクリックで作成。発注書PDFも自動生成。",
   },
   {
     icon: FileText,
+    image: "/images/lp/feature-meo.png",
     title: "MEO分析でGoogleマップ上位表示",
     description: "Googleビジネスプロフィールの改善点をAIが診断。口コミ分析・競合比較で、地域検索での上位表示をサポート。",
   },
   {
     icon: TrendingUp,
+    image: "/images/lp/feature-ad.png",
     title: "月次レポートを自動作成",
     description: "集客施策の効果を自動集計。PDF形式のレポートで、オーナーもスタッフも成果を一目で把握。",
   },
@@ -124,38 +128,50 @@ export default function LP() {
         </div>
       </header>
 
-      {/* Hero */}
+      {/* Hero with manga illustration */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-        <div className="relative max-w-5xl mx-auto px-4 pt-20 pb-24 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-8">
-            <Zap className="w-4 h-4" />
-            AIが30秒で商圏を丸裸にする
-          </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black leading-tight mb-6">
-            地図 × AI で、
-            <br />
-            <span className="bg-gradient-to-r from-primary to-primary-foreground bg-clip-text" style={{ WebkitTextFillColor: "transparent", backgroundImage: "linear-gradient(135deg, hsl(217 91% 55%), hsl(200 85% 52%))" }}>
-              集客を、もっと賢く。
-            </span>
-          </h1>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-            住所を入力するだけ。国勢調査の実データとAIが、
-            <br className="hidden sm:block" />
-            商圏分析・チラシ配布・Web広告・MEO対策まで
-            <br className="hidden sm:block" />
-            ワンストップで自動化します。
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/free-analysis">
-              <Button size="lg" className="text-base px-8 py-6 bg-primary text-white shadow-xl hover:shadow-2xl transition-all">
-                無料で商圏分析する
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
-            <p className="text-sm text-muted-foreground">
-              クレカ不要 ・ 登録なしで今すぐ使える
-            </p>
+        <div className="relative max-w-6xl mx-auto px-4 pt-16 pb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left: Text */}
+            <div className="text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-8">
+                <Zap className="w-4 h-4" />
+                AIが30秒で商圏を丸裸にする
+              </div>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-black leading-tight mb-6">
+                地図 × AI で、
+                <br />
+                <span style={{ WebkitTextFillColor: "transparent", backgroundImage: "linear-gradient(135deg, hsl(217 91% 55%), hsl(200 85% 52%))", WebkitBackgroundClip: "text" }}>
+                  集客を、もっと賢く。
+                </span>
+              </h1>
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mb-10 leading-relaxed">
+                住所を入力するだけ。国勢調査の実データとAIが、
+                商圏分析・チラシ配布・Web広告・MEO対策まで
+                ワンストップで自動化します。
+              </p>
+              <div className="flex flex-col sm:flex-row items-center lg:items-start gap-4">
+                <Link to="/free-analysis">
+                  <Button size="lg" className="text-base px-8 py-6 bg-primary text-white shadow-xl hover:shadow-2xl transition-all">
+                    無料で商圏分析する
+                    <ArrowRight className="ml-2 w-5 h-5" />
+                  </Button>
+                </Link>
+                <p className="text-sm text-muted-foreground mt-2">
+                  クレカ不要 ・ 登録なしで今すぐ使える
+                </p>
+              </div>
+            </div>
+            {/* Right: Hero manga image */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-accent/10 rounded-3xl blur-3xl -z-10" />
+              <img
+                src="/images/lp/hero.png"
+                alt="MapBoost AIで商圏分析するオーナー"
+                className="w-full rounded-2xl shadow-2xl border border-border/20"
+              />
+            </div>
           </div>
 
           {/* Stats */}
@@ -166,7 +182,7 @@ export default function LP() {
               { value: "¥0", label: "から始められる" },
               { value: "AI", label: "自動提案" },
             ].map((stat) => (
-              <div key={stat.label} className="text-center">
+              <div key={stat.label} className="text-center p-4 rounded-xl bg-card/50 border border-border/40">
                 <div className="text-2xl sm:text-3xl font-black text-primary">{stat.value}</div>
                 <div className="text-sm text-muted-foreground mt-1">{stat.label}</div>
               </div>
@@ -175,37 +191,112 @@ export default function LP() {
         </div>
       </section>
 
-      {/* Pain Points */}
+      {/* Pain Points with manga illustration */}
       <section className="py-20 bg-muted/30">
-        <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-4">こんなお悩みありませんか？</h2>
-          <p className="text-center text-muted-foreground mb-12">一つでも当てはまるなら、MapBoost AIがお役に立てます</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {LP_PAIN_POINTS.map((pain) => (
-              <div key={pain} className="flex items-start gap-3 p-5 rounded-xl bg-card border border-border/60 shadow-sm">
-                <CheckCircle2 className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-                <span className="text-sm font-medium">{pain}</span>
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left: Pain point manga */}
+            <div className="order-2 lg:order-1">
+              <img
+                src="/images/lp/pain-point.png"
+                alt="広告費に困るオーナー"
+                className="w-full max-w-md mx-auto rounded-2xl shadow-lg border border-border/20"
+              />
+            </div>
+            {/* Right: Pain points */}
+            <div className="order-1 lg:order-2">
+              <h2 className="text-3xl font-bold mb-4">こんなお悩みありませんか？</h2>
+              <p className="text-muted-foreground mb-8">一つでも当てはまるなら、MapBoost AIがお役に立てます</p>
+              <div className="space-y-3">
+                {LP_PAIN_POINTS.map((pain) => (
+                  <div key={pain} className="flex items-start gap-3 p-4 rounded-xl bg-card border border-border/60 shadow-sm">
+                    <CheckCircle2 className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                    <span className="text-sm font-medium">{pain}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Before / After manga */}
+      <section className="py-20">
+        <div className="max-w-5xl mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-4">MapBoost AIで、こう変わる</h2>
+          <p className="text-muted-foreground mb-10">閑散とした店舗が、AIの力で繁盛店に</p>
+          <img
+            src="/images/lp/before-after.png"
+            alt="ビフォーアフター：閑散 → 繁盛"
+            className="w-full rounded-2xl shadow-2xl border border-border/20"
+          />
+          <div className="flex justify-center gap-16 mt-6">
+            <div className="text-center">
+              <span className="text-lg font-bold text-destructive">Before</span>
+              <p className="text-sm text-muted-foreground">集客に悩む毎日...</p>
+            </div>
+            <div className="text-center">
+              <span className="text-lg font-bold text-accent">After</span>
+              <p className="text-sm text-muted-foreground">AIで賢く集客！</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features with manga images */}
+      <section className="py-20 bg-muted/30">
+        <div className="max-w-6xl mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-4">MapBoost AIでできること</h2>
+          <p className="text-center text-muted-foreground mb-16">エリアマーケティングに必要なすべてをAIが自動化</p>
+          <div className="space-y-20">
+            {LP_FEATURES.map((feature, i) => (
+              <div key={feature.title} className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${i % 2 === 1 ? "lg:flex-row-reverse" : ""}`}>
+                <div className={i % 2 === 1 ? "lg:order-2" : ""}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, hsl(217 91% 55% / 0.15), hsl(200 85% 52% / 0.1))" }}>
+                      <feature.icon className="w-6 h-6 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-bold">{feature.title}</h3>
+                  </div>
+                  <p className="text-muted-foreground leading-relaxed text-base">{feature.description}</p>
+                </div>
+                <div className={i % 2 === 1 ? "lg:order-1" : ""}>
+                  <img
+                    src={feature.image}
+                    alt={feature.title}
+                    className="w-full max-w-md mx-auto rounded-2xl shadow-lg border border-border/20 hover:shadow-xl transition-shadow"
+                  />
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Features */}
+      {/* Solution image */}
       <section className="py-20">
-        <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-4">MapBoost AIでできること</h2>
-          <p className="text-center text-muted-foreground mb-12">エリアマーケティングに必要なすべてをAIが自動化</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {LP_FEATURES.map((feature) => (
-              <div key={feature.title} className="p-6 rounded-2xl bg-card border border-border/60 shadow-sm hover:shadow-lg transition-all">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: "linear-gradient(135deg, hsl(217 91% 55% / 0.1), hsl(200 85% 52% / 0.1))" }}>
-                  <feature.icon className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
-              </div>
-            ))}
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl font-bold mb-4">データに基づく集客戦略を、<br />すべてのお店に</h2>
+              <p className="text-muted-foreground leading-relaxed mb-8">
+                これまで大手企業や広告代理店しか使えなかった高度な商圏分析を、
+                AIが自動化。月額9,800円から、あなたのお店の集客力を劇的に改善します。
+              </p>
+              <Link to="/free-analysis">
+                <Button size="lg" className="bg-primary text-white shadow-lg">
+                  まずは無料で試してみる
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </Link>
+            </div>
+            <div>
+              <img
+                src="/images/lp/solution.png"
+                alt="AIで集客を改善"
+                className="w-full rounded-2xl shadow-xl border border-border/20"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -217,12 +308,12 @@ export default function LP() {
           <p className="text-center text-muted-foreground mb-12">難しい設定は一切不要。今すぐ始められます</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {LP_STEPS.map((step, i) => (
-              <div key={step.step} className="relative text-center">
+              <div key={step.step} className="relative text-center p-6 rounded-2xl bg-card border border-border/60 shadow-sm">
                 <div className="text-5xl font-black text-primary/15 mb-4">{step.step}</div>
                 <h3 className="text-lg font-bold mb-2">{step.title}</h3>
                 <p className="text-sm text-muted-foreground">{step.description}</p>
                 {i < LP_STEPS.length - 1 && (
-                  <ChevronRight className="hidden md:block absolute top-8 -right-5 w-6 h-6 text-muted-foreground/30" />
+                  <ChevronRight className="hidden md:block absolute top-1/2 -right-5 w-6 h-6 text-muted-foreground/30" />
                 )}
               </div>
             ))}
@@ -233,15 +324,16 @@ export default function LP() {
       {/* Comparison */}
       <section className="py-20">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">広告代理店との比較</h2>
-          <div className="overflow-x-auto">
+          <h2 className="text-3xl font-bold text-center mb-4">広告代理店との比較</h2>
+          <p className="text-center text-muted-foreground mb-12">同じ分析を、1/10のコストで</p>
+          <div className="overflow-x-auto rounded-2xl border border-border/60 shadow-sm">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-4 px-4"></th>
-                  <th className="text-center py-4 px-4 text-primary font-bold">MapBoost AI</th>
-                  <th className="text-center py-4 px-4 text-muted-foreground">広告代理店</th>
-                  <th className="text-center py-4 px-4 text-muted-foreground">自力（Excel）</th>
+                <tr className="bg-muted/50">
+                  <th className="text-left py-4 px-5"></th>
+                  <th className="text-center py-4 px-5 text-primary font-bold">MapBoost AI</th>
+                  <th className="text-center py-4 px-5 text-muted-foreground">広告代理店</th>
+                  <th className="text-center py-4 px-5 text-muted-foreground">自力（Excel）</th>
                 </tr>
               </thead>
               <tbody>
@@ -254,11 +346,11 @@ export default function LP() {
                   ["MEO対策", "AI診断", "別料金", "自力で勉強"],
                   ["レポート", "自動PDF", "月1回", "手作り"],
                 ].map(([item, mapboost, agency, manual]) => (
-                  <tr key={item} className="border-b border-border/40">
-                    <td className="py-3 px-4 font-medium">{item}</td>
-                    <td className="py-3 px-4 text-center text-primary font-semibold">{mapboost}</td>
-                    <td className="py-3 px-4 text-center text-muted-foreground">{agency}</td>
-                    <td className="py-3 px-4 text-center text-muted-foreground">{manual}</td>
+                  <tr key={item} className="border-t border-border/40">
+                    <td className="py-3 px-5 font-medium bg-card">{item}</td>
+                    <td className="py-3 px-5 text-center text-primary font-semibold bg-primary/5">{mapboost}</td>
+                    <td className="py-3 px-5 text-center text-muted-foreground bg-card">{agency}</td>
+                    <td className="py-3 px-5 text-center text-muted-foreground bg-card">{manual}</td>
                   </tr>
                 ))}
               </tbody>
@@ -267,14 +359,22 @@ export default function LP() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-20 bg-muted/30">
-        <div className="max-w-5xl mx-auto px-4">
+      {/* Testimonials with background */}
+      <section className="py-20 relative overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img
+            src="/images/lp/testimonial-bg.png"
+            alt=""
+            className="w-full h-full object-cover opacity-10"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
+        </div>
+        <div className="max-w-5xl mx-auto px-4 relative z-10">
           <h2 className="text-3xl font-bold text-center mb-4">導入事例</h2>
           <p className="text-center text-muted-foreground mb-12">MapBoost AIを導入した店舗オーナーの声</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {LP_TESTIMONIALS.map((t) => (
-              <div key={t.name} className="p-6 rounded-2xl bg-card border border-border/60 shadow-sm">
+              <div key={t.name} className="p-6 rounded-2xl bg-card/90 backdrop-blur border border-border/60 shadow-lg">
                 <div className="flex gap-1 mb-3">
                   {Array.from({ length: t.rating }).map((_, i) => (
                     <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -300,14 +400,14 @@ export default function LP() {
             {LP_PRICING.map((plan) => (
               <div
                 key={plan.name}
-                className={`relative p-6 rounded-2xl border shadow-sm ${
+                className={`relative p-6 rounded-2xl border shadow-sm transition-all hover:shadow-lg ${
                   plan.highlight
                     ? "border-primary bg-primary/5 shadow-lg scale-105"
                     : "border-border/60 bg-card"
                 }`}
               >
                 {plan.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-primary text-white text-xs font-bold">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-primary text-white text-xs font-bold shadow-md">
                     人気No.1
                   </div>
                 )}
@@ -347,7 +447,7 @@ export default function LP() {
           <h2 className="text-3xl font-bold text-center mb-12">よくある質問</h2>
           <div className="space-y-4">
             {LP_FAQ.map((faq) => (
-              <div key={faq.q} className="p-5 rounded-xl bg-card border border-border/60">
+              <div key={faq.q} className="p-5 rounded-xl bg-card border border-border/60 shadow-sm">
                 <h3 className="font-bold text-sm mb-2">Q. {faq.q}</h3>
                 <p className="text-sm text-muted-foreground">A. {faq.a}</p>
               </div>
@@ -356,23 +456,35 @@ export default function LP() {
         </div>
       </section>
 
-      {/* Bottom CTA */}
-      <section className="py-24">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <div className="p-12 rounded-3xl shadow-xl" style={{ background: "linear-gradient(135deg, hsl(217 91% 55%), hsl(200 85% 52%))" }}>
-            <h2 className="text-3xl font-black text-white mb-4">
-              今すぐ、あなたの商圏を分析しませんか？
-            </h2>
-            <p className="text-white/80 mb-8">
-              クレジットカード不要・30秒で結果が出ます
-            </p>
-            <Link to="/free-analysis">
-              <Button size="lg" className="bg-white text-primary font-bold px-8 py-6 text-base shadow-lg hover:shadow-xl transition-all">
-                無料で商圏分析する
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
-          </div>
+      {/* Bottom CTA with city background */}
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img
+            src="/images/lp/cta-bg.png"
+            alt=""
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/80 to-primary/90" />
+        </div>
+        <div className="max-w-3xl mx-auto px-4 text-center relative z-10">
+          <img
+            src="/images/lp/banner-character.png"
+            alt="MapBoost AIコンサルタント"
+            className="w-40 mx-auto mb-8 drop-shadow-2xl"
+          />
+          <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">
+            今すぐ、あなたの商圏を
+            <br />分析しませんか？
+          </h2>
+          <p className="text-white/80 mb-8 text-lg">
+            クレジットカード不要・30秒で結果が出ます
+          </p>
+          <Link to="/free-analysis">
+            <Button size="lg" className="bg-white text-primary font-bold px-10 py-7 text-lg shadow-2xl hover:shadow-xl transition-all hover:scale-105">
+              無料で商圏分析する
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </Button>
+          </Link>
         </div>
       </section>
 
