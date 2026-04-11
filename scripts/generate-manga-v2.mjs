@@ -12,40 +12,40 @@ const OUTPUT_DIR = path.resolve('public/images/lp/manga');
 // - Medium build, average height
 // - The same character throughout ALL panels
 
-const CHARACTER_REF = `A young Japanese ramen chef (male, early 30s, short neat black hair parted to the side, round friendly face, medium build). He wears a white chef coat with rolled-up sleeves throughout the entire story. Consistent manga art style with clean lines, bright colors, and warm tones. Japanese seinen manga style similar to Oishinbo or Cooking Papa.`;
+const CHARACTER_REF = `A young Japanese ramen chef (male, early 30s, short neat black hair parted to the side, round friendly face, medium build). He wears a white chef coat with rolled-up sleeves throughout the entire story. Consistent manga art style with clean lines, bright colors, and warm tones. Japanese seinen manga style similar to Oishinbo or Cooking Papa. IMPORTANT: absolutely NO text, NO speech bubbles, NO written words, NO letters, NO captions anywhere in the image.`;
 
 const panels = [
   {
     id: 'panel-1',
-    prompt: `${CHARACTER_REF} Panel 1: The chef sits alone at his empty ramen counter at evening, chin resting on his hand, looking sad. The restaurant is completely empty with no customers. A single bowl of untouched ramen sits in front of him. Warm but lonely interior lighting. Square format manga panel with thin black border.`,
+    prompt: `${CHARACTER_REF} Panel 1: The chef sits alone at his empty ramen counter at evening, chin resting on his hand, looking sad. The restaurant is completely empty with no customers. A single bowl of untouched ramen sits in front of him. Warm but lonely interior lighting. Square format manga panel with thin black border. No text, no speech bubbles, no words, no letters anywhere.`,
   },
   {
     id: 'panel-2',
-    prompt: `${CHARACTER_REF} Panel 2: The same chef sitting at a desk covered with expensive advertising brochures and invoices. He holds his head with both hands in frustration. A calculator shows a large number. Papers scattered around. Stressed expression with manga-style sweat drops. Square format manga panel with thin black border.`,
+    prompt: `${CHARACTER_REF} Panel 2: The same chef sitting at a desk covered with expensive advertising brochures and invoices. He holds his head with both hands in frustration. A calculator shows a large number. Papers scattered around. Stressed expression with manga-style sweat drops. Square format manga panel with thin black border. No text, no speech bubbles, no words, no letters anywhere.`,
   },
   {
     id: 'panel-3',
-    prompt: `${CHARACTER_REF} Panel 3: Late at night, the same chef discovers something amazing on his laptop screen. His eyes are wide with surprise and excitement (manga sparkle eyes). The laptop screen glows brightly showing a colorful map interface with the text "MapBoost AI" visible on screen. He leans forward with both hands on the desk. Square format manga panel with thin black border.`,
+    prompt: `${CHARACTER_REF} Panel 3: Late at night, the same chef discovers something amazing on his laptop screen. His eyes are wide with surprise and excitement (manga sparkle eyes). The laptop screen glows brightly showing a colorful map interface with the text "MapBoost AI" visible on screen. He leans forward with both hands on the desk. Square format manga panel with thin black border. No text, no speech bubbles, no words, no letters anywhere.`,
   },
   {
     id: 'panel-4',
-    prompt: `${CHARACTER_REF} Panel 4: Next morning, the same chef sits at his laptop in bright daylight, smiling as he types his restaurant address into a clean search interface. Sunlight streams through the window. He looks hopeful and determined. A coffee cup sits nearby. Square format manga panel with thin black border.`,
+    prompt: `${CHARACTER_REF} Panel 4: Next morning, the same chef sits at his laptop in bright daylight, smiling as he types his restaurant address into a clean search interface. Sunlight streams through the window. He looks hopeful and determined. A coffee cup sits nearby. Square format manga panel with thin black border. No text, no speech bubbles, no words, no letters anywhere.`,
   },
   {
     id: 'panel-5',
-    prompt: `${CHARACTER_REF} Panel 5: The same chef's laptop now shows a detailed colorful trade area map with circular analysis zones, population icons, and highlighted areas. The chef pumps his fist with excitement, mouth open in an excited yell. Bright sparkle effects around the screen. Dynamic action pose. Square format manga panel with thin black border.`,
+    prompt: `${CHARACTER_REF} Panel 5: The same chef's laptop now shows a detailed colorful trade area map with circular analysis zones, population icons, and highlighted areas. The chef pumps his fist with excitement, mouth open in an excited yell. Bright sparkle effects around the screen. Dynamic action pose. Square format manga panel with thin black border. No text, no speech bubbles, no words, no letters anywhere.`,
   },
   {
     id: 'panel-6',
-    prompt: `${CHARACTER_REF} Panel 6: The same chef stands confidently at his restaurant counter, holding a printed flyer distribution plan in one hand and giving thumbs up with the other. Behind him, a wall calendar shows dates marked with plans. He has a focused determined expression. Bright scene. Square format manga panel with thin black border.`,
+    prompt: `${CHARACTER_REF} Panel 6: The same chef stands confidently at his restaurant counter, holding a printed flyer distribution plan in one hand and giving thumbs up with the other. Behind him, a wall calendar shows dates marked with plans. He has a focused determined expression. Bright scene. Square format manga panel with thin black border. No text, no speech bubbles, no words, no letters anywhere.`,
   },
   {
     id: 'panel-7',
-    prompt: `${CHARACTER_REF} Panel 7: The same chef's ramen restaurant is now packed with happy customers! He's behind the counter cooking energetically with steam rising, wearing a headband over his chef coat. Customers are lined up at the counter eating and smiling. Warm busy bustling atmosphere with motion lines. Square format manga panel with thin black border.`,
+    prompt: `${CHARACTER_REF} Panel 7: The same chef's ramen restaurant is now packed with happy customers! He's behind the counter cooking energetically with steam rising, wearing a headband over his chef coat. Customers are lined up at the counter eating and smiling. Warm busy bustling atmosphere with motion lines. Square format manga panel with thin black border. No text, no speech bubbles, no words, no letters anywhere.`,
   },
   {
     id: 'panel-8',
-    prompt: `${CHARACTER_REF} Panel 8: The same chef stands proudly outside his bustling restaurant at beautiful sunset/golden hour. Arms crossed with a huge confident smile. The restaurant sign glows warmly behind him, customers visible through the windows. Cherry blossom petals drift in the air. Triumphant heroic pose. Warm golden lighting. Square format manga panel with thin black border.`,
+    prompt: `${CHARACTER_REF} Panel 8: The same chef stands proudly outside his bustling restaurant at beautiful sunset/golden hour. Arms crossed with a huge confident smile. The restaurant sign glows warmly behind him, customers visible through the windows. Cherry blossom petals drift in the air. Triumphant heroic pose. Warm golden lighting. Square format manga panel with thin black border. No text, no speech bubbles, no words, no letters anywhere.`,
   },
 ];
 
