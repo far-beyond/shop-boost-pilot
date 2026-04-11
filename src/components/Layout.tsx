@@ -1,11 +1,14 @@
 import { Link } from "react-router-dom";
-import { Target } from "lucide-react";
+import { Target, Sun, Moon } from "lucide-react";
+import { useTheme } from "next-themes";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Button } from "@/components/ui/button";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { t } = useLanguage();
+  const { theme, setTheme } = useTheme();
 
   return (
     <SidebarProvider>
@@ -24,6 +27,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </div>
               <span className="hidden sm:inline tracking-tight">MapBoost AI</span>
             </Link>
+            <div className="ml-auto">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="rounded-full"
+              >
+                <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <span className="sr-only">Toggle theme</span>
+              </Button>
+            </div>
           </header>
 
           <main className="flex-1">{children}</main>
