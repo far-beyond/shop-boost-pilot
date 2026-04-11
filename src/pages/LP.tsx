@@ -102,9 +102,9 @@ const LP_FAQ = [
 
 export default function LP() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-white text-gray-900">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/40">
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-100 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div
@@ -130,12 +130,12 @@ export default function LP() {
 
       {/* Hero with manga illustration */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-yellow-50/50 to-blue-50" />
         <div className="relative max-w-6xl mx-auto px-4 pt-16 pb-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left: Text */}
             <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-8">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-100 text-orange-700 text-sm font-medium mb-8">
                 <Zap className="w-4 h-4" />
                 AIが30秒で商圏を丸裸にする
               </div>
@@ -182,9 +182,9 @@ export default function LP() {
               { value: "¥0", label: "から始められる" },
               { value: "AI", label: "自動提案" },
             ].map((stat) => (
-              <div key={stat.label} className="text-center p-4 rounded-xl bg-card/50 border border-border/40">
-                <div className="text-2xl sm:text-3xl font-black text-primary">{stat.value}</div>
-                <div className="text-sm text-muted-foreground mt-1">{stat.label}</div>
+              <div key={stat.label} className="text-center p-4 rounded-xl bg-white border border-orange-100 shadow-sm">
+                <div className="text-2xl sm:text-3xl font-black text-orange-600">{stat.value}</div>
+                <div className="text-sm text-gray-500 mt-1">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -192,7 +192,7 @@ export default function LP() {
       </section>
 
       {/* Pain Points with manga illustration */}
-      <section className="py-20 bg-muted/30">
+      <section className="py-20 bg-gradient-to-b from-amber-50/50 to-orange-50/30">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left: Pain point manga */}
@@ -209,8 +209,8 @@ export default function LP() {
               <p className="text-muted-foreground mb-8">一つでも当てはまるなら、MapBoost AIがお役に立てます</p>
               <div className="space-y-3">
                 {LP_PAIN_POINTS.map((pain) => (
-                  <div key={pain} className="flex items-start gap-3 p-4 rounded-xl bg-card border border-border/60 shadow-sm">
-                    <CheckCircle2 className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                  <div key={pain} className="flex items-start gap-3 p-4 rounded-xl bg-white border border-orange-100 shadow-sm">
+                    <CheckCircle2 className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
                     <span className="text-sm font-medium">{pain}</span>
                   </div>
                 ))}
@@ -220,8 +220,44 @@ export default function LP() {
         </div>
       </section>
 
+      {/* 8-panel Manga Story */}
+      <section className="py-20 bg-white">
+        <div className="max-w-5xl mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-4">ある店主のサクセスストーリー</h2>
+          <p className="text-center text-gray-500 mb-12">MapBoost AIで人生が変わった、あるラーメン店主の物語</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { src: "/images/lp/manga/panel-1.png", caption: "客が来ない...毎日不安な日々" },
+              { src: "/images/lp/manga/panel-2.png", caption: "広告費は高すぎて手が出ない" },
+              { src: "/images/lp/manga/panel-3.png", caption: "ある日、MapBoost AIを発見！" },
+              { src: "/images/lp/manga/panel-4.png", caption: "住所を入力するだけで..." },
+              { src: "/images/lp/manga/panel-5.png", caption: "AIが商圏を完全分析！" },
+              { src: "/images/lp/manga/panel-6.png", caption: "データに基づいて集客開始" },
+              { src: "/images/lp/manga/panel-7.png", caption: "お客さんが行列に！" },
+              { src: "/images/lp/manga/panel-8.png", caption: "繁盛店の仲間入り！" },
+            ].map((panel, i) => (
+              <div key={i} className="group">
+                <div className="relative overflow-hidden rounded-xl border-2 border-gray-200 shadow-md hover:shadow-xl transition-all hover:scale-105">
+                  <img src={panel.src} alt={panel.caption} className="w-full aspect-square object-cover" />
+                  <div className="absolute top-2 left-2 w-7 h-7 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center shadow">{i + 1}</div>
+                </div>
+                <p className="text-xs text-center text-gray-600 mt-2 font-medium">{panel.caption}</p>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-10">
+            <Link to="/free-analysis">
+              <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-8 py-6 text-base shadow-lg">
+                あなたも無料で始めてみる
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Before / After manga */}
-      <section className="py-20">
+      <section className="py-20 bg-gradient-to-b from-yellow-50/50 to-white">
         <div className="max-w-5xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">MapBoost AIで、こう変わる</h2>
           <p className="text-muted-foreground mb-10">閑散とした店舗が、AIの力で繁盛店に</p>
@@ -244,7 +280,7 @@ export default function LP() {
       </section>
 
       {/* Features with manga images */}
-      <section className="py-20 bg-muted/30">
+      <section className="py-20 bg-gradient-to-b from-orange-50/40 to-amber-50/30">
         <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-4">MapBoost AIでできること</h2>
           <p className="text-center text-muted-foreground mb-16">エリアマーケティングに必要なすべてをAIが自動化</p>
@@ -302,7 +338,7 @@ export default function LP() {
       </section>
 
       {/* How it works */}
-      <section className="py-20 bg-muted/30">
+      <section className="py-20 bg-gradient-to-b from-orange-50/40 to-amber-50/30">
         <div className="max-w-4xl mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-4">かんたん3ステップ</h2>
           <p className="text-center text-muted-foreground mb-12">難しい設定は一切不要。今すぐ始められます</p>
@@ -442,7 +478,7 @@ export default function LP() {
       </section>
 
       {/* FAQ */}
-      <section className="py-20 bg-muted/30">
+      <section className="py-20 bg-gradient-to-b from-orange-50/40 to-amber-50/30">
         <div className="max-w-3xl mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">よくある質問</h2>
           <div className="space-y-4">
@@ -464,7 +500,7 @@ export default function LP() {
             alt=""
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/80 to-primary/90" />
+          <div className="absolute inset-0 bg-gradient-to-b from-orange-500/85 to-red-500/80" />
         </div>
         <div className="max-w-3xl mx-auto px-4 text-center relative z-10">
           <img
@@ -480,7 +516,7 @@ export default function LP() {
             クレジットカード不要・30秒で結果が出ます
           </p>
           <Link to="/free-analysis">
-            <Button size="lg" className="bg-white text-primary font-bold px-10 py-7 text-lg shadow-2xl hover:shadow-xl transition-all hover:scale-105">
+            <Button size="lg" className="bg-white text-orange-600 font-bold px-10 py-7 text-lg shadow-2xl hover:shadow-xl transition-all hover:scale-105">
               無料で商圏分析する
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
@@ -489,8 +525,8 @@ export default function LP() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/40 py-10">
-        <div className="max-w-5xl mx-auto px-4 text-center text-xs text-muted-foreground space-y-3">
+      <footer className="border-t border-gray-100 py-10 bg-white">
+        <div className="max-w-5xl mx-auto px-4 text-center text-xs text-gray-400 space-y-3">
           <div className="flex items-center justify-center gap-2.5">
             <div
               className="w-7 h-7 rounded-md flex items-center justify-center text-white"
